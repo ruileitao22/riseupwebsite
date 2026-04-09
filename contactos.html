@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="pt">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Contactos | Rise Up</title>
+    <link rel="icon" type="image/png" href="img/rise%20up%20logo.png" />
+    <link rel="stylesheet" href="style.css" />
+    <script src="supabase-config.js" defer></script>
+    <script src="script.js" defer></script>
+  </head>
+  <body data-page="contact">
+    <header class="site-header">
+      <div class="container header-shell">
+        <a class="brand-link" href="index.html" aria-label="Rise Up">
+          <img class="brand-mark" src="img/rise%20up%20logo.png" alt="LogÃ³tipo Rise Up" data-i18n-alt="common.logoAlt" />
+          <span class="brand-caption">
+            <span class="brand-name">Rise Up</span>
+            <span class="brand-note" data-i18n="brand.note">JÃºnior Empresa | Universidade da Maia</span>
+          </span>
+        </a>
+        <nav class="site-nav" aria-label="NavegaÃ§Ã£o principal">
+          <ul class="nav-list">
+            <li><a class="nav-link" href="index.html" data-i18n="nav.home">Home</a></li>
+            <li><a class="nav-link" href="sobre.html" data-i18n="nav.about">Sobre a Rise Up</a></li>
+            <li><a class="nav-link" href="equipa.html" data-i18n="nav.team">Equipa</a></li>
+            <li><a class="nav-link" href="riseuplegends.html" data-i18n="nav.legends">Rise Up Legends</a></li>
+            <li><a class="nav-link" href="projetos.html" data-i18n="nav.projects">Projetos</a></li>
+            <li><a class="nav-link" href="junta-te.html" data-i18n="nav.join">Junta-te a NÃ³s</a></li>
+            <li><a class="nav-link active" aria-current="page" href="contactos.html" data-i18n="nav.contact">Contactos</a></li>
+          </ul>
+        </nav>
+        <div class="header-actions">
+          <div class="lang-tools">
+            <span class="lang-label" data-i18n="nav.lang">Idioma</span>
+            <div class="lang-switch" aria-label="Seletor de idioma">
+              <button type="button" data-lang="pt" class="active">PT</button>
+              <button type="button" data-lang="en">EN</button>
+            </div>
+          </div>
+          <button class="menu-toggle" type="button" aria-label="Abrir menu">
+            <span></span>
+            <span></span>
+            <span></span>
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <main>
+      <section class="page-hero contact-hero">
+        <div class="container">
+          <div class="reveal">
+            <span class="eyebrow" data-i18n="contact.eyebrow">Contactos</span>
+            <h1 class="page-title" data-i18n="contact.title">Contactos</h1>
+            <p class="page-copy" data-i18n="contact.copy">Estamos disponÃ­veis para esclarecer, colaborar e receber novas ligaÃ§Ãµes.</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="section contact-section">
+        <div class="container contact-grid">
+          <div class="form-card contact-form-card reveal">
+            <div class="section-header contact-form-header">
+              <span class="tag" data-i18n="contact.form.tag">Mensagem</span>
+              <h2 class="section-title" data-i18n="contact.form.title">Envia uma mensagem</h2>
+              <p class="section-copy" data-i18n="contact.form.copy">Preenche o formulÃ¡rio e envia-nos a tua mensagem.</p>
+            </div>
+
+            <form data-form-type="contact" data-supabase-table="contact_submissions" novalidate>
+              <div class="field">
+                <label for="contact-name" data-i18n="contact.form.name.label">Nome</label>
+                <input id="contact-name" name="name" type="text" required placeholder="Como te devemos identificar" data-i18n-placeholder="contact.form.name.placeholder" />
+              </div>
+              <div class="field">
+                <label for="contact-email" data-i18n="contact.form.email.label">Email</label>
+                <input id="contact-email" name="email" type="email" required placeholder="nome@email.com" data-i18n-placeholder="contact.form.email.placeholder" />
+              </div>
+              <div class="field">
+                <label for="contact-message" data-i18n="contact.form.message.label">Mensagem</label>
+                <textarea id="contact-message" name="message" required placeholder="Escreve a tua mensagem." data-i18n-placeholder="contact.form.message.placeholder"></textarea>
+              </div>
+              <button class="button button-primary" type="submit" data-i18n="contact.form.submit">Enviar mensagem</button>
+              <p class="form-note" data-i18n="contact.form.note">Se preferires, podes contactar-nos diretamente atravÃ©s do email institucional.</p>
+              <p class="form-status" data-form-status aria-live="polite"></p>
+            </form>
+          </div>
+
+          <div class="stack contact-sidebar reveal">
+            <article class="info-card contact-side-card">
+              <span class="tag" data-i18n="contact.info.tag">Contacto direto</span>
+              <div class="contact-detail-list">
+                <div class="contact-detail-item">
+                  <strong data-i18n="contact.email.title">Email institucional</strong>
+                  <a class="contact-inline-link" href="mailto:riseup.ismai@gmail.com" data-i18n="contact.email.value">riseup.ismai@gmail.com</a>
+                </div>
+              </div>
+            </article>
+
+            <article class="info-card contact-side-card">
+              <strong data-i18n="contact.social.title">Redes sociais</strong>
+              <p class="info-copy" data-i18n="contact.social.copy">Acompanha a Rise Up nas redes oficiais e fica a par de novidades, projetos e atividades.</p>
+              <div class="social-list">
+                <a class="social-link" href="https://www.instagram.com/riseup.maia/" target="_blank" rel="noreferrer">
+                  <span class="badge-icon"><img class="social-icon" src="img/Social%20media/instagram-icon.svg" alt="Instagram" /></span>
+                  <span><strong>Instagram</strong><span class="muted">@riseup.maia</span></span>
+                </a>
+                <a class="social-link" href="https://www.linkedin.com/company/rise-up-umaia-junior-enterprise/?viewAsMember=true" target="_blank" rel="noreferrer">
+                  <span class="badge-icon"><img class="social-icon" src="img/Social%20media/linkedin-icon.svg" alt="LinkedIn" /></span>
+                  <span><strong>LinkedIn</strong><span class="muted">Rise Up // UMAIA Junior Enterprise</span></span>
+                </a>
+                <a class="social-link" href="https://www.facebook.com/p/Rise-Up-Junior-Enterprise-100064102447634/" target="_blank" rel="noreferrer">
+                  <span class="badge-icon"><img class="social-icon" src="img/Social%20media/facebook.svg" alt="Facebook" /></span>
+                  <span><strong>Facebook</strong><span class="muted">Rise Up - Junior Enterprise</span></span>
+                </a>
+              </div>
+            </article>
+          </div>
+        </div>
+
+        <div class="contact-map-wrap reveal">
+          <article class="info-card contact-map-card">
+            <div class="contact-map-layout">
+              <div class="map-embed">
+                <span class="map-floating-label" aria-hidden="true">Rise Up | UMAIA</span>
+                <iframe
+                  title="Mapa da localizaÃ§Ã£o da Rise Up"
+                  src="https://www.google.com/maps?q=41.26723112396962,-8.616999230784975&z=17&output=embed"
+                  loading="lazy"
+                  referrerpolicy="no-referrer-when-downgrade"
+                ></iframe>
+              </div>
+
+              <div class="contact-map-info">
+                <span class="tag" data-i18n="contact.location.title">Morada</span>
+                <strong data-i18n="contact.map.title">LocalizaÃ§Ã£o no mapa</strong>
+                <p class="info-copy" data-i18n="contact.map.copy">Encontra-nos em frente Ã  Universidade da Maia, em CastÃªlo da Maia.</p>
+                <div class="contact-detail-item contact-address-card">
+                  <strong data-i18n="contact.location.title">Morada</strong>
+                  <span data-i18n="contact.location.value">Universidade da Maia, Avenida Carlos de Oliveira Campos, 4475-690 CastÃªlo da Maia, Maia, Portugal</span>
+                </div>
+                <a class="button button-secondary contact-map-link" href="https://www.google.com/maps?q=41.26723112396962,-8.616999230784975" target="_blank" rel="noreferrer" data-i18n="contact.map.link">Abrir no mapa</a>
+              </div>
+            </div>
+          </article>
+        </div>
+      </section>
+    </main>
+    <footer class="footer">
+      <div class="container">
+        <div class="footer-shell">
+          <div class="footer-top">
+            <div class="stack">
+              <img class="footer-brand-logo" src="img/rise%20up%20logo.png" alt="Logótipo Rise Up" />
+            </div>
+            <div class="footer-links">
+              <a class="footer-link" href="sobre.html" data-i18n="footer.linkAbout">Sobre</a>
+              <a class="footer-link" href="projetos.html" data-i18n="footer.linkProjects">Projetos</a>
+              <a class="footer-link" href="junta-te.html" data-i18n="footer.linkJoin">Junta-te a Nós</a>
+              <a class="footer-link" href="contactos.html" data-i18n="footer.linkContact">Contactos</a>
+            </div>
+            <div class="footer-legal-links">
+              <a class="footer-link" href="politica-protecao-dados.html" data-i18n="footer.linkPrivacy">Política de Proteção de Dados</a>
+              <a class="footer-link" href="termos-condicoes.html" data-i18n="footer.linkTerms">Termos e Condições</a>
+            </div>
+            <div class="footer-social" aria-label="Redes sociais">
+              <a class="footer-social-link" href="https://www.instagram.com/riseup.maia/" target="_blank" rel="noreferrer" aria-label="Instagram Rise Up">
+                <img class="footer-social-icon" src="img/Social%20media/instagram-icon.svg" alt="Instagram" />
+              </a>
+              <a class="footer-social-link" href="https://www.linkedin.com/company/rise-up-umaia-junior-enterprise/?viewAsMember=true" target="_blank" rel="noreferrer" aria-label="LinkedIn Rise Up">
+                <img class="footer-social-icon" src="img/Social%20media/linkedin-icon.svg" alt="LinkedIn" />
+              </a>
+              <a class="footer-social-link" href="https://www.facebook.com/p/Rise-Up-Junior-Enterprise-100064102447634/" target="_blank" rel="noreferrer" aria-label="Facebook Rise Up">
+                <img class="footer-social-icon" src="img/Social%20media/facebook.svg" alt="Facebook" />
+              </a>
+            </div>
+          </div>
+          <div class="footer-bottom">
+            <span><span data-year></span> Rise Up. <span data-i18n="footer.bottomLeft">Júnior empresa ligada à Universidade da Maia.</span></span>
+          </div>
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>
