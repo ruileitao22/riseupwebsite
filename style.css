@@ -854,6 +854,35 @@ body.nav-open .menu-toggle span:nth-child(3) {
   color: var(--text-soft);
 }
 
+.team-photo-card {
+  padding: 1.1rem;
+}
+
+.team-photo-frame {
+  margin: 0;
+  border-radius: 20px;
+  overflow: hidden;
+  border: 1px solid rgba(9, 19, 25, 0.08);
+  background:
+    radial-gradient(circle at top right, rgba(22, 185, 200, 0.22), transparent 36%),
+    linear-gradient(140deg, #edf6f7 0%, #d8e8e9 100%);
+}
+
+.team-photo-frame img {
+  display: block;
+  width: 100%;
+  max-height: 640px;
+  object-fit: cover;
+}
+
+.team-photo-note {
+  margin: 1rem 0 0;
+  text-align: center;
+  font-family: "Sora", "Manrope", sans-serif;
+  font-size: clamp(1rem, 2.2vw, 1.2rem);
+  color: var(--text);
+}
+
 .coming-soon {
   display: grid;
   gap: 1.5rem;
@@ -943,6 +972,170 @@ body.nav-open .menu-toggle span:nth-child(3) {
   font-weight: 800;
   letter-spacing: 0.08em;
   text-transform: uppercase;
+}
+
+.project-list {
+  display: grid;
+  gap: 1.35rem;
+}
+
+.project-entry {
+  display: grid;
+  grid-template-columns: minmax(320px, 520px) minmax(0, 1fr);
+  gap: 1.25rem;
+  align-items: start;
+  padding: 1.25rem;
+}
+
+.project-carousel {
+  position: relative;
+  align-self: start;
+}
+
+.project-carousel-viewport {
+  overflow: hidden;
+  border-radius: 16px;
+  border: 1px solid rgba(9, 19, 25, 0.08);
+  background:
+    radial-gradient(circle at top right, rgba(22, 185, 200, 0.22), transparent 34%),
+    linear-gradient(140deg, #edf6f7 0%, #d8e8e9 100%);
+  touch-action: pan-y;
+}
+
+.project-gallery {
+  display: flex;
+  gap: 0;
+  transition: transform 260ms ease;
+  will-change: transform;
+}
+
+.project-gallery-item {
+  flex: 0 0 100%;
+  margin: 0;
+  aspect-ratio: 16 / 10;
+  overflow: hidden;
+}
+
+.project-gallery-item img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.project-carousel-button {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 42px;
+  height: 42px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.55);
+  background: rgba(9, 19, 25, 0.5);
+  color: #fff;
+  display: grid;
+  place-items: center;
+  font-size: 1.1rem;
+  line-height: 1;
+  cursor: pointer;
+  z-index: 2;
+  transition: background 160ms ease, opacity 160ms ease;
+}
+
+.project-carousel-button:hover {
+  background: rgba(9, 19, 25, 0.68);
+}
+
+.project-carousel-button.prev {
+  left: 0.7rem;
+}
+
+.project-carousel-button.next {
+  right: 0.7rem;
+}
+
+.project-carousel-button:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+.project-carousel-button[hidden] {
+  display: none;
+}
+
+.project-content h2 {
+  margin: 0.7rem 0 0;
+  font-family: "Sora", "Manrope", sans-serif;
+  font-size: clamp(1.28rem, 2vw, 1.56rem);
+  line-height: 1.2;
+}
+
+.project-meta {
+  margin: 0.7rem 0 0;
+  color: var(--text-soft);
+  font-size: 0.96rem;
+}
+
+.project-content > p {
+  margin: 0.78rem 0 0;
+  color: var(--text-soft);
+}
+
+.project-points {
+  margin: 0.82rem 0 0;
+  padding-left: 1.1rem;
+  color: var(--text-soft);
+  display: grid;
+  gap: 0.36rem;
+}
+
+.project-brands,
+.project-result {
+  margin-top: 0.84rem;
+}
+
+@media (max-width: 1080px) {
+  .project-entry {
+    grid-template-columns: 1fr;
+  }
+
+  .project-gallery-item {
+    aspect-ratio: 4 / 3;
+  }
+
+  .project-carousel-button {
+    width: 40px;
+    height: 40px;
+  }
+}
+
+@media (max-width: 640px) {
+  .project-entry {
+    padding: 1rem;
+    gap: 0.95rem;
+  }
+
+  .project-gallery-item {
+    aspect-ratio: 4 / 3;
+  }
+
+  .project-carousel-button {
+    width: 36px;
+    height: 36px;
+    font-size: 1rem;
+  }
+
+  .project-carousel-button.prev {
+    left: 0.5rem;
+  }
+
+  .project-carousel-button.next {
+    right: 0.5rem;
+  }
+
+  .project-points {
+    padding-left: 0.95rem;
+  }
 }
 
 .benefits-grid {
@@ -1875,6 +2068,10 @@ body.ready .reveal.is-visible {
     min-height: 210px;
   }
 
+  .team-photo-frame img {
+    max-height: 520px;
+  }
+
   .logo-stage {
     min-height: 220px;
   }
@@ -2027,6 +2224,14 @@ body.ready .reveal.is-visible {
   .visual-card.large,
   .portrait-placeholder {
     min-height: 190px;
+  }
+
+  .team-photo-note {
+    font-size: 1rem;
+  }
+
+  .team-photo-frame img {
+    max-height: 380px;
   }
 
   .map-embed iframe {

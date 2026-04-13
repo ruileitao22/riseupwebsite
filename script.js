@@ -228,7 +228,39 @@
     "contact.form.message.label": "Message",
     "contact.form.message.placeholder": "Write your message.",
     "contact.form.submit": "Send message",
-    "contact.form.note": "If you prefer, you can also contact us directly through our institutional email."
+    "contact.form.note": "If you prefer, you can also contact us directly through our institutional email.",
+
+    "privacy.eyebrow": "Legal",
+    "privacy.title": "Data Protection Policy",
+    "privacy.copy": "This page transparently describes the principles applied to personal data processing in the context of Rise Up's institutional website.",
+    "privacy.card1.title": "Data controller",
+    "privacy.card1.copy": "Rise Up, as the Junior Enterprise of the University of Maia, is responsible for processing personal data collected through this website within the scope of its institutional activities.",
+    "privacy.card2.title": "Data collected",
+    "privacy.card2.copy": "Data voluntarily provided by users may be collected, such as name, email, and other information submitted through contact or application forms.",
+    "privacy.card3.title": "Purposes",
+    "privacy.card3.copy": "Data is used to reply to contacts, manage applications, support institutional communication, and improve the browsing and interaction experience on the website.",
+    "privacy.card4.title": "Retention and security",
+    "privacy.card4.copy": "Data will only be kept for the necessary period and handled with appropriate measures for security, confidentiality, and access control.",
+    "privacy.card5.title": "Data subject rights",
+    "privacy.card5.copy": "Data subjects may request access, rectification, erasure, restriction, or objection to processing, under applicable legislation.",
+    "privacy.card6.title": "Contact",
+    "privacy.card6.copy": "For clarifications related to data protection, users may contact Rise Up through the available institutional channels.",
+
+    "terms.eyebrow": "Legal",
+    "terms.title": "Terms and Conditions",
+    "terms.copy": "These terms regulate the use of Rise Up's institutional website and define the conditions applicable to browsing and interaction with its content.",
+    "terms.card1.title": "Purpose",
+    "terms.card1.copy": "Rise Up's website is institutional and informational, intended to present the organization, its activities, projects, and opportunities for contact or application.",
+    "terms.card2.title": "Permitted use",
+    "terms.card2.copy": "Users commit to using the website responsibly, lawfully, and in accordance with these terms, refraining from any improper or harmful use.",
+    "terms.card3.title": "Intellectual property",
+    "terms.card3.copy": "Website content, including texts, images, graphic elements, and visual identity, belongs to Rise Up or its rightful owners and may not be used without authorization.",
+    "terms.card4.title": "External links",
+    "terms.card4.copy": "The website may include links to third-party platforms, such as social media. Rise Up is not responsible for the content or policies of those external websites.",
+    "terms.card5.title": "Availability and changes",
+    "terms.card5.copy": "Rise Up may modify, suspend, or update website content, features, and visual elements whenever necessary, without prior notice.",
+    "terms.card6.title": "Acceptance",
+    "terms.card6.copy": "Browsing this website implies acceptance of these terms and conditions. If users do not agree, they should stop using the website."
   }
 };
 
@@ -243,9 +275,6 @@ const pageTitles = {
     contact: "Contactos | Rise Up",
     privacy: "Política de Proteção de Dados | Rise Up",
     terms: "Termos e Condições | Rise Up"
-  },
-  pt: {
-    "join.form.note": "Ao enviar, a tua candidatura fica registada diretamente para análise da equipa da Rise Up."
   },
   en: {
     home: "Rise Up | Junior Enterprise at the University of Maia",
@@ -625,6 +654,130 @@ function initReveals() {
   );
 
   revealElements.forEach((element) => observer.observe(element));
+}
+
+function initProjectCarousels() {
+  const galleries = document.querySelectorAll(".project-gallery");
+  if (!galleries.length) {
+    return;
+  }
+
+  galleries.forEach((gallery) => {
+    if (gallery.closest(".project-carousel")) {
+      return;
+    }
+
+    const slides = Array.from(gallery.querySelectorAll(".project-gallery-item"));
+    if (!slides.length) {
+      return;
+    }
+
+    const wrapper = document.createElement("div");
+    wrapper.className = "project-carousel";
+
+    const viewport = document.createElement("div");
+    viewport.className = "project-carousel-viewport";
+    viewport.tabIndex = 0;
+    viewport.setAttribute("aria-label", "Galeria de imagens do projeto");
+
+    const prevButton = document.createElement("button");
+    prevButton.type = "button";
+    prevButton.className = "project-carousel-button prev";
+    prevButton.setAttribute("aria-label", "Imagem anterior");
+    prevButton.innerHTML = "&#10094;";
+
+    const nextButton = document.createElement("button");
+    nextButton.type = "button";
+    nextButton.className = "project-carousel-button next";
+    nextButton.setAttribute("aria-label", "Imagem seguinte");
+    nextButton.innerHTML = "&#10095;";
+
+    const parent = gallery.parentNode;
+    if (!(parent instanceof Node)) {
+      return;
+    }
+
+    parent.insertBefore(wrapper, gallery);
+    wrapper.appendChild(prevButton);
+    wrapper.appendChild(viewport);
+    viewport.appendChild(gallery);
+    wrapper.appendChild(nextButton);
+
+    let currentIndex = 0;
+    const maxIndex = slides.length - 1;
+
+    const updateCarousel = () => {
+      gallery.style.transform = `translateX(-${currentIndex * 100}%)`;
+      prevButton.disabled = currentIndex === 0;
+      nextButton.disabled = currentIndex === maxIndex;
+    };
+
+    const goToPrevious = () => {
+      if (currentIndex <= 0) {
+        return;
+      }
+      currentIndex -= 1;
+      updateCarousel();
+    };
+
+    const goToNext = () => {
+      if (currentIndex >= maxIndex) {
+        return;
+      }
+      currentIndex += 1;
+      updateCarousel();
+    };
+
+    prevButton.addEventListener("click", goToPrevious);
+    nextButton.addEventListener("click", goToNext);
+
+    viewport.addEventListener("keydown", (event) => {
+      if (event.key === "ArrowLeft") {
+        event.preventDefault();
+        goToPrevious();
+      } else if (event.key === "ArrowRight") {
+        event.preventDefault();
+        goToNext();
+      }
+    });
+
+    let startX = 0;
+    let pointerActive = false;
+
+    viewport.addEventListener("pointerdown", (event) => {
+      startX = event.clientX;
+      pointerActive = true;
+      viewport.setPointerCapture(event.pointerId);
+    });
+
+    viewport.addEventListener("pointerup", (event) => {
+      if (!pointerActive) {
+        return;
+      }
+
+      const delta = event.clientX - startX;
+      const threshold = 40;
+
+      if (delta < -threshold) {
+        goToNext();
+      } else if (delta > threshold) {
+        goToPrevious();
+      }
+
+      pointerActive = false;
+    });
+
+    viewport.addEventListener("pointercancel", () => {
+      pointerActive = false;
+    });
+
+    if (slides.length === 1) {
+      prevButton.hidden = true;
+      nextButton.hidden = true;
+    }
+
+    updateCarousel();
+  });
 }
 
 function normalizeSearchValue(value) {
@@ -1024,6 +1177,7 @@ document.addEventListener("DOMContentLoaded", () => {
   setCurrentYear();
   initMenu();
   initReveals();
+  initProjectCarousels();
   initCourseAutocomplete();
   initForms();
 });
