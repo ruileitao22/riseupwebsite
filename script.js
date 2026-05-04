@@ -1,6 +1,6 @@
 ﻿const translations = {
   en: {
-    "brand.note": "Junior Enterprise | University of Maia",
+    "brand.note": "Junior Enterprise",
     "common.logoAlt": "Rise Up logo",
     "nav.home": "Home",
     "nav.about": "About Rise Up",
@@ -18,14 +18,17 @@
     "footer.linkContact": "Contact",
     "footer.linkPrivacy": "Data Protection Policy",
     "footer.linkTerms": "Terms and Conditions",
-    "footer.bottomLeft": "Junior enterprise connected to the University of Maia.",
+    "footer.bottomLeft": "Junior Enterprise.",
     "footer.bottomRight": "Design prepared to grow with the brand.",
 
-    "home.eyebrow": "Junior Enterprise | University of Maia",
+    "home.eyebrow": "Junior Enterprise",
     "home.title": "Rise Up. Grow. Lead.",
-    "home.copy": "Rise Up is the Junior Enterprise of the University of Maia and stands as a space for practical learning, innovation, collaboration and talent development with academic, professional and social impact.",
+    "home.copy": "Rise Up is the Junior Enterprise. Here, students turn ambition into real experience through projects, events and teams that make things happen.",
     "home.ctaPrimary": "Join Us",
-    "home.ctaSecondary": "Get to Know Rise Up",
+    "home.ctaSecondary": "See projects",
+    "home.proof1": "Projects with practical impact",
+    "home.proof2": "Real team experience",
+    "home.proof3": "Growth with purpose",
     "home.panelCopy": "Brand space prepared to highlight the existing logo and strengthen a visual presence that feels clear, contemporary and consistent.",
     "home.metric1.label": "Growth",
     "home.metric1.copy": "Experiences that accelerate autonomy, communication and strategic thinking.",
@@ -34,16 +37,16 @@
     "home.metric3.label": "Impact",
     "home.metric3.copy": "A base prepared to showcase projects, results and applied experience.",
     "home.intro.tag": "Who we are",
-    "home.intro.title": "A Junior Enterprise that connects academic knowledge with real experience.",
-    "home.intro.copy": "Connected to the University of Maia, Rise Up promotes a culture of initiative, responsibility and professionalism, creating opportunities for students to develop skills, take part in projects and engage with real challenges.",
-    "home.intro.card1.title": "Connection to UMAIA",
-    "home.intro.card1.copy": "The connection to UMAIA strengthens Rise Up’s academic identity and builds a strong bridge between university education, the market and personal growth.",
-    "home.intro.card2.title": "Learning by doing",
+    "home.intro.title": "A Junior Enterprise that connects practical knowledge with real experience.",
+    "home.intro.copy": "As a Junior Enterprise, Rise Up promotes a culture of initiative, responsibility and professionalism, creating opportunities for students to develop skills, take part in projects and engage with real challenges.",
+    "home.intro.card1.title": "Junior Enterprise",
+    "home.intro.card1.copy": "The Junior Enterprise identity strengthens Rise Up's practical culture and connects learning, the market and personal growth.",
+    "home.intro.card2.title": "Learn by doing",
     "home.intro.card2.copy": "At Rise Up, members find an active learning environment where collaboration, autonomy and execution help turn potential into experience.",
     "home.quotes.tag": "Rise Up culture",
     "home.quotes.title": "Words that reflect growth, leadership and team spirit.",
-    "home.quotes.copy": "Rise Up’s identity is built every day through initiative, team spirit and the desire to create value inside and outside the University of Maia.",
-    "home.quote1.text": "At Rise Up, academic knowledge gains context, application and relevance through teamwork and contact with real challenges.",
+    "home.quotes.copy": "Rise Up’s identity is built every day through initiative, team spirit and the desire to create value with real impact.",
+    "home.quote1.text": "At Rise Up, practical knowledge gains context, application and relevance through teamwork and contact with real challenges.",
     "home.quote1.author": "Growth with purpose",
     "home.quote2.text": "Leadership is also about collaborating, listening, organizing and helping each member grow with confidence and a sense of responsibility.",
     "home.quote2.author": "Collaborative leadership",
@@ -51,18 +54,18 @@
     "home.quote3.author": "Rise Up spirit",
     "home.backstage.tag": "Behind the scenes",
     "home.backstage.title": "A structure made of people, projects and moments of growth.",
-    "home.backstage.copy": "Life at Rise Up happens through meetings, events, knowledge sharing and experiences that strengthen team spirit and the connection to the academic community.",
+    "home.backstage.copy": "Life at Rise Up happens through meetings, events, knowledge sharing and experiences that strengthen team spirit and the connection to the active community.",
     "home.backstage.card1.tag": "Team",
     "home.backstage.card1.title": "Meetings that align vision, strategy and execution",
     "home.backstage.card1.copy": "Each meeting is an opportunity to plan, decide and reinforce the collective ambition that guides Rise Up’s activity.",
     "home.backstage.card2.tag": "Event",
-    "home.backstage.card2.title": "Active presence in the academic community",
-    "home.backstage.card2.copy": "Events, initiatives and representation moments help strengthen Rise Up’s presence within the university ecosystem and beyond.",
+    "home.backstage.card2.title": "Active presence in the community",
+    "home.backstage.card2.copy": "Events, initiatives and representation moments help strengthen Rise Up’s presence within the innovation ecosystem and beyond.",
     "home.backstage.card3.tag": "Collaboration",
     "home.backstage.card3.title": "Learning, sharing and growth between members",
     "home.backstage.card3.copy": "The Rise Up spirit grows through mutual support, shared experiences and the development of skills with practical application.",
     "home.recruit.tag": "Recruitment",
-    "home.recruit.title": "Do you want to grow through a university experience with real impact?",
+    "home.recruit.title": "Do you want to grow through a Junior Enterprise experience with real impact?",
     "home.recruit.copy": "Joining Rise Up means becoming part of a dynamic team, developing transversal skills, gaining practical experience and actively contributing to the growth of a Junior Enterprise with a future-oriented vision.",
     "home.recruit.primary": "I want to apply",
     "home.recruit.secondary": "Talk to the team",
@@ -71,29 +74,29 @@
 
     "about.eyebrow": "About Rise Up",
     "about.title": "Identity, mission and vision of a junior enterprise built to grow.",
-    "about.copy": "Rise Up is the Junior Enterprise of the University of Maia and presents itself as a space for initiative, applied learning, collaboration and talent development.",
+    "about.copy": "Rise Up is the Junior Enterprise and presents itself as a space for initiative, applied learning, collaboration and talent development.",
     "about.who.tag": "Who we are",
-    "about.who.title": "A university structure focused on applied learning and continuous evolution.",
-    "about.who.copy": "With an academic foundation and professional ambition, Rise Up promotes experiences that bring students closer to real contexts while reinforcing skills, responsibility and initiative.",
-    "about.who.card1.title": "Academic connection with practical vision",
-    "about.who.card1.copy": "The connection to the University of Maia reinforces a culture of development, responsible experimentation and preparation for real professional contexts.",
+    "about.who.title": "A Junior Enterprise structure focused on applied learning and continuous evolution.",
+    "about.who.copy": "With a practical foundation and professional ambition, Rise Up promotes experiences that bring students closer to real contexts while reinforcing skills, responsibility and initiative.",
+    "about.who.card1.title": "Practical vision with professional ambition",
+    "about.who.card1.copy": "The Junior Enterprise identity reinforces a culture of development, responsible experimentation and preparation for real professional contexts.",
     "about.who.card2.title": "Growth culture",
     "about.who.card2.copy": "Rise Up values continuous learning, commitment and evolution, creating an environment where each member can contribute, experiment and grow with the team.",
     "about.story.tag": "Our story",
     "about.story.title": "A story shaped by initiative, evolution and ambition.",
-    "about.story.copy": "Rise Up’s journey is built through active participation, projects, collaboration between members and involvement in the academic community of the University of Maia.",
+    "about.story.copy": "Rise Up’s journey is built through active participation, projects, collaboration between members and involvement in the community where it operates.",
     "about.story.card1.title": "Origins and identity",
-    "about.story.card1.copy": "Rise Up was born from a clear desire to connect academic education, practical experience and entrepreneurial spirit within the university community.",
+    "about.story.card1.copy": "Rise Up was born from a clear desire to connect learning, practical experience and entrepreneurial spirit within an active community.",
     "about.story.card2.title": "Growth and structure",
     "about.story.card2.copy": "Rise Up grows through internal organization, teamwork, participation in initiatives and the steady construction of a strong culture.",
     "about.story.card3.title": "Future vision",
-    "about.story.card3.copy": "Rise Up’s ambition is to strengthen its impact, expand learning experiences and affirm itself as a reference in the academic and youth ecosystem.",
+    "about.story.card3.copy": "Rise Up’s ambition is to strengthen its impact, expand learning experiences and affirm itself as a reference in the entrepreneurial and youth ecosystem.",
     "about.mission.tag": "Mission",
     "about.mission.title": "Create real development opportunities for students who want to learn, act and grow.",
-    "about.mission.copy": "Rise Up seeks to connect students with practical experiences, projects and team dynamics that reinforce personal, academic and professional skills.",
+    "about.mission.copy": "Rise Up seeks to connect students with practical experiences, projects and team dynamics that reinforce personal and professional skills.",
     "about.vision.tag": "Vision",
-    "about.vision.title": "Be a university reference for initiative, youthful professionalism and consistent impact.",
-    "about.vision.copy": "Rise Up’s vision is grounded in a strong academic presence, a culture of execution and a growing ability to create value for students, partners and the community.",
+    "about.vision.title": "Be a Junior Enterprise reference for initiative, youthful professionalism and consistent impact.",
+    "about.vision.copy": "Rise Up’s vision is grounded in a strong practical presence, a culture of execution and a growing ability to create value for students, partners and the community.",
     "about.values.tag": "Values",
     "about.values.title": "Principles that bring consistency to the way Rise Up works.",
     "about.values.copy": "These principles guide Rise Up’s internal culture and help build a more cohesive, responsible and growth-oriented team.",
@@ -150,14 +153,14 @@
 
     "projects.eyebrow": "Projects",
     "projects.title": "Projects, initiatives and experiences that reflect Rise Up’s work.",
-    "projects.copy": "This area presents Rise Up’s main fields of action and the kinds of experiences that help connect creativity, execution and impact in academic and professional contexts.",
+    "projects.copy": "This area presents Rise Up’s main fields of action and the kinds of experiences that help connect creativity, execution and impact in practical and professional contexts.",
     "projects.panel.title": "Areas of action",
     "projects.panel.copy": "Rise Up develops initiatives focused on communication, strategy, activation and practical experience, reinforcing skills and institutional presence.",
     "projects.card.status": "Area of action",
     "projects.card1.title": "Communication and Brand",
     "projects.card1.copy": "Projects connected to identity, content creation, digital presence and institutional communication.",
     "projects.card2.title": "Events and Activation",
-    "projects.card2.copy": "Initiatives that strengthen the connection to the academic community, institutional representation and the creation of experiences.",
+    "projects.card2.copy": "Initiatives that strengthen the connection to the active community, institutional representation and the creation of experiences.",
     "projects.card3.title": "Strategy and Development",
     "projects.card3.copy": "Work focused on internal organization, sustainable growth and value creation for Rise Up.",
 
@@ -185,7 +188,7 @@
     "join.form.email.label": "Email",
     "join.form.email.placeholder": "name@email.com",
     "join.form.course.label": "Degree",
-    "join.form.course.placeholder": "Start typing to search for your UMAIA degree",
+    "join.form.course.placeholder": "Write your degree or area of study",
     "join.form.year.label": "Year of study",
     "join.form.year.option0": "Select an option",
     "join.form.year.option1": "1st year",
@@ -210,13 +213,13 @@
     "contact.info.title": "We are available to clarify, collaborate and welcome new connections.",
     "contact.info.copy": "Use the channels below to get in touch with the Rise Up team.",
     "contact.email.title": "Institutional email",
-    "contact.email.value": "riseup.ismai@gmail.com",
+    "contact.email.value": "Usa o formulário de contacto",
     "contact.location.title": "Address",
-    "contact.location.value": "University of Maia, Avenida Carlos de Oliveira Campos, 4475-690 Castêlo da Maia, Maia, Portugal",
+    "contact.location.value": "",
     "contact.social.title": "Social media",
     "contact.social.copy": "Follow Rise Up through its official social media channels and keep up with news, projects and activities.",
     "contact.map.title": "Location on the map",
-    "contact.map.copy": "Find us opposite the University of Maia, in Castêlo da Maia.",
+    "contact.map.copy": "Contact us through Rise Up's official channels.",
     "contact.map.link": "Open map",
     "contact.form.tag": "Message",
     "contact.form.title": "Send a message",
@@ -234,7 +237,7 @@
     "privacy.title": "Data Protection Policy",
     "privacy.copy": "This page transparently describes the principles applied to personal data processing in the context of Rise Up's institutional website.",
     "privacy.card1.title": "Data controller",
-    "privacy.card1.copy": "Rise Up, as the Junior Enterprise of the University of Maia, is responsible for processing personal data collected through this website within the scope of its institutional activities.",
+    "privacy.card1.copy": "Rise Up, as the Junior Enterprise, is responsible for processing personal data collected through this website within the scope of its institutional activities.",
     "privacy.card2.title": "Data collected",
     "privacy.card2.copy": "Data voluntarily provided by users may be collected, such as name, email, and other information submitted through contact or application forms.",
     "privacy.card3.title": "Purposes",
@@ -266,8 +269,8 @@
 
 const pageTitles = {
   pt: {
-    home: "Rise Up | Júnior Empresa da Universidade da Maia",
-    about: "Sobre a Rise Up | Júnior Empresa da Universidade da Maia",
+    home: "Rise Up | Júnior Empresa",
+    about: "Sobre a Rise Up | Júnior Empresa",
     team: "Equipa | Rise Up",
     legends: "Rise Up Legends | Rise Up",
     projects: "Projetos | Rise Up",
@@ -277,8 +280,8 @@ const pageTitles = {
     terms: "Termos e Condições | Rise Up"
   },
   en: {
-    home: "Rise Up | Junior Enterprise at the University of Maia",
-    about: "About Rise Up | Junior Enterprise at the University of Maia",
+    home: "Rise Up | Junior Enterprise",
+    about: "About Rise Up | Junior Enterprise",
     team: "Team | Rise Up",
     legends: "Rise Up Legends | Rise Up",
     projects: "Projects | Rise Up",
@@ -292,19 +295,19 @@ const pageTitles = {
 const uiMessages = {
   pt: {
     validationError: "Revê os campos obrigatórios antes de enviar.",
-    invalidCourse: "Seleciona um curso válido da UMAIA a partir da lista.",
+    invalidCourse: "Preenche o teu curso ou área de estudo.",
     applicationSuccess: "Candidatura enviada com sucesso. Obrigado pelo teu interesse na Rise Up.",
     contactSuccess: "Mensagem enviada com sucesso. Vamos responder assim que possível.",
     submissionError: "Não foi possível enviar o formulário neste momento. Tenta novamente.",
     supabaseConfigError: "Falta configurar o Supabase para receber os formulários deste site.",
     sending: "A enviar...",
-    courseNoResults: "N&atilde;o encontr&aacute;mos nenhum curso com essa pesquisa.",
+    courseNoResults: "Não encontrámos nenhum curso com essa pesquisa.",
     menuOpen: "Abrir menu",
     menuClose: "Fechar menu"
   },
   en: {
     validationError: "Please review the required fields before sending.",
-    invalidCourse: "Select a valid UMAIA degree from the list.",
+    invalidCourse: "Fill in your degree or area of study.",
     applicationSuccess: "Application sent successfully. Thank you for your interest in Rise Up.",
     contactSuccess: "Message sent successfully. We will reply as soon as possible.",
     submissionError: "We could not send the form right now. Please try again.",
@@ -318,7 +321,7 @@ const uiMessages = {
 
 let currentLanguage = "pt";
 
-const umaiaCourses = [
+const degreeOptions = [
   { title: "Arte Multimédia", cycle: "Licenciatura", area: "Comunicação e Tecnologias" },
   { title: "Ciências da Comunicação", cycle: "Licenciatura", area: "Comunicação e Tecnologias" },
   { title: "Informática", cycle: "Licenciatura", area: "Comunicação e Tecnologias" },
@@ -407,7 +410,7 @@ function repairObjectKeys(source) {
 repairNestedStrings(translations);
 repairNestedStrings(pageTitles);
 repairNestedStrings(uiMessages);
-repairNestedStrings(umaiaCourses);
+repairNestedStrings(degreeOptions);
 
 const repairedCourseCycleOrder = repairObjectKeys(courseCycleOrder);
 Object.keys(courseCycleOrder).forEach((key) => {
@@ -656,6 +659,49 @@ function initReveals() {
   revealElements.forEach((element) => observer.observe(element));
 }
 
+function initHeroEntrance() {
+  const title = document.querySelector(".hero-home .hero-title");
+  if (!title) {
+    return;
+  }
+
+  const animateTitle = () => {
+    const text = title.textContent.trim();
+    if (!text) {
+      return;
+    }
+
+    title.setAttribute("aria-label", text);
+    title.classList.remove("is-animated");
+    title.textContent = "";
+
+    let charIndex = 0;
+    text.split(/\s+/).forEach((word) => {
+      const wordElement = document.createElement("span");
+      wordElement.className = "hero-title-word";
+      wordElement.setAttribute("aria-hidden", "true");
+
+      Array.from(word).forEach((char) => {
+        const charElement = document.createElement("span");
+        charElement.className = "hero-title-char";
+        charElement.style.setProperty("--char-index", charIndex);
+        charElement.textContent = char;
+        wordElement.appendChild(charElement);
+        charIndex += 1;
+      });
+
+      title.appendChild(wordElement);
+    });
+
+    window.requestAnimationFrame(() => {
+      title.classList.add("is-animated");
+    });
+  };
+
+  animateTitle();
+  document.addEventListener("riseup:languagechange", animateTitle);
+}
+
 function initProjectCarousels() {
   const galleries = document.querySelectorAll(".project-gallery");
   if (!galleries.length) {
@@ -788,15 +834,12 @@ function normalizeSearchValue(value) {
     .trim();
 }
 
-function isKnownUmaiaCourse(value) {
-  const normalizedValue = normalizeSearchValue(value || "");
-  return umaiaCourses.some((course) => normalizeSearchValue(`${course.title} ${course.cycle}`) === normalizedValue || normalizeSearchValue(course.title) === normalizedValue);
-}
+
 
 function getFilteredCourses(query) {
   const normalizedQuery = normalizeSearchValue(query || "");
 
-  return umaiaCourses
+  return degreeOptions
     .map((course) => {
       const titleValue = normalizeSearchValue(course.title);
       const areaValue = normalizeSearchValue(course.area);
@@ -1133,8 +1176,7 @@ function initForms() {
 
       const courseInput = form.querySelector("[data-course-autocomplete]");
       if (courseInput) {
-        const isValidCourse = isKnownUmaiaCourse(courseInput.value);
-        courseInput.setCustomValidity(courseInput.value.trim() && !isValidCourse ? uiMessages[currentLanguage].invalidCourse : "");
+        courseInput.setCustomValidity("");
       }
 
       if (!form.checkValidity()) {
@@ -1174,6 +1216,7 @@ function initForms() {
 document.addEventListener("DOMContentLoaded", () => {
   repairDocumentMojibake();
   initLanguageSwitcher();
+  initHeroEntrance();
   setCurrentYear();
   initMenu();
   initReveals();

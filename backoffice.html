@@ -1,0 +1,939 @@
+<!DOCTYPE html>
+<html lang="pt-PT">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="robots" content="noindex, nofollow" />
+    <title>BackOffice | Rise Up</title>
+    <link rel="icon" href="favicon.ico" sizes="any" />
+    <link rel="stylesheet" href="backoffice.css" />
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="supabase-config.js" defer></script>
+    <script src="backoffice.js" defer></script>
+  </head>
+  <body>
+    <section class="bo-auth" data-auth-view>
+      <div class="bo-auth-card">
+        <div class="bo-auth-intro">
+          <img class="bo-logo" src="img/riseup-logo.png" alt="Rise Up" />
+          <div>
+            <p class="bo-kicker">BackOffice</p>
+            <h1>Gestão Rise Up</h1>
+            <p>Equipa, projetos e publicações num espaço interno simples, seguro e pronto para crescer.</p>
+          </div>
+        </div>
+
+        <form class="bo-form" data-login-form>
+          <div class="bo-form-head">
+            <h2>Entrar</h2>
+          </div>
+          <label>
+            Email
+            <input type="email" name="email" autocomplete="email" required />
+          </label>
+          <label>
+            Palavra-passe
+            <input type="password" name="password" autocomplete="current-password" required />
+          </label>
+          <button class="bo-button bo-button-primary" type="submit">Entrar</button>
+          <p class="bo-status" data-login-status></p>
+        </form>
+      </div>
+    </section>
+
+    <div class="bo-shell" data-app-view hidden>
+      <aside class="bo-sidebar">
+        <div class="bo-sidebar-inner">
+          <a class="bo-brand" href="index.html" aria-label="Voltar ao site">
+            <img src="img/riseup-logo.png" alt="Rise Up" />
+          </a>
+          <nav class="bo-nav" aria-label="BackOffice">
+            <div class="bo-nav-main">
+              <button type="button" class="is-active" data-view-button="dashboard" data-admin-only aria-pressed="true">Painel</button>
+              <button type="button" data-view-button="projects" aria-pressed="false">Projetos</button>
+              <button type="button" data-view-button="team" data-admin-only aria-pressed="false">Equipa</button>
+              <button type="button" data-view-button="hr" aria-pressed="false">Recursos Humanos</button>
+            </div>
+            <span class="bo-nav-divider" aria-hidden="true"></span>
+            <button type="button" class="bo-nav-profile" data-view-button="profile" aria-label="Perfil" title="Perfil" aria-pressed="false">
+              <span class="bo-sr-only">Perfil</span>
+              <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                <path d="M12 12.2a4.1 4.1 0 1 0 0-8.2 4.1 4.1 0 0 0 0 8.2Z"></path>
+                <path d="M4.5 19.3a7.8 7.8 0 0 1 15 0"></path>
+              </svg>
+            </button>
+          </nav>
+        </div>
+      </aside>
+
+      <main class="bo-main">
+        <header class="bo-topbar">
+          <div>
+            <p class="bo-kicker">BackOffice</p>
+            <h1 data-page-title>Painel</h1>
+          </div>
+          <div class="bo-user">
+            <span data-user-email></span>
+            <strong data-user-role></strong>
+            <button class="bo-button bo-button-ghost" type="button" data-logout>Terminar sess&atilde;o</button>
+          </div>
+        </header>
+
+        <p class="bo-status bo-global-status" data-global-status></p>
+
+        <section class="bo-section is-active" data-section="dashboard" data-admin-only>
+          <div class="bo-dashboard-grid">
+            <div class="bo-metrics">
+              <article>
+                <small>Equipa</small>
+                <span data-metric-team>0</span>
+                <p>Membros</p>
+              </article>
+              <article data-admin-only>
+                <small>Site público</small>
+                <span data-metric-published>0</span>
+                <p>Projetos publicados</p>
+              </article>
+              <article data-admin-only>
+                <small>BackOffice</small>
+                <span data-metric-draft>0</span>
+                <p>Rascunhos</p>
+              </article>
+            </div>
+
+            <div class="bo-dashboard-panels">
+              <article class="bo-panel">
+                <div class="bo-list-head">
+                  <div>
+                    <p class="bo-kicker">Prioridades</p>
+                    <h3>Tarefas pendentes</h3>
+                    <p>O que precisa de revis&atilde;o antes de ficar pronto para a equipa ou para o site.</p>
+                  </div>
+                </div>
+                <div class="bo-list" data-dashboard-tasks></div>
+              </article>
+
+              <article class="bo-panel">
+                <div class="bo-list-head">
+                  <div>
+                    <p class="bo-kicker">Hist&oacute;rico</p>
+                    <h3>&Uacute;ltimas altera&ccedil;&otilde;es</h3>
+                    <p>Registo r&aacute;pido das a&ccedil;&otilde;es feitas no backoffice.</p>
+                  </div>
+                </div>
+                <div class="bo-list" data-activity-list></div>
+              </article>
+            </div>
+
+            <article class="bo-panel bo-access-panel">
+              <p class="bo-kicker">Acesso</p>
+              <h2>Permissões ativas</h2>
+              <p data-dashboard-copy>
+                Administradores gerem todos os dados. Os membros editam apenas o seu próprio perfil.
+              </p>
+            </article>
+
+            <article class="bo-panel bo-permissions-panel" data-admin-only>
+              <div class="bo-list-head">
+                <div>
+                  <p class="bo-kicker">Permissões</p>
+                  <h3>Gerir acessos do BackOffice</h3>
+                  <p>Define quem fica apenas com Perfil, quem gere Projetos, quem acompanha Recursos Humanos e quem tem acesso total.</p>
+                </div>
+              </div>
+
+              <div class="bo-list" data-permission-list></div>
+              <p class="bo-status" data-permission-status></p>
+            </article>
+          </div>
+        </section>
+
+        <section class="bo-section" data-section="profile">
+          <div class="bo-section-head">
+            <div>
+              <p class="bo-kicker">Perfil</p>
+              <h2>O teu perfil Rise Up</h2>
+            </div>
+            <p class="bo-section-note">
+              Este é o perfil que aparece no site público. Aqui, cada pessoa atualiza a sua própria informação.
+            </p>
+          </div>
+
+          <p class="bo-empty" data-profile-empty hidden></p>
+
+          <form class="bo-panel bo-form" data-profile-form hidden>
+            <div class="bo-form-head">
+              <h3>Editar perfil</h3>
+            </div>
+
+            <input type="hidden" name="id" />
+
+            <label>
+              Nome
+              <input type="text" name="name" required />
+            </label>
+
+            <label>
+              Cargo
+              <input type="text" name="role" required />
+            </label>
+
+            <label class="bo-field-full">
+              Descrição
+              <textarea name="description" rows="4"></textarea>
+            </label>
+
+            <input type="hidden" name="photo_url" />
+
+            <label>
+              Fotografia
+              <input type="file" name="photo" accept="image/*" />
+              <span class="bo-field-hint">Escolhe uma nova imagem para substituir a fotografia atual.</span>
+            </label>
+
+            <div class="bo-photo-preview-card" data-photo-preview>
+              <span class="bo-field-label">Pr&eacute;-visualiza&ccedil;&atilde;o</span>
+              <div class="bo-photo-preview-frame">
+                <img data-photo-preview-image alt="Pr&eacute;-visualiza&ccedil;&atilde;o da fotografia de perfil" hidden />
+                <p class="bo-photo-preview-empty" data-photo-preview-empty>Sem fotografia carregada.</p>
+              </div>
+              <p class="bo-field-hint" data-photo-preview-caption>Mostra a fotografia atual ou a nova imagem antes de guardar.</p>
+            </div>
+
+            <label>
+              <span class="bo-label-line">LinkedIn <span class="bo-label-note">(coloca o link do perfil)</span></span>
+              <input type="url" name="linkedin_url" placeholder="https://www.linkedin.com/in/..." />
+            </label>
+
+            <label>
+              Email
+              <input type="email" name="email" />
+            </label>
+
+            <label>
+              Mês de entrada
+              <select name="joined_month">
+                <option value="">Sem mês</option>
+                <option value="1">Janeiro</option>
+                <option value="2">Fevereiro</option>
+                <option value="3">Março</option>
+                <option value="4">Abril</option>
+                <option value="5">Maio</option>
+                <option value="6">Junho</option>
+                <option value="7">Julho</option>
+                <option value="8">Agosto</option>
+                <option value="9">Setembro</option>
+                <option value="10">Outubro</option>
+                <option value="11">Novembro</option>
+                <option value="12">Dezembro</option>
+              </select>
+            </label>
+
+            <label>
+              Ano de entrada
+              <input type="number" name="joined_year" min="2000" max="2100" />
+            </label>
+
+            <div class="bo-actions">
+              <button class="bo-button bo-button-primary" type="submit">Guardar perfil</button>
+            </div>
+            <p class="bo-status" data-profile-form-status></p>
+          </form>
+        </section>
+
+        <section class="bo-section" data-section="team" data-admin-only>
+          <div class="bo-section-head">
+            <div>
+              <p class="bo-kicker">Equipa</p>
+              <h2>Perfis da equipa</h2>
+            </div>
+            <p class="bo-section-note" data-admin-only>
+              Os perfis são criados automaticamente quando adicionas contas no Supabase Auth.
+            </p>
+          </div>
+
+          <div class="bo-workspace">
+            <div class="bo-panel">
+              <div class="bo-list-tools">
+                <label>
+                  <span class="bo-field-label">Pesquisar</span>
+                  <input type="search" placeholder="Nome, cargo ou email" data-team-search />
+                </label>
+                <label>
+                  <span class="bo-field-label">Estado</span>
+                  <select data-team-status-filter>
+                    <option value="all">Todos</option>
+                    <option value="active">Ativos</option>
+                    <option value="inactive">Inativos</option>
+                  </select>
+                </label>
+              </div>
+              <div class="bo-list" data-team-list></div>
+            </div>
+
+            <form class="bo-panel bo-form" data-team-form hidden>
+              <div class="bo-form-head">
+                <h3 data-team-form-title>Editar membro</h3>
+                <button class="bo-icon-button" type="button" data-close-team-form aria-label="Fechar">x</button>
+              </div>
+
+              <input type="hidden" name="id" />
+
+              <label>
+                Nome
+                <input type="text" name="name" required />
+              </label>
+
+              <label>
+                Cargo
+                <input type="text" name="role" required />
+              </label>
+
+              <label class="bo-field-full">
+                Descri&ccedil;&atilde;o
+                <textarea name="description" rows="4"></textarea>
+              </label>
+
+              <input type="hidden" name="photo_url" />
+
+              <label>
+                Fotografia
+                <input type="file" name="photo" accept="image/*" />
+                <span class="bo-field-hint">Escolhe uma nova imagem para substituir a fotografia atual.</span>
+              </label>
+
+              <div class="bo-photo-preview-card" data-photo-preview>
+                <span class="bo-field-label">Pr&eacute;-visualiza&ccedil;&atilde;o</span>
+                <div class="bo-photo-preview-frame">
+                  <img data-photo-preview-image alt="Pr&eacute;-visualiza&ccedil;&atilde;o da fotografia do membro" hidden />
+                  <p class="bo-photo-preview-empty" data-photo-preview-empty>Sem fotografia carregada.</p>
+                </div>
+                <p class="bo-field-hint" data-photo-preview-caption>Mostra a fotografia atual ou a nova imagem antes de guardar.</p>
+              </div>
+
+              <label>
+                <span class="bo-label-line">LinkedIn <span class="bo-label-note">(coloca o link do perfil)</span></span>
+                <input type="url" name="linkedin_url" placeholder="https://www.linkedin.com/in/..." />
+              </label>
+
+              <label>
+                Email
+                <input type="email" name="email" />
+              </label>
+
+              <label>
+                M&ecirc;s de entrada
+                <select name="joined_month">
+                  <option value="">Sem mês</option>
+                  <option value="1">Janeiro</option>
+                  <option value="2">Fevereiro</option>
+                  <option value="3">Mar&ccedil;o</option>
+                  <option value="4">Abril</option>
+                  <option value="5">Maio</option>
+                  <option value="6">Junho</option>
+                  <option value="7">Julho</option>
+                  <option value="8">Agosto</option>
+                  <option value="9">Setembro</option>
+                  <option value="10">Outubro</option>
+                  <option value="11">Novembro</option>
+                  <option value="12">Dezembro</option>
+                </select>
+              </label>
+
+              <label>
+                Ano de entrada
+                <input type="number" name="joined_year" min="2000" max="2100" />
+              </label>
+
+              <label class="bo-check" data-admin-only>
+                <input type="checkbox" name="is_active" checked />
+                Ativo no site público
+              </label>
+
+              <div class="bo-actions">
+                <button class="bo-button bo-button-primary" type="submit">Guardar perfil</button>
+                <button class="bo-button bo-button-danger" type="button" data-delete-team-member>Apagar perfil</button>
+              </div>
+              <p class="bo-status" data-team-form-status></p>
+            </form>
+          </div>
+        </section>
+
+        <section class="bo-section" data-section="projects">
+          <div class="bo-section-head">
+            <div>
+              <p class="bo-kicker">Projetos</p>
+              <h2>Projetos e associa&ccedil;&otilde;es</h2>
+            </div>
+            <div class="bo-actions">
+              <button class="bo-button bo-button-primary" type="button" data-new-project>Novo projeto</button>
+            </div>
+          </div>
+
+          <div class="bo-workspace">
+            <div class="bo-panel">
+              <div class="bo-list-tools">
+                <label>
+                  <span class="bo-field-label">Pesquisar</span>
+                  <input type="search" placeholder="Projeto, categoria ou tag" data-project-search />
+                </label>
+                <label>
+                  <span class="bo-field-label">Estado</span>
+                  <select data-project-status-filter>
+                    <option value="all">Todos</option>
+                    <option value="draft">Rascunho</option>
+                    <option value="in_review">Em revis&atilde;o</option>
+                    <option value="published">Publicado</option>
+                    <option value="archived">Arquivado</option>
+                  </select>
+                </label>
+              </div>
+              <div class="bo-list" data-project-list></div>
+            </div>
+
+            <form class="bo-panel bo-form" data-project-form hidden>
+              <div class="bo-form-head">
+                <h3 data-project-form-title>Editar projeto</h3>
+                <button class="bo-icon-button" type="button" data-close-project-form aria-label="Fechar">x</button>
+              </div>
+
+              <input type="hidden" name="id" />
+
+              <label>
+                Título
+                <input type="text" name="title" required />
+              </label>
+
+              <label>
+                Categoria
+                <input type="text" name="category" />
+              </label>
+
+              <label>
+                Data
+                <input type="date" name="project_date" />
+              </label>
+
+              <label>
+                Estado
+                <select name="status" required>
+                  <option value="draft">Rascunho</option>
+                  <option value="in_review">Em revis&atilde;o</option>
+                  <option value="published">Publicado</option>
+                  <option value="archived">Arquivado</option>
+                </select>
+              </label>
+
+              <label class="bo-field-full">
+                Descri&ccedil;&atilde;o
+                <textarea name="description" rows="5"></textarea>
+              </label>
+
+              <div class="bo-field-full bo-image-field">
+                <div>
+                  <span class="bo-field-label">Imagens do projeto</span>
+                  <span class="bo-field-hint">A primeira imagem &eacute; a capa. Usa imagens horizontais, idealmente 1600x1200 px. O backoffice otimiza imagens grandes antes de enviar.</span>
+                </div>
+                <input class="bo-sr-only" type="file" name="image" accept="image/*" multiple data-project-image-input />
+                <input type="hidden" name="image_url" />
+                <div class="bo-image-preview" data-project-image-preview></div>
+              </div>
+
+              <label>
+                Link externo
+                <input type="url" name="external_link" placeholder="https://..." />
+              </label>
+
+              <label>
+                Tags
+                <input type="text" name="tags" placeholder="media, logística, inteligência artificial" />
+                <span class="bo-field-hint">Separadas por vírgulas. Aparecem no projeto e alimentam os dados de SEO.</span>
+              </label>
+
+              <label>
+                Ordem na lista
+                <input type="number" name="sort_order" min="1" step="1" />
+                <span class="bo-field-hint">1 aparece primeiro. Se colocares um projeto numa posi&ccedil;&atilde;o j&aacute; ocupada, os restantes descem automaticamente.</span>
+              </label>
+
+              <fieldset class="bo-field-full bo-member-picker">
+                <legend>Pessoas envolvidas</legend>
+                <div class="bo-member-picker-head">
+                  <span class="bo-field-hint">Seleciona os membros ligados a este projeto.</span>
+                  <div class="bo-member-picker-tools">
+                    <button class="bo-button bo-button-ghost bo-member-picker-search-button" type="button" data-project-member-search-toggle>
+                      Pesquisar pessoas
+                    </button>
+                    <div class="bo-member-picker-search" data-project-member-search-wrap hidden>
+                      <label class="bo-sr-only" for="project-member-search">Pesquisar pessoas envolvidas</label>
+                      <input id="project-member-search" type="search" placeholder="Nome ou email" data-project-member-search />
+                      <button class="bo-button bo-button-ghost" type="button" data-project-member-search-clear>Limpar</button>
+                    </div>
+                  </div>
+                </div>
+                <div data-project-member-options></div>
+              </fieldset>
+
+              <div class="bo-actions">
+                <button class="bo-button bo-button-primary" type="submit">Guardar projeto</button>
+                <button class="bo-button bo-button-ghost" type="button" data-preview-project>Pr&eacute;-visualizar</button>
+                <button class="bo-button bo-button-danger" type="button" data-archive-project>Arquivar</button>
+                <button class="bo-button bo-button-danger" type="button" data-delete-project data-admin-only>Apagar definitivo</button>
+              </div>
+              <p class="bo-status" data-project-form-status></p>
+            </form>
+          </div>
+        </section>
+
+        <section class="bo-section" data-section="hr">
+          <div class="bo-section-head">
+            <div>
+              <p class="bo-kicker">Recursos Humanos</p>
+              <h2>Entrevistas e avalia&ccedil;&otilde;es</h2>
+            </div>
+            <p class="bo-section-note">
+              Segue o gui&atilde;o, conduz a conversa com crit&eacute;rio e regista cada decis&atilde;o no mesmo fluxo.
+            </p>
+          </div>
+
+          <article class="bo-panel bo-hr-overview">
+            <div class="bo-hr-overview-main">
+              <div class="bo-hr-overview-copy">
+                <p class="bo-kicker">Fluxo</p>
+                <h3>Gui&atilde;o, decis&atilde;o e registo no mesmo lugar</h3>
+                <p>
+                  Usa esta &aacute;rea para preparar a entrevista, conduzir a conversa em 30 minutos e fechar a
+                  avalia&ccedil;&atilde;o com o mesmo crit&eacute;rio em todas as candidaturas.
+                </p>
+              </div>
+              <div class="bo-hr-overview-meta">
+                <div class="bo-hr-meta-card">
+                  <strong>30 min</strong>
+                  <span>Dura&ccedil;&atilde;o recomendada</span>
+                </div>
+                <div class="bo-hr-meta-card">
+                  <strong>5 blocos</strong>
+                  <span>Estrutura da conversa</span>
+                </div>
+              </div>
+            </div>
+            <div class="bo-segmented" role="tablist" aria-label="Vistas de Recursos Humanos">
+              <button type="button" class="is-active" data-hr-view-button="guide">Gui&atilde;o da entrevista</button>
+              <button type="button" data-hr-view-button="evaluation">Grelha de avalia&ccedil;&atilde;o</button>
+            </div>
+          </article>
+
+          <div class="bo-hr-view is-active" data-hr-view="guide">
+            <article class="bo-panel bo-hr-guide-primary">
+              <div class="bo-hr-guide-head">
+                <div>
+                  <p class="bo-kicker">Gui&atilde;o</p>
+                  <h3>Roteiro da entrevista de integra&ccedil;&atilde;o</h3>
+                  <p>
+                    Segue os blocos por ordem: abre com contexto, aprofunda apenas quando surgem sinais relevantes e
+                    fecha sempre com pr&oacute;ximos passos claros.
+                  </p>
+                </div>
+                <div class="bo-actions bo-hr-doc-actions">
+                  <a class="bo-button bo-button-ghost" href="documentos/rh/guiao-entrevista-integracao-rise-up.docx" target="_blank" rel="noopener">Abrir gui&atilde;o original</a>
+                  <a class="bo-button bo-button-ghost" href="documentos/rh/grelha-avaliacao-entrevista-rise-up.docx" target="_blank" rel="noopener">Abrir grelha original</a>
+                </div>
+              </div>
+
+              <div class="bo-hr-process">
+                <article class="bo-hr-process-step">
+                  <div class="bo-hr-process-time">0-6 min</div>
+                  <div class="bo-hr-process-copy">
+                    <h4>Enquadrar a Rise Up</h4>
+                    <p>Apresentar cultura, exig&ecirc;ncia e o tipo de responsabilidade esperado.</p>
+                  </div>
+                </article>
+                <article class="bo-hr-process-step">
+                  <div class="bo-hr-process-time">6-9 min</div>
+                  <div class="bo-hr-process-copy">
+                    <h4>Apresentar quem conduz</h4>
+                    <p>Explicar quem entrevista e criar um tom pr&oacute;ximo, mas exigente.</p>
+                  </div>
+                </article>
+                <article class="bo-hr-process-step">
+                  <div class="bo-hr-process-time">9-17 min</div>
+                  <div class="bo-hr-process-copy">
+                    <h4>Conhecer o percurso</h4>
+                    <p>Ouvir a hist&oacute;ria, a iniciativa e a forma como a pessoa se posiciona.</p>
+                  </div>
+                </article>
+                <article class="bo-hr-process-step">
+                  <div class="bo-hr-process-time">17-27 min</div>
+                  <div class="bo-hr-process-copy">
+                    <h4>Testar compromisso real</h4>
+                    <p>Explorar motiva&ccedil;&atilde;o, disponibilidade, maturidade e rea&ccedil;&atilde;o a feedback.</p>
+                  </div>
+                </article>
+                <article class="bo-hr-process-step">
+                  <div class="bo-hr-process-time">27-30 min</div>
+                  <div class="bo-hr-process-copy">
+                    <h4>Fechar a conversa</h4>
+                    <p>Alinhar pr&oacute;ximos passos, agradecer e explicar quando haver&aacute; resposta.</p>
+                  </div>
+                </article>
+              </div>
+            </article>
+
+            <div class="bo-hr-guide-grid">
+              <article class="bo-panel">
+                <p class="bo-kicker">Perguntas priorit&aacute;rias</p>
+                <ol class="bo-hr-list bo-hr-list-ordered">
+                  <li><strong>Motiva&ccedil;&atilde;o.</strong> Porque queres entrar na Rise Up agora?</li>
+                  <li><strong>Valor.</strong> O que &eacute; que a equipa ganharia em ter-te?</li>
+                  <li><strong>Responsabilidade.</strong> Conta-nos uma situa&ccedil;&atilde;o em que tiveste de assumir compromisso real.</li>
+                  <li><strong>Feedback.</strong> Como reages quando recebes feedback duro ou inesperado?</li>
+                  <li><strong>Disponibilidade.</strong> Quanto tempo real tens para esta responsabilidade nos pr&oacute;ximos meses?</li>
+                  <li><strong>Exig&ecirc;ncia.</strong> O que farias se percebesses que o ritmo &eacute; mais intenso do que esperavas?</li>
+                </ol>
+              </article>
+
+              <article class="bo-panel">
+                <p class="bo-kicker">Sinais de avan&ccedil;o</p>
+                <ul class="bo-hr-list">
+                  <li>Raz&otilde;es concretas para entrar e no&ccedil;&atilde;o clara do que a Rise Up exige.</li>
+                  <li>Exemplos reais de iniciativa, responsabilidade e consist&ecirc;ncia.</li>
+                  <li>Disponibilidade compat&iacute;vel com o ritmo da equipa.</li>
+                  <li>Abertura para aprender, ouvir e ajustar.</li>
+                  <li>Coer&ecirc;ncia entre discurso, postura e percurso.</li>
+                </ul>
+              </article>
+
+              <article class="bo-panel">
+                <p class="bo-kicker">Sinais de alerta</p>
+                <ul class="bo-hr-list">
+                  <li>Respostas vagas, decoradas ou sem exemplos concretos.</li>
+                  <li>Entusiasmo alto sem disponibilidade real.</li>
+                  <li>Desconforto ao falar de feedback, press&atilde;o ou compromisso.</li>
+                  <li>Falta de perce&ccedil;&atilde;o sobre o que a organiza&ccedil;&atilde;o pede.</li>
+                  <li>Incoer&ecirc;ncias entre discurso, experi&ecirc;ncia e inten&ccedil;&atilde;o de entrada.</li>
+                </ul>
+              </article>
+
+              <article class="bo-panel">
+                <p class="bo-kicker">Como fechar</p>
+                <div class="bo-hr-callout">
+                  <strong>Frase de abertura</strong>
+                  <p>Vamos apresentar rapidamente a Rise Up e depois queremos perceber melhor o teu percurso, motiva&ccedil;&atilde;o e disponibilidade.</p>
+                </div>
+                <div class="bo-hr-callout">
+                  <strong>Frase de fecho</strong>
+                  <p>Obrigado pela partilha. Vamos alinhar internamente e damos feedback com os pr&oacute;ximos passos assim que fecharmos a leitura.</p>
+                </div>
+                <ul class="bo-hr-list">
+                  <li>Confirmar se ficou alguma resposta importante em aberto.</li>
+                  <li>Alinhar prazo de resposta para a candidatura.</li>
+                  <li>Registar a avalia&ccedil;&atilde;o logo a seguir &agrave; conversa.</li>
+                </ul>
+              </article>
+            </div>
+          </div>
+
+          <div class="bo-hr-view" data-hr-view="evaluation">
+            <div class="bo-hr-live-layout">
+              <aside class="bo-panel bo-hr-live-guide" aria-label="Gui&atilde;o da entrevista em direto">
+                <div class="bo-hr-live-guide-head">
+                  <div>
+                    <p class="bo-kicker">Gui&atilde;o em direto</p>
+                    <h3>Consulta enquanto avalias</h3>
+                  </div>
+                  <a class="bo-button bo-button-ghost" href="documentos/rh/guiao-entrevista-integracao-rise-up.docx" target="_blank" rel="noopener">Original</a>
+                </div>
+
+                <div class="bo-hr-live-blocks">
+                  <article>
+                    <span>0-6 min</span>
+                    <strong>Enquadrar a Rise Up</strong>
+                    <p>Cultura, exig&ecirc;ncia e responsabilidade esperada.</p>
+                  </article>
+                  <article>
+                    <span>6-9 min</span>
+                    <strong>Apresentar quem conduz</strong>
+                    <p>Explicar quem entrevista e criar proximidade com crit&eacute;rio.</p>
+                  </article>
+                  <article>
+                    <span>9-17 min</span>
+                    <strong>Conhecer o percurso</strong>
+                    <p>Ouvir hist&oacute;ria, iniciativa e forma de posicionamento.</p>
+                  </article>
+                  <article>
+                    <span>17-27 min</span>
+                    <strong>Testar compromisso real</strong>
+                    <p>Motiva&ccedil;&atilde;o, disponibilidade, maturidade e feedback.</p>
+                  </article>
+                  <article>
+                    <span>27-30 min</span>
+                    <strong>Fechar a conversa</strong>
+                    <p>Pr&oacute;ximos passos, prazo de resposta e agradecimento.</p>
+                  </article>
+                </div>
+
+                <div class="bo-hr-live-section">
+                  <h4>Perguntas-chave</h4>
+                  <ol class="bo-hr-list bo-hr-list-ordered">
+                    <li>Porque queres entrar na Rise Up agora?</li>
+                    <li>O que &eacute; que a equipa ganharia em ter-te?</li>
+                    <li>Como reages a feedback duro ou inesperado?</li>
+                    <li>Quanto tempo real tens nos pr&oacute;ximos meses?</li>
+                  </ol>
+                </div>
+
+                <div class="bo-hr-live-section">
+                  <h4>Sinais a observar</h4>
+                  <ul class="bo-hr-list">
+                    <li>Raz&otilde;es concretas e exemplos reais.</li>
+                    <li>Disponibilidade compat&iacute;vel com o ritmo da equipa.</li>
+                    <li>Abertura para aprender, ouvir e ajustar.</li>
+                    <li>Coer&ecirc;ncia entre discurso, postura e percurso.</li>
+                  </ul>
+                </div>
+              </aside>
+
+              <div class="bo-workspace bo-hr-workspace">
+              <div class="bo-panel bo-hr-archive-panel">
+                <div class="bo-list-head">
+                  <div>
+                    <p class="bo-kicker">Arquivo</p>
+                    <h3>Avalia&ccedil;&otilde;es registadas</h3>
+                    <p>Consulta o hist&oacute;rico ou abre uma nova grelha para guardar a decis&atilde;o.</p>
+                  </div>
+                  <div class="bo-actions">
+                    <a class="bo-button bo-button-ghost" href="documentos/rh/grelha-avaliacao-entrevista-rise-up.docx" target="_blank" rel="noopener">Abrir modelo</a>
+                    <button class="bo-button bo-button-primary" type="button" data-new-evaluation>Nova avalia&ccedil;&atilde;o</button>
+                  </div>
+                </div>
+
+                <p class="bo-empty" data-hr-setup-notice hidden></p>
+                <div class="bo-list-tools">
+                  <label>
+                    <span class="bo-field-label">Pesquisar</span>
+                    <input type="search" placeholder="Nome, &aacute;rea ou entrevistadores" data-hr-search />
+                  </label>
+                  <label>
+                    <span class="bo-field-label">Decis&atilde;o</span>
+                    <select data-hr-decision-filter>
+                      <option value="all">Todas</option>
+                      <option value="advance">Avan&ccedil;ar</option>
+                      <option value="reject">N&atilde;o avan&ccedil;ar</option>
+                    </select>
+                  </label>
+                </div>
+                <div class="bo-list" data-hr-evaluation-list></div>
+              </div>
+
+              <form class="bo-panel bo-form bo-hr-evaluation-panel" data-hr-form hidden>
+                <div class="bo-form-head">
+                  <div>
+                    <h3 data-hr-form-title>Nova avalia&ccedil;&atilde;o</h3>
+                    <p>Guarda a grelha no Supabase para manter o hist&oacute;rico da entrevista acess&iacute;vel &agrave; equipa.</p>
+                  </div>
+                  <div class="bo-inline-head-actions">
+                    <span class="bo-pill" data-hr-average>M&eacute;dia a calcular</span>
+                    <button class="bo-icon-button" type="button" data-close-hr-form aria-label="Fechar">x</button>
+                  </div>
+                </div>
+
+                <input type="hidden" name="id" />
+
+                <label>
+                  Nome da pessoa candidata
+                  <input type="text" name="candidate_name" required />
+                </label>
+
+                <label>
+                  Data
+                  <input type="date" name="interview_date" />
+                </label>
+
+                <label>
+                  Curso / Ano
+                  <input type="text" name="course_year" placeholder="Ex.: Gest&atilde;o, 2.&ordm; ano" />
+                </label>
+
+                <label>
+                  &Aacute;rea / Equipa potencial
+                  <input type="text" name="potential_area" placeholder="Ex.: Marketing, Projetos, RH" />
+                </label>
+
+                <label class="bo-field-full">
+                  Entrevistadores
+                  <input type="text" name="interviewers" placeholder="Ex.: Ana Silva, Jo&atilde;o Costa" />
+                </label>
+
+                <label>
+                  Decis&atilde;o final
+                  <select name="final_decision" required>
+                    <option value="">Selecionar</option>
+                    <option value="advance">Avan&ccedil;ar</option>
+                    <option value="reject">N&atilde;o avan&ccedil;ar</option>
+                  </select>
+                </label>
+
+                <div class="bo-field-full bo-score-panel">
+                  <div class="bo-subsection-head">
+                    <div>
+                      <span class="bo-field-label">Crit&eacute;rios de avalia&ccedil;&atilde;o</span>
+                      <span class="bo-field-hint">Escala: 1 = muito fraco / desalinhado, 5 = muito forte / excelente fit.</span>
+                    </div>
+                  </div>
+
+                  <div class="bo-score-grid">
+                    <label class="bo-score-card">
+                      <span class="bo-score-title">Motiva&ccedil;&atilde;o real</span>
+                      <span class="bo-field-hint">Vontade genu&iacute;na de entrar e entendimento claro do que &eacute; a Rise Up.</span>
+                      <select name="score_motivation" required>
+                        <option value="">Pontua&ccedil;&atilde;o</option>
+                        <option value="1">1</option>
+                        <option value="2">2</option>
+                        <option value="3">3</option>
+                        <option value="4">4</option>
+                        <option value="5">5</option>
+                      </select>
+                    </label>
+
+                    <label class="bo-score-card">
+                      <span class="bo-score-title">Maturidade</span>
+                      <span class="bo-field-hint">Capacidade para lidar com responsabilidade, exig&ecirc;ncia e contexto real.</span>
+                      <select name="score_maturity" required>
+                        <option value="">Pontua&ccedil;&atilde;o</option>
+                        <option value="1">1</option>
+                        <option value="2">2</option>
+                        <option value="3">3</option>
+                        <option value="4">4</option>
+                        <option value="5">5</option>
+                      </select>
+                    </label>
+
+                    <label class="bo-score-card">
+                      <span class="bo-score-title">Comunica&ccedil;&atilde;o</span>
+                      <span class="bo-field-hint">Clareza, estrutura do discurso e capacidade de se explicar com seguran&ccedil;a.</span>
+                      <select name="score_communication" required>
+                        <option value="">Pontua&ccedil;&atilde;o</option>
+                        <option value="1">1</option>
+                        <option value="2">2</option>
+                        <option value="3">3</option>
+                        <option value="4">4</option>
+                        <option value="5">5</option>
+                      </select>
+                    </label>
+
+                    <label class="bo-score-card">
+                      <span class="bo-score-title">Compromisso / disponibilidade</span>
+                      <span class="bo-field-hint">Tempo real, consist&ecirc;ncia e no&ccedil;&atilde;o do compromisso pedido.</span>
+                      <select name="score_commitment" required>
+                        <option value="">Pontua&ccedil;&atilde;o</option>
+                        <option value="1">1</option>
+                        <option value="2">2</option>
+                        <option value="3">3</option>
+                        <option value="4">4</option>
+                        <option value="5">5</option>
+                      </select>
+                    </label>
+
+                    <label class="bo-score-card">
+                      <span class="bo-score-title">Humildade / aprendizagem</span>
+                      <span class="bo-field-hint">Abertura para aprender, ouvir e crescer com feedback exigente.</span>
+                      <select name="score_humility" required>
+                        <option value="">Pontua&ccedil;&atilde;o</option>
+                        <option value="1">1</option>
+                        <option value="2">2</option>
+                        <option value="3">3</option>
+                        <option value="4">4</option>
+                        <option value="5">5</option>
+                      </select>
+                    </label>
+
+                    <label class="bo-score-card">
+                      <span class="bo-score-title">Fit cultural Rise Up</span>
+                      <span class="bo-field-hint">Alinhamento com a cultura, ritmo e forma de trabalhar da organiza&ccedil;&atilde;o.</span>
+                      <select name="score_culture_fit" required>
+                        <option value="">Pontua&ccedil;&atilde;o</option>
+                        <option value="1">1</option>
+                        <option value="2">2</option>
+                        <option value="3">3</option>
+                        <option value="4">4</option>
+                        <option value="5">5</option>
+                      </select>
+                    </label>
+                  </div>
+                </div>
+
+                <div class="bo-field-full bo-score-panel">
+                  <div class="bo-subsection-head">
+                    <div>
+                      <span class="bo-field-label">Leitura final obrigat&oacute;ria</span>
+                      <span class="bo-field-hint">Esta leitura interna ajuda a fechar a decis&atilde;o com crit&eacute;rio.</span>
+                    </div>
+                  </div>
+
+                  <div class="bo-reading-grid">
+                    <label class="bo-score-card">
+                      <span class="bo-score-title">Esta pessoa quer mesmo estar na Rise Up?</span>
+                      <select name="reading_wants_rise_up" required>
+                        <option value="">Selecionar</option>
+                        <option value="yes">Sim</option>
+                        <option value="partial">Parcialmente</option>
+                        <option value="no">N&atilde;o</option>
+                      </select>
+                    </label>
+
+                    <label class="bo-score-card">
+                      <span class="bo-score-title">Esta pessoa aguenta o n&iacute;vel de exig&ecirc;ncia da organiza&ccedil;&atilde;o?</span>
+                      <select name="reading_handles_pressure" required>
+                        <option value="">Selecionar</option>
+                        <option value="yes">Sim</option>
+                        <option value="partial">Parcialmente</option>
+                        <option value="no">N&atilde;o</option>
+                      </select>
+                    </label>
+
+                    <label class="bo-score-card">
+                      <span class="bo-score-title">Esta pessoa acrescenta &agrave; cultura ou vai apenas ocupar espa&ccedil;o?</span>
+                      <select name="reading_adds_culture" required>
+                        <option value="">Selecionar</option>
+                        <option value="yes">Sim</option>
+                        <option value="partial">Parcialmente</option>
+                        <option value="no">N&atilde;o</option>
+                      </select>
+                    </label>
+                  </div>
+                </div>
+
+                <label class="bo-field-full">
+                  Ponto mais forte
+                  <textarea name="strongest_point" rows="3"></textarea>
+                </label>
+
+                <label class="bo-field-full">
+                  Principal risco
+                  <textarea name="main_risk" rows="3"></textarea>
+                </label>
+
+                <label class="bo-field-full">
+                  D&uacute;vidas a validar
+                  <textarea name="doubts_to_validate" rows="3"></textarea>
+                </label>
+
+                <label class="bo-field-full">
+                  Coment&aacute;rio final do avaliador
+                  <textarea name="evaluator_comment" rows="4"></textarea>
+                </label>
+
+                <div class="bo-actions">
+                  <button class="bo-button bo-button-primary" type="submit">Guardar avalia&ccedil;&atilde;o</button>
+                  <button class="bo-button bo-button-danger" type="button" data-delete-evaluation hidden>Apagar registo</button>
+                </div>
+                <p class="bo-status" data-hr-form-status></p>
+              </form>
+              </div>
+            </div>
+          </div>
+        </section>
+      </main>
+    </div>
+  </body>
+</html>
