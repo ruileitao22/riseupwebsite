@@ -524,6 +524,28 @@ img {
   line-height: 1.25;
 }
 
+.bo-name-line {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.46rem;
+}
+
+.bo-online-dot {
+  width: 0.58rem;
+  height: 0.58rem;
+  flex: 0 0 auto;
+  border-radius: 999px;
+  background: rgba(107, 118, 125, 0.24);
+  box-shadow: inset 0 0 0 1px rgba(9, 19, 25, 0.08);
+}
+
+.bo-online-dot.is-online {
+  background: #19c36b;
+  box-shadow:
+    0 0 0 3px rgba(25, 195, 107, 0.15),
+    0 0 12px rgba(25, 195, 107, 0.34);
+}
+
 .bo-list-row p {
   margin: 0.22rem 0 0;
   color: var(--bo-muted);

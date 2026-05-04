@@ -18,6 +18,9 @@
     session: null,
     user: null,
     profile: null,
+    presenceChannel: null,
+    onlineUserIds: new Set(),
+    onlineEmails: new Set(),
     userProfiles: [],
     team: [],
     projects: [],
@@ -615,7 +618,48 @@
     return element;
   }
 
+  function createUserHeading(name, isOnline) {
+    const heading = createElement("h3", "bo-name-line");
+    const dot = createElement("span", `bo-online-dot${isOnline ? " is-online" : ""}`);
+    dot.setAttribute("aria-hidden", "true");
+    heading.appendChild(dot);
+    heading.appendChild(createElement("span", null, name || "Sem nome"));
+    if (isOnline) {
+      heading.title = "Online agora";
+    }
+    return heading;
+  }
+
+  function isProfileOnline(profile) {
+    if (!profile) {
+      return false;
+    }
+
+    return Boolean(
+      (profile.id && state.onlineUserIds.has(profile.id))
+      || (profile.email && state.onlineEmails.has(profile.email.toLowerCase()))
+    );
+  }
+
+  function isMemberOnline(member) {
+    if (!member) {
+      return false;
+    }
+
+    return Boolean(
+      (member.user_id && state.onlineUserIds.has(member.user_id))
+      || (member.email && state.onlineEmails.has(member.email.toLowerCase()))
+    );
+  }
+
+  function renderPresenceViews() {
+    renderCurrentUserSummary();
+    renderPermissionManager();
+    renderTeamList();
+  }
+
   function showAuthView() {
+    stopPresence();
     clearMemberPhotoPreview($(selectors.profileForm));
     clearMemberPhotoPreview($(selectors.teamForm));
     $(selectors.authView).hidden = false;
@@ -671,6 +715,76 @@
     document.body.classList.toggle("is-member", !isAdmin());
     syncViewVisibility();
     renderCurrentUserSummary();
+  }
+
+  function syncPresenceState() {
+    const presenceState = state.presenceChannel?.presenceState?.() || {};
+    const onlineUserIds = new Set();
+    const onlineEmails = new Set();
+
+    Object.values(presenceState).flat().forEach((entry) => {
+      if (entry?.user_id) {
+        onlineUserIds.add(entry.user_id);
+      }
+
+      if (entry?.email) {
+        onlineEmails.add(String(entry.email).toLowerCase());
+      }
+    });
+
+    state.onlineUserIds = onlineUserIds;
+    state.onlineEmails = onlineEmails;
+    renderPresenceViews();
+  }
+
+  async function startPresence() {
+    if (!state.client || !state.user || state.presenceChannel) {
+      return;
+    }
+
+    const channel = state.client.channel("riseup-backoffice-presence", {
+      config: {
+        presence: {
+          key: state.user.id
+        }
+      }
+    });
+
+    state.presenceChannel = channel;
+    channel.on("presence", { event: "sync" }, syncPresenceState);
+    channel.subscribe(async (status) => {
+      if (status !== "SUBSCRIBED") {
+        return;
+      }
+
+      await channel.track({
+        user_id: state.user.id,
+        email: state.user.email || state.profile?.email || "",
+        name: getCurrentUserDisplayName(),
+        online_at: new Date().toISOString()
+      });
+      syncPresenceState();
+    });
+  }
+
+  async function stopPresence() {
+    if (!state.presenceChannel) {
+      state.onlineUserIds = new Set();
+      state.onlineEmails = new Set();
+      return;
+    }
+
+    const channel = state.presenceChannel;
+    state.presenceChannel = null;
+    state.onlineUserIds = new Set();
+    state.onlineEmails = new Set();
+
+    try {
+      await channel.untrack();
+      await state.client?.removeChannel(channel);
+    } catch (error) {
+      console.warn("BackOffice presence cleanup failed", error);
+    }
   }
 
   async function optimizeImageFile(file, options = {}) {
@@ -874,6 +988,7 @@
     await loadAuditLogs();
     showAppView();
     renderAll();
+    await startPresence();
     setGlobalStatus("");
   }
 
@@ -1069,7 +1184,7 @@
       const body = createElement("div");
       const displayName = member?.name || profile.email?.split("@")[0] || "Sem nome";
 
-      body.appendChild(createElement("h3", null, displayName));
+      body.appendChild(createUserHeading(displayName, isProfileOnline(profile)));
       body.appendChild(createElement("p", null, profile.email || "Sem email associado"));
       body.appendChild(createElement("p", null, `${roleMeta.label} · ${roleMeta.summary}`));
 
@@ -1255,7 +1370,7 @@
       const row = createElement("article", "bo-list-row");
       const body = createElement("div");
       const stateLabel = member.is_active ? "Ativo" : "Inativo";
-      body.appendChild(createElement("h3", null, member.name || "Sem nome"));
+      body.appendChild(createUserHeading(member.name || "Sem nome", isMemberOnline(member)));
       body.appendChild(createElement("p", null, `${member.role || "Sem cargo"} · ${stateLabel}`));
 
       const actions = createElement("div", "bo-row-actions");
@@ -2574,10 +2689,13 @@
     });
 
     $("[data-logout]").addEventListener("click", async () => {
+      await stopPresence();
       await state.client.auth.signOut();
       state.session = null;
       state.user = null;
       state.profile = null;
+      state.onlineUserIds = new Set();
+      state.onlineEmails = new Set();
       state.userProfiles = [];
       state.team = [];
       state.projects = [];
