@@ -142,6 +142,8 @@
     pageTitle: "[data-page-title]",
     profileForm: "[data-profile-form]",
     profileStatus: "[data-profile-form-status]",
+    passwordForm: "[data-password-form]",
+    passwordStatus: "[data-password-form-status]",
     teamList: "[data-team-list]",
     teamForm: "[data-team-form]",
     teamFormTitle: "[data-team-form-title]",
@@ -382,6 +384,25 @@
           : project.tags,
       details: normalizeStructuredCopy(project.details)
     };
+  }
+
+  function createAccountClient() {
+    const config = getConfig();
+    if (!isConfigured(config)) {
+      throw new Error("Configura o Supabase em supabase-config.js.");
+    }
+
+    if (!window.supabase?.createClient) {
+      throw new Error("NÃ£o foi possÃ­vel carregar a biblioteca do Supabase.");
+    }
+
+    return window.supabase.createClient(config.url, config.publicKey, {
+      auth: {
+        persistSession: false,
+        autoRefreshToken: false,
+        detectSessionInUrl: false
+      }
+    });
   }
 
   function getProjectStatusLabel(status) {
@@ -997,6 +1018,21 @@
     )) || null;
   }
 
+  function findProfileForMember(member) {
+    if (!member) {
+      return null;
+    }
+
+    return state.userProfiles.find((profile) => (
+      (member.user_id && profile.id === member.user_id)
+      || (
+        member.email
+        && profile.email
+        && member.email.toLowerCase() === profile.email.toLowerCase()
+      )
+    )) || null;
+  }
+
   function renderPermissionManager() {
     const list = $(selectors.permissionList);
     const status = $(selectors.permissionStatus);
@@ -1119,6 +1155,8 @@
   }
 
   function populateMemberForm(form, member, options = {}) {
+    const isNew = !member;
+    const profile = findProfileForMember(member);
     form.reset();
     setField(form, "id", member?.id || "");
     setField(form, "name", member?.name || "");
@@ -1129,6 +1167,28 @@
     setField(form, "email", member?.email || "");
     setField(form, "joined_month", member?.joined_month || "");
     setField(form, "joined_year", member?.joined_year || "");
+    setField(form, "account_role", profile?.role || "member");
+
+    const newAccountFields = form.querySelectorAll("[data-new-account-field]");
+    newAccountFields.forEach((field) => {
+      field.hidden = !isNew;
+      field.querySelectorAll("input, select, textarea").forEach((input) => {
+        input.required = isNew;
+        if (!isNew) {
+          input.value = "";
+        }
+      });
+    });
+
+    const accountEmailHint = form.querySelector("[data-account-email-hint]");
+    if (accountEmailHint) {
+      accountEmailHint.hidden = !isNew;
+    }
+
+    if (form.elements.email) {
+      form.elements.email.required = isNew;
+      form.elements.email.readOnly = Boolean(options.allowAdminFields && member?.user_id);
+    }
 
     if (options.allowAdminFields && form.elements.is_active) {
       setField(form, "is_active", member?.is_active ?? true);
@@ -1139,6 +1199,7 @@
 
   function renderProfileSection() {
     const form = $(selectors.profileForm);
+    const passwordForm = $(selectors.passwordForm);
     const empty = $("[data-profile-empty]");
     if (!form || !empty) {
       return;
@@ -1147,6 +1208,9 @@
     const member = getOwnTeamMember();
     if (!member) {
       form.hidden = true;
+      if (passwordForm) {
+        passwordForm.hidden = false;
+      }
       empty.hidden = false;
       clearMemberPhotoPreview(form);
       empty.textContent = "Ainda não existe um perfil associado a esta conta. Confirma se o SQL de setup foi executado depois de criares o utilizador.";
@@ -1155,6 +1219,9 @@
 
     empty.hidden = true;
     form.hidden = false;
+    if (passwordForm) {
+      passwordForm.hidden = false;
+    }
     populateMemberForm(form, member);
   }
 
@@ -1173,7 +1240,7 @@
 
     if (!state.team.length) {
       const message = isAdmin()
-        ? "Ainda não existem perfis. Cria contas em Authentication > Users; os perfis aparecem aqui automaticamente."
+        ? "Ainda não existem perfis. Usa o botão Novo membro para criar a primeira conta."
         : "O teu perfil ainda não foi gerado. Confirma se o SQL de setup foi executado depois de criares a conta.";
       list.appendChild(createElement("p", "bo-empty", message));
       return;
@@ -1426,12 +1493,24 @@
     const isNew = !member;
 
     if (isNew) {
-      setGlobalStatus("Os perfis são criados automaticamente quando a conta é criada no Supabase Auth.");
+      form.hidden = false;
+      $(selectors.teamFormTitle).textContent = "Novo membro";
+      setStatus($(selectors.teamStatus), "");
+      populateMemberForm(form, null, { allowAdminFields: true });
+      const deleteButton = $("[data-delete-team-member]");
+      if (deleteButton) {
+        deleteButton.hidden = true;
+      }
+      setGlobalStatus("Preenche os dados para criar a conta e o perfil no BackOffice.");
       return;
     }
 
     form.hidden = false;
     $(selectors.teamFormTitle).textContent = "Editar membro";
+    const deleteButton = $("[data-delete-team-member]");
+    if (deleteButton) {
+      deleteButton.hidden = false;
+    }
     setStatus($(selectors.teamStatus), "");
     populateMemberForm(form, member, { allowAdminFields: true });
 
@@ -1441,6 +1520,114 @@
   function closeTeamForm() {
     clearMemberPhotoPreview($(selectors.teamForm));
     $(selectors.teamForm).hidden = true;
+  }
+
+  async function refreshAccountCreationData() {
+    await loadUserProfiles();
+    await loadTeam();
+  }
+
+  function findTeamMemberByAccount(user, email) {
+    const normalizedEmail = String(email || "").toLowerCase();
+    return state.team.find((member) => (
+      (user?.id && member.user_id === user.id)
+      || (
+        normalizedEmail
+        && member.email
+        && member.email.toLowerCase() === normalizedEmail
+      )
+    )) || null;
+  }
+
+  async function waitForCreatedTeamMember(user, email) {
+    for (let attempt = 0; attempt < 6; attempt += 1) {
+      await refreshAccountCreationData();
+      const member = findTeamMemberByAccount(user, email);
+      if (member) {
+        return member;
+      }
+
+      await new Promise((resolve) => window.setTimeout(resolve, 450));
+    }
+
+    return null;
+  }
+
+  async function createTeamMemberAccount(form, statusElement) {
+    requireAdmin();
+
+    const email = form.elements.email.value.trim();
+    const password = form.elements.account_password.value;
+    const accountRole = backofficeRoles[form.elements.account_role.value]
+      ? form.elements.account_role.value
+      : "member";
+
+    if (!email || !password) {
+      setStatus(statusElement, "Preenche o email e a palavra-passe inicial.", "error");
+      return null;
+    }
+
+    if (password.length < 6) {
+      setStatus(statusElement, "A palavra-passe inicial deve ter pelo menos 6 caracteres.", "error");
+      return null;
+    }
+
+    if (state.userProfiles.some((profile) => profile.email?.toLowerCase() === email.toLowerCase())) {
+      setStatus(statusElement, "Já existe uma conta com esse email.", "error");
+      return null;
+    }
+
+    try {
+      setStatus(statusElement, "A criar conta...");
+      const accountClient = createAccountClient();
+      const { data, error } = await accountClient.auth.signUp({
+        email,
+        password,
+        options: {
+          data: {
+            name: form.elements.name.value.trim(),
+            full_name: form.elements.name.value.trim(),
+            team_role: form.elements.role.value.trim()
+          }
+        }
+      });
+
+      if (error) {
+        throw error;
+      }
+
+      const member = await waitForCreatedTeamMember(data.user, email);
+      if (!member) {
+        throw new Error("A conta foi criada, mas o perfil ainda não apareceu. Confirma se executaste o supabase-setup.sql.");
+      }
+
+      const { error: profileError } = await state.client
+        .from(table("userProfiles"))
+        .update({ role: accountRole, email })
+        .eq("id", data.user.id);
+
+      if (profileError) {
+        throw profileError;
+      }
+
+      const updated = await saveMemberForm({
+        form,
+        statusElement,
+        memberId: member.id,
+        allowAdminFields: true,
+        successMessage: "Conta e perfil criados."
+      });
+
+      if (updated) {
+        await loadUserProfiles();
+        await recordAudit("Conta de BackOffice criada", "team_member", updated.name || email);
+      }
+
+      return updated;
+    } catch (error) {
+      setStatus(statusElement, getErrorMessage(error), "error");
+      return null;
+    }
   }
 
   async function saveMemberForm({ form, statusElement, memberId, allowAdminFields, successMessage }) {
@@ -1485,6 +1672,28 @@
         throw error;
       }
 
+      const linkedProfile = findProfileForMember(existing);
+      if (allowAdminFields && linkedProfile && form.elements.account_role) {
+        const targetRole = backofficeRoles[form.elements.account_role.value]
+          ? form.elements.account_role.value
+          : "member";
+        const adminCount = state.userProfiles.filter((entry) => entry.role === "admin").length;
+
+        if (linkedProfile.id === state.user?.id && linkedProfile.role === "admin" && targetRole !== "admin" && adminCount <= 1) {
+          throw new Error("Mantém pelo menos um administrador ativo antes de remover o teu acesso total.");
+        }
+
+        const { error: profileError } = await state.client
+          .from(table("userProfiles"))
+          .update({ role: targetRole, email: payload.email })
+          .eq("id", linkedProfile.id);
+
+        if (profileError) {
+          throw profileError;
+        }
+      }
+
+      await loadUserProfiles();
       await loadTeam();
       await recordAudit(allowAdminFields ? "Perfil de equipa atualizado" : "Perfil próprio atualizado", "team_member", payload.name || existing.name);
       renderAll();
@@ -1516,11 +1725,54 @@
     }
   }
 
+  async function savePasswordForm(event) {
+    event.preventDefault();
+
+    const form = event.currentTarget;
+    const status = $(selectors.passwordStatus);
+    const newPassword = form.elements.new_password.value;
+    const confirmPassword = form.elements.confirm_password.value;
+
+    if (newPassword.length < 6) {
+      setStatus(status, "A nova palavra-passe deve ter pelo menos 6 caracteres.", "error");
+      return;
+    }
+
+    if (newPassword !== confirmPassword) {
+      setStatus(status, "As palavras-passe não coincidem.", "error");
+      return;
+    }
+
+    try {
+      setStatus(status, "A alterar palavra-passe...");
+      const { error } = await state.client.auth.updateUser({ password: newPassword });
+      if (error) {
+        throw error;
+      }
+
+      form.reset();
+      await recordAudit("Palavra-passe alterada", "user_profile", getCurrentUserDisplayName() || state.user?.email);
+      setStatus(status, "Palavra-passe alterada com sucesso.", "success");
+    } catch (error) {
+      setStatus(status, getErrorMessage(error), "error");
+    }
+  }
+
   async function saveTeamMember(event) {
     event.preventDefault();
 
     const form = event.currentTarget;
     const status = $(selectors.teamStatus);
+
+    if (!form.elements.id.value) {
+      const created = await createTeamMemberAccount(form, status);
+      if (created) {
+        renderAll();
+        openTeamForm(created);
+      }
+      return;
+    }
+
     const refreshed = await saveMemberForm({
       form,
       statusElement: status,
@@ -2354,6 +2606,7 @@
       newTeamMemberButton.addEventListener("click", () => openTeamForm(null));
     }
     $(selectors.profileForm).addEventListener("submit", saveProfileForm);
+    $(selectors.passwordForm)?.addEventListener("submit", savePasswordForm);
     $(selectors.profileForm).elements.photo.addEventListener("change", (event) => {
       syncMemberPhotoPreview(event.currentTarget.form);
     });

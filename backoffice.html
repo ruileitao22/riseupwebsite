@@ -239,6 +239,31 @@
             </div>
             <p class="bo-status" data-profile-form-status></p>
           </form>
+
+          <form class="bo-panel bo-form bo-password-form" data-password-form hidden>
+            <div class="bo-form-head">
+              <div>
+                <h3>Alterar palavra-passe</h3>
+                <p>Atualiza a palavra-passe usada para entrar no BackOffice.</p>
+              </div>
+            </div>
+
+            <label>
+              Nova palavra-passe
+              <input type="password" name="new_password" autocomplete="new-password" minlength="6" required />
+              <span class="bo-field-hint">Usa pelo menos 6 caracteres.</span>
+            </label>
+
+            <label>
+              Confirmar palavra-passe
+              <input type="password" name="confirm_password" autocomplete="new-password" minlength="6" required />
+            </label>
+
+            <div class="bo-actions">
+              <button class="bo-button bo-button-primary" type="submit">Alterar palavra-passe</button>
+            </div>
+            <p class="bo-status" data-password-form-status></p>
+          </form>
         </section>
 
         <section class="bo-section" data-section="team" data-admin-only>
@@ -248,12 +273,19 @@
               <h2>Perfis da equipa</h2>
             </div>
             <p class="bo-section-note" data-admin-only>
-              Os perfis são criados automaticamente quando adicionas contas no Supabase Auth.
+              Cria contas e perfis diretamente aqui, sem abrir o painel do Supabase.
             </p>
           </div>
 
           <div class="bo-workspace">
             <div class="bo-panel">
+              <div class="bo-list-head">
+                <div>
+                  <p class="bo-kicker">Membros</p>
+                  <h3>Lista de perfis</h3>
+                </div>
+                <button class="bo-button bo-button-primary" type="button" data-new-team-member>Novo membro</button>
+              </div>
               <div class="bo-list-tools">
                 <label>
                   <span class="bo-field-label">Pesquisar</span>
@@ -319,6 +351,23 @@
               <label>
                 Email
                 <input type="email" name="email" />
+                <span class="bo-field-hint" data-account-email-hint hidden>Este email vai ser usado para criar a conta de acesso.</span>
+              </label>
+
+              <label data-new-account-field hidden>
+                Palavra-passe inicial
+                <input type="password" name="account_password" autocomplete="new-password" minlength="6" />
+                <span class="bo-field-hint">A pessoa pode alterá-la depois na aba Perfil.</span>
+              </label>
+
+              <label data-admin-only>
+                Acesso BackOffice
+                <select name="account_role">
+                  <option value="member">Membro</option>
+                  <option value="communication_team">Equipa Comunicação</option>
+                  <option value="hr_team">Equipa Recursos Humanos</option>
+                  <option value="admin">Administrador</option>
+                </select>
               </label>
 
               <label>

@@ -1,0 +1,613 @@
+<!DOCTYPE html>
+<html lang="pt-PT">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Funcionalidades do Website Rise Up - 04/05/2026</title>
+    <style>
+      :root {
+        --ink: #16151f;
+        --muted: #5f6070;
+        --line: #dedfea;
+        --soft: #f6f3fb;
+        --brand: #5f2dbf;
+        --accent: #00a78e;
+        --warn: #b46600;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        color: var(--ink);
+        background: #ffffff;
+        font: 12.5pt/1.55 Arial, Helvetica, sans-serif;
+      }
+
+      @page {
+        size: A4;
+        margin: 18mm 16mm;
+      }
+
+      h1,
+      h2,
+      h3 {
+        margin: 0;
+        line-height: 1.18;
+      }
+
+      h1 {
+        font-size: 30pt;
+        max-width: 720px;
+      }
+
+      h2 {
+        margin-top: 28px;
+        padding-top: 16px;
+        border-top: 2px solid var(--line);
+        font-size: 18pt;
+        color: var(--brand);
+        break-after: avoid;
+      }
+
+      h3 {
+        margin-top: 18px;
+        font-size: 13.5pt;
+        break-after: avoid;
+      }
+
+      p {
+        margin: 8px 0 0;
+      }
+
+      ul {
+        margin: 8px 0 0 20px;
+        padding: 0;
+      }
+
+      li {
+        margin: 4px 0;
+      }
+
+      table {
+        width: 100%;
+        margin-top: 10px;
+        border-collapse: collapse;
+        break-inside: avoid;
+      }
+
+      th,
+      td {
+        padding: 8px 9px;
+        border: 1px solid var(--line);
+        vertical-align: top;
+        text-align: left;
+      }
+
+      th {
+        background: var(--soft);
+        color: var(--brand);
+        font-weight: 700;
+      }
+
+      code {
+        padding: 1px 4px;
+        border-radius: 4px;
+        background: #f0f0f6;
+        font-family: Consolas, "Courier New", monospace;
+        font-size: 0.92em;
+      }
+
+      .cover {
+        min-height: 246mm;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        break-after: page;
+      }
+
+      .kicker {
+        color: var(--brand);
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+
+      .subtitle {
+        max-width: 650px;
+        margin-top: 16px;
+        color: var(--muted);
+        font-size: 14pt;
+      }
+
+      .meta-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 10px;
+        margin-top: 28px;
+      }
+
+      .meta-card,
+      .note,
+      .summary-card {
+        padding: 14px;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: #fff;
+      }
+
+      .meta-label {
+        display: block;
+        color: var(--muted);
+        font-size: 9.5pt;
+        text-transform: uppercase;
+      }
+
+      .meta-value {
+        display: block;
+        margin-top: 3px;
+        font-weight: 700;
+      }
+
+      .toc {
+        break-after: page;
+      }
+
+      .toc ol {
+        margin-top: 14px;
+        padding-left: 22px;
+        columns: 2;
+      }
+
+      .toc li {
+        margin: 7px 0;
+      }
+
+      .summary-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 10px;
+        margin-top: 12px;
+      }
+
+      .summary-card strong {
+        color: var(--brand);
+      }
+
+      .badge-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+        margin-top: 10px;
+      }
+
+      .badge {
+        display: inline-block;
+        padding: 4px 8px;
+        border-radius: 999px;
+        background: var(--soft);
+        color: var(--brand);
+        font-size: 9.5pt;
+        font-weight: 700;
+      }
+
+      .callout {
+        margin-top: 12px;
+        padding: 12px 14px;
+        border-left: 4px solid var(--accent);
+        background: #f0fbf8;
+      }
+
+      .warning {
+        border-left-color: var(--warn);
+        background: #fff8ee;
+      }
+
+      .page-break {
+        break-before: page;
+      }
+
+      .small {
+        color: var(--muted);
+        font-size: 10pt;
+      }
+
+      .footer-note {
+        color: var(--muted);
+        font-size: 10pt;
+      }
+    </style>
+  </head>
+  <body>
+    <section class="cover">
+      <div>
+        <p class="kicker">Rise Up - Website e BackOffice</p>
+        <h1>Relatório de funcionalidades do website até 04 de maio de 2026</h1>
+        <p class="subtitle">
+          Documento funcional consolidado da versão publicada do website Rise Up, incluindo área pública,
+          integrações Supabase, conteúdos dinâmicos e BackOffice.
+        </p>
+        <div class="meta-grid">
+          <div class="meta-card">
+            <span class="meta-label">Projeto</span>
+            <span class="meta-value">Rise Up Website</span>
+          </div>
+          <div class="meta-card">
+            <span class="meta-label">Versão analisada</span>
+            <span class="meta-value">Commit 92debc3 - Atualiza nova versao do site</span>
+          </div>
+          <div class="meta-card">
+            <span class="meta-label">Tipo de website</span>
+            <span class="meta-value">Site estático com integração Supabase</span>
+          </div>
+          <div class="meta-card">
+            <span class="meta-label">Data do relatório</span>
+            <span class="meta-value">04/05/2026</span>
+          </div>
+        </div>
+      </div>
+      <p class="footer-note">
+        Fontes usadas: ficheiros locais <code>*.html</code>, <code>script.js</code>, <code>riseup-data.js</code>,
+        <code>backoffice.html</code>, <code>backoffice.js</code>, <code>supabase-config.js</code>,
+        <code>supabase-setup.sql</code> e <code>SUPABASE_SETUP.md</code>.
+      </p>
+    </section>
+
+    <section class="toc">
+      <h2>Índice</h2>
+      <ol>
+        <li>Resumo executivo</li>
+        <li>Arquitetura geral</li>
+        <li>Área pública do website</li>
+        <li>Funcionalidades transversais</li>
+        <li>Formulários e recolha de dados</li>
+        <li>Conteúdos dinâmicos</li>
+        <li>SEO, redes sociais e metadados</li>
+        <li>BackOffice</li>
+        <li>Permissões e perfis</li>
+        <li>Supabase, base de dados e storage</li>
+        <li>Segurança e privacidade</li>
+        <li>Documentos e ficheiros de apoio</li>
+        <li>Notas operacionais</li>
+      </ol>
+    </section>
+
+    <main>
+      <h2>1. Resumo Executivo</h2>
+      <p>
+        A versão atual do website Rise Up combina uma área pública institucional com um BackOffice privado.
+        A área pública apresenta a organização, equipa, projetos, recrutamento, contactos, páginas legais e
+        conteúdo preparado para português e inglês. O BackOffice permite gerir perfis, projetos, recursos humanos
+        e permissões, com autenticação e persistência via Supabase.
+      </p>
+      <div class="summary-grid">
+        <div class="summary-card">
+          <strong>Website público</strong>
+          <p>Inclui páginas institucionais, navegação responsiva, idiomas PT/EN, formulários, projetos e equipa dinâmicos.</p>
+        </div>
+        <div class="summary-card">
+          <strong>BackOffice</strong>
+          <p>Inclui login, painel, perfil, gestão de equipa, gestão de projetos e módulo de Recursos Humanos.</p>
+        </div>
+        <div class="summary-card">
+          <strong>Base de dados</strong>
+          <p>Usa Supabase para submissões, utilizadores, membros, projetos, associações, avaliações de entrevista e auditoria.</p>
+        </div>
+        <div class="summary-card">
+          <strong>Publicação</strong>
+          <p>Site estático, sem build obrigatório, preparado para alojamento simples e carregamento direto dos ficheiros.</p>
+        </div>
+      </div>
+
+      <h2>2. Arquitetura Geral</h2>
+      <table>
+        <tr>
+          <th>Camada</th>
+          <th>Descrição</th>
+        </tr>
+        <tr>
+          <td>Frontend público</td>
+          <td>Páginas HTML estáticas com CSS e JavaScript próprios: <code>index.html</code>, <code>sobre.html</code>, <code>equipa.html</code>, <code>riseuplegends.html</code>, <code>projetos.html</code>, <code>junta-te.html</code>, <code>contactos.html</code>, páginas legais.</td>
+        </tr>
+        <tr>
+          <td>BackOffice</td>
+          <td>Interface privada em <code>backoffice.html</code>, com estilos em <code>backoffice.css</code> e lógica em <code>backoffice.js</code>.</td>
+        </tr>
+        <tr>
+          <td>Dados dinâmicos públicos</td>
+          <td><code>riseup-data.js</code> carrega membros e projetos publicados a partir do Supabase quando configurado.</td>
+        </tr>
+        <tr>
+          <td>Integração Supabase</td>
+          <td><code>supabase-config.js</code> centraliza URL, chave pública, tabelas e buckets de storage.</td>
+        </tr>
+        <tr>
+          <td>Setup de base de dados</td>
+          <td><code>supabase-setup.sql</code> cria tabelas, índices, políticas RLS, funções, triggers e buckets.</td>
+        </tr>
+      </table>
+
+      <h2>3. Área Pública do Website</h2>
+      <h3>Páginas disponíveis</h3>
+      <ul>
+        <li><strong>Início:</strong> apresentação da Rise Up, chamadas para candidatura e projetos, mensagens de cultura, bastidores e recrutamento.</li>
+        <li><strong>Sobre a Rise Up:</strong> identidade, história, missão, visão e valores.</li>
+        <li><strong>Equipa:</strong> apresentação da estrutura e listagem dinâmica de membros ativos quando o Supabase está disponível.</li>
+        <li><strong>Rise Up Legends:</strong> página dedicada a alumni, legado e memória institucional.</li>
+        <li><strong>Projetos:</strong> listagem de projetos, galerias de imagens, categorias, tags, detalhes, datas e links externos.</li>
+        <li><strong>Junta-te a Nós:</strong> página de recrutamento com benefícios e formulário de candidatura.</li>
+        <li><strong>Contactos:</strong> formulário de contacto e links para redes sociais.</li>
+        <li><strong>Política de Proteção de Dados:</strong> princípios de tratamento de dados pessoais.</li>
+        <li><strong>Termos e Condições:</strong> regras de utilização do website.</li>
+        <li><strong>BackOffice:</strong> página privada excluída de indexação por <code>noindex, nofollow</code>.</li>
+      </ul>
+
+      <h3>Navegação pública</h3>
+      <ul>
+        <li>Menu comum em todas as páginas públicas.</li>
+        <li>Estado ativo por página com <code>aria-current</code>.</li>
+        <li>Menu responsivo para ecrãs móveis com botão de abertura/fecho.</li>
+        <li>Fecho do menu por clique exterior, link de navegação, redimensionamento e tecla Escape.</li>
+        <li>Rodapé com links rápidos para páginas principais e legais.</li>
+      </ul>
+
+      <h2>4. Funcionalidades Transversais</h2>
+      <ul>
+        <li><strong>Multilingue PT/EN:</strong> sistema de traduções em JavaScript com seleção de idioma.</li>
+        <li><strong>Persistência de idioma:</strong> idioma guardado em <code>localStorage</code> com chave <code>riseUpLanguage</code>.</li>
+        <li><strong>Atualização do ano:</strong> rodapé atualizado automaticamente através de <code>data-year</code>.</li>
+        <li><strong>Animações de entrada:</strong> elementos <code>.reveal</code> são ativados com <code>IntersectionObserver</code>.</li>
+        <li><strong>Animação no hero:</strong> título da homepage animado por palavra/letra.</li>
+        <li><strong>Carrosséis de projetos:</strong> galerias transformadas em carrossel com botões anterior/seguinte, teclado e gesto de arrasto.</li>
+        <li><strong>Fallbacks visuais:</strong> imagens com <code>loading="lazy"</code> e tratamento de erro em várias galerias.</li>
+        <li><strong>Reparação de texto:</strong> lógica para corrigir alguns casos de codificação/mojibake em conteúdos.</li>
+      </ul>
+
+      <h2>5. Formulários e Recolha de Dados</h2>
+      <h3>Formulário de contacto</h3>
+      <p>Presente em <code>contactos.html</code>, envia dados para a tabela <code>contact_submissions</code>.</p>
+      <ul>
+        <li>Campos: nome, email e mensagem.</li>
+        <li>Validação HTML obrigatória antes do envio.</li>
+        <li>Estados visuais de envio, sucesso e erro.</li>
+        <li>Regista página de origem, URL, idioma e user agent.</li>
+      </ul>
+
+      <h3>Formulário de candidatura</h3>
+      <p>Presente em <code>junta-te.html</code>, envia dados para a tabela <code>join_applications</code>.</p>
+      <ul>
+        <li>Campos: nome, email, curso, ano de estudo, motivação, telefone, LinkedIn opcional e idade.</li>
+        <li>Validação HTML obrigatória.</li>
+        <li>Autocomplete de cursos/áreas com normalização de acentos e pesquisa por título, área e ciclo.</li>
+        <li>Regista página de origem, URL, idioma e user agent.</li>
+      </ul>
+
+      <h3>Integração dos formulários</h3>
+      <ul>
+        <li>Envio por <code>fetch</code> para a API REST do Supabase.</li>
+        <li>Uso da chave pública/anon key configurada em <code>supabase-config.js</code>.</li>
+        <li>Proteção contra configuração incompleta ou placeholders de chave.</li>
+        <li>Mensagens de erro extraídas da resposta Supabase quando disponíveis.</li>
+      </ul>
+
+      <h2>6. Conteúdos Dinâmicos Públicos</h2>
+      <h3>Equipa dinâmica</h3>
+      <ul>
+        <li>Carrega membros ativos de <code>team_members</code>.</li>
+        <li>Apresenta nome, função, descrição, fotografia, LinkedIn, email e data de entrada.</li>
+        <li>Associa projetos publicados aos respetivos membros através de <code>project_members</code>.</li>
+        <li>Tem mensagens de vazio/erro quando os dados não estão disponíveis.</li>
+      </ul>
+
+      <h3>Projetos dinâmicos</h3>
+      <ul>
+        <li>Carrega projetos com estado <code>published</code>.</li>
+        <li>Ordena por <code>sort_order</code> e data do projeto.</li>
+        <li>Renderiza título, categoria, data, descrição, tags, detalhes, resultados, marcas e link externo.</li>
+        <li>Suporta uma ou várias imagens por projeto através de <code>image_url</code> e <code>image_urls</code>.</li>
+        <li>Atualiza metadados SEO de projetos e JSON-LD da coleção.</li>
+      </ul>
+
+      <h2>7. SEO, Redes Sociais e Metadados</h2>
+      <ul>
+        <li>Títulos e descrições específicas por página.</li>
+        <li>Links canónicos para <code>riseupmaia.pt</code>.</li>
+        <li><code>hreflang</code> em português e <code>x-default</code>.</li>
+        <li>Open Graph e Twitter Card para partilha em redes sociais.</li>
+        <li>JSON-LD com <code>Organization</code>, <code>WebSite</code> e <code>WebPage</code>.</li>
+        <li>JSON-LD adicional para projetos dinâmicos, usando <code>CollectionPage</code> e <code>CreativeWork</code>.</li>
+        <li>Ficheiros complementares: <code>robots.txt</code>, <code>sitemap.xml</code>, <code>site.webmanifest</code>, favicons e apple touch icon.</li>
+        <li>Links sociais para Instagram e Facebook.</li>
+      </ul>
+
+      <h2 class="page-break">8. BackOffice</h2>
+      <p>
+        O BackOffice está implementado em <code>backoffice.html</code> e usa autenticação Supabase com sessão persistente,
+        refresh automático de token e deteção de sessão no URL.
+      </p>
+
+      <h3>Autenticação</h3>
+      <ul>
+        <li>Login com email e password via <code>supabase.auth.signInWithPassword</code>.</li>
+        <li>Logout via <code>supabase.auth.signOut</code>.</li>
+        <li>Verificação da sessão ativa ao carregar a página.</li>
+        <li>Mensagem de erro quando Supabase ou biblioteca Supabase não estão configurados/carregados.</li>
+      </ul>
+
+      <h3>Painel</h3>
+      <ul>
+        <li>Vista de administração com resumo operacional.</li>
+        <li>Lista de tarefas/estado através de <code>data-dashboard-tasks</code>.</li>
+        <li>Histórico de atividade/auditoria através de <code>data-activity-list</code>.</li>
+        <li>Visibilidade condicionada a administradores.</li>
+      </ul>
+
+      <h3>Perfil</h3>
+      <ul>
+        <li>Todos os utilizadores autenticados têm acesso à edição do próprio perfil.</li>
+        <li>Campos: nome, função, descrição, fotografia, LinkedIn, email, mês e ano de entrada.</li>
+        <li>Upload de fotografia para storage <code>team-photos</code>.</li>
+        <li>Pré-visualização/limpeza de fotografia durante a edição.</li>
+      </ul>
+
+      <h3>Gestão de equipa</h3>
+      <ul>
+        <li>Acesso de administração.</li>
+        <li>Listagem de membros com pesquisa e filtro de estado.</li>
+        <li>Criação e edição de membros.</li>
+        <li>Campos semelhantes ao perfil, incluindo ativação/desativação pública.</li>
+        <li>Upload de fotografia e ligação ao perfil de utilizador quando aplicável.</li>
+        <li>Possibilidade de apagar perfil por administradores.</li>
+      </ul>
+
+      <h3>Gestão de projetos</h3>
+      <ul>
+        <li>Acesso a administradores e equipa de comunicação.</li>
+        <li>Listagem com pesquisa e filtro por estado.</li>
+        <li>Criação, edição, pré-visualização, arquivo e eliminação definitiva.</li>
+        <li>Campos: título, categoria, data, estado, descrição, imagens, link externo, tags, ordem de apresentação e membros associados.</li>
+        <li>Estados suportados: <code>draft</code>, <code>in_review</code>, <code>published</code> e <code>archived</code>.</li>
+        <li>Projetos publicados aparecem no website público; rascunhos e arquivados ficam apenas no BackOffice.</li>
+        <li>Eliminação definitiva limitada a administradores e bloqueada para projetos publicados sem arquivar primeiro.</li>
+        <li>Upload múltiplo de imagens para <code>project-images</code>.</li>
+        <li>Otimização de imagens no browser antes do upload quando aplicável.</li>
+        <li>Associação de membros aos projetos com pesquisa e seleção.</li>
+      </ul>
+
+      <h3>Recursos Humanos</h3>
+      <ul>
+        <li>Acesso a administradores e equipa de Recursos Humanos.</li>
+        <li>Duas vistas: guião de entrevista e grelha de avaliação.</li>
+        <li>Pesquisa por nome, área ou entrevistadores.</li>
+        <li>Filtro por decisão final.</li>
+        <li>Criação, edição e eliminação de avaliações de entrevista.</li>
+        <li>Campos: candidato, data da entrevista, curso/ano, área potencial, entrevistadores e decisão final.</li>
+        <li>Critérios avaliados de 1 a 5: motivação real, maturidade, comunicação, compromisso/disponibilidade, humildade/aprendizagem e fit cultural.</li>
+        <li>Leitura final: quer mesmo estar na Rise Up, aguenta o nível de exigência e acrescenta à cultura.</li>
+        <li>Campos qualitativos: ponto mais forte, principal risco, dúvidas a validar e comentário do avaliador.</li>
+        <li>Cálculo automático da média da avaliação.</li>
+        <li>Aviso quando a tabela de avaliações ainda não existe no Supabase.</li>
+      </ul>
+
+      <h3>Auditoria</h3>
+      <ul>
+        <li>Registo de ações como criação/atualização/eliminação de projetos, membros e avaliações.</li>
+        <li>Persistência principal em <code>audit_logs</code>.</li>
+        <li>Fallback local em <code>localStorage</code> com chave <code>riseupBackofficeAuditLogs</code> quando a tabela opcional não está disponível.</li>
+        <li>Histórico limitado aos registos mais recentes para manter a interface leve.</li>
+      </ul>
+
+      <h2>9. Permissões e Perfis</h2>
+      <table>
+        <tr>
+          <th>Perfil</th>
+          <th>Acesso funcional</th>
+        </tr>
+        <tr>
+          <td><code>admin</code></td>
+          <td>Acesso total ao painel, perfil, equipa, projetos e Recursos Humanos.</td>
+        </tr>
+        <tr>
+          <td><code>communication_team</code></td>
+          <td>Acesso ao perfil e à gestão de projetos.</td>
+        </tr>
+        <tr>
+          <td><code>hr_team</code></td>
+          <td>Acesso ao perfil e à área de Recursos Humanos.</td>
+        </tr>
+        <tr>
+          <td><code>member</code></td>
+          <td>Acesso apenas ao próprio perfil.</td>
+        </tr>
+      </table>
+      <div class="callout">
+        O primeiro administrador deve ser criado no Supabase Authentication e promovido na tabela
+        <code>user_profiles</code> conforme descrito em <code>SUPABASE_SETUP.md</code>.
+      </div>
+
+      <h2>10. Supabase, Base de Dados e Storage</h2>
+      <h3>Tabelas principais</h3>
+      <div class="badge-row">
+        <span class="badge">contact_submissions</span>
+        <span class="badge">join_applications</span>
+        <span class="badge">user_profiles</span>
+        <span class="badge">team_members</span>
+        <span class="badge">projects</span>
+        <span class="badge">project_members</span>
+        <span class="badge">interview_evaluations</span>
+        <span class="badge">audit_logs</span>
+      </div>
+
+      <h3>Principais estruturas</h3>
+      <ul>
+        <li><code>contact_submissions</code>: contactos recebidos no website.</li>
+        <li><code>join_applications</code>: candidaturas recebidas no website.</li>
+        <li><code>user_profiles</code>: perfis e roles de acesso ao BackOffice.</li>
+        <li><code>team_members</code>: perfis públicos/privados de membros.</li>
+        <li><code>projects</code>: projetos, estados, imagens, tags, detalhes e ordenação.</li>
+        <li><code>project_members</code>: associação muitos-para-muitos entre projetos e membros.</li>
+        <li><code>interview_evaluations</code>: grelhas de avaliação de entrevistas.</li>
+        <li><code>audit_logs</code>: histórico de ações do BackOffice.</li>
+      </ul>
+
+      <h3>Funções, triggers e índices</h3>
+      <ul>
+        <li><code>set_updated_at</code> atualiza timestamps de alteração.</li>
+        <li><code>current_user_role</code>, <code>is_admin</code>, <code>can_manage_projects</code> e <code>can_manage_hr</code> suportam as políticas de acesso.</li>
+        <li>Trigger em novos utilizadores de autenticação cria automaticamente <code>user_profiles</code> e <code>team_members</code>.</li>
+        <li>Backfill para associar contas existentes a perfis antigos quando possível.</li>
+        <li>Índices para estados, ordenação, datas, nomes e logs.</li>
+      </ul>
+
+      <h3>Storage</h3>
+      <ul>
+        <li>Bucket público <code>team-photos</code> para fotografias dos membros.</li>
+        <li>Bucket público <code>project-images</code> para imagens de projetos.</li>
+        <li>Leitura pública de imagens.</li>
+        <li>Upload de fotografias de equipa por utilizadores autenticados.</li>
+        <li>Gestão de imagens de projetos por administradores e equipa de comunicação.</li>
+      </ul>
+
+      <h2>11. Segurança e Privacidade</h2>
+      <ul>
+        <li>O website usa apenas chave pública Supabase; a documentação alerta para não expor a <code>service_role</code>.</li>
+        <li>Row Level Security ativado nas tabelas criadas pelo setup.</li>
+        <li>Inserção pública permitida apenas para contactos e candidaturas.</li>
+        <li>Leitura pública limitada a membros ativos e projetos publicados.</li>
+        <li>Gestão de perfis, projetos, RH e auditoria controlada por role.</li>
+        <li>BackOffice marcado com <code>noindex, nofollow</code>.</li>
+        <li>Páginas de Política de Proteção de Dados e Termos e Condições disponíveis no website.</li>
+      </ul>
+      <div class="callout warning">
+        Recomenda-se adicionar proteção anti-spam aos formulários públicos, por exemplo Cloudflare Turnstile,
+        antes de exposição prolongada com tráfego real.
+      </div>
+
+      <h2>12. Documentos e Ficheiros de Apoio</h2>
+      <ul>
+        <li><code>SUPABASE_SETUP.md</code>: guia de configuração de Supabase, criação de administrador, perfis, estados e storage.</li>
+        <li><code>supabase-setup.sql</code>: script incremental de base de dados, políticas e seed.</li>
+        <li><code>documentos/rh/grelha-avaliacao-entrevista-rise-up.docx</code>: documento de apoio à avaliação de entrevistas.</li>
+        <li><code>documentos/rh/guiao-entrevista-integracao-rise-up.docx</code>: guião de entrevista/integração.</li>
+        <li>Imagens hero desktop/mobile e imagens de projetos incluídas no repositório.</li>
+      </ul>
+
+      <h2>13. Notas Operacionais</h2>
+      <ul>
+        <li>Para ativar o BackOffice em ambiente real, executar novamente <code>supabase-setup.sql</code> no Supabase.</li>
+        <li>Criar o primeiro administrador manualmente em <code>user_profiles</code>.</li>
+        <li>Manter <code>url</code> e <code>publicKey</code> atualizados em <code>supabase-config.js</code>.</li>
+        <li>Publicar projetos com estado <code>published</code> para aparecerem no site público.</li>
+        <li>Usar o campo "Ativo no site público" para esconder membros sem apagar perfis.</li>
+        <li>Arquivar projetos antes de apagar definitivamente.</li>
+        <li>Confirmar políticas RLS após alterações futuras ao modelo de permissões.</li>
+      </ul>
+
+      <p class="small">
+        Fim do relatório. Documento gerado a partir da versão local do projeto em 04/05/2026.
+      </p>
+    </main>
+  </body>
+</html>

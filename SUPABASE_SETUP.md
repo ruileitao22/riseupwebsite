@@ -111,9 +111,30 @@ set role = 'admin',
 
 Depois abre `backoffice.html` e faz login com esse utilizador.
 
+### Criar utilizadores e perfis pelo BackOffice
+
+Os administradores podem criar novos membros diretamente em `backoffice.html`, na aba `Equipa`, usando o botão `Novo membro`.
+
+Ao criar um membro pelo BackOffice, são pedidos:
+
+- nome
+- cargo
+- email
+- palavra-passe inicial
+- nível de acesso ao BackOffice
+- restantes dados públicos do perfil
+
+O BackOffice cria a conta no Supabase Auth, o trigger do SQL cria `user_profiles` e `team_members`, e depois o perfil é completado automaticamente com os dados preenchidos no formulário.
+
+Para isto funcionar, mantém o provider de email/password ativo no Supabase Auth. Se a confirmação de email estiver ativa, o utilizador pode precisar de confirmar o email antes de conseguir entrar.
+
+### Alterar palavra-passe
+
+Cada utilizador autenticado pode alterar a palavra-passe diretamente no BackOffice, na aba `Perfil`, através do bloco `Alterar palavra-passe`.
+
 ### Perfis de equipa
 
-A partir de agora nao precisas de criar membros manualmente no BackOffice.
+A partir de agora tambem nao precisas de criar membros manualmente na base de dados.
 
 Quando crias uma conta em `Authentication > Users`, o trigger do SQL cria automaticamente:
 
