@@ -888,6 +888,15 @@ body.nav-open .menu-toggle span:nth-child(3) {
   color: rgba(255, 255, 255, 0.76);
 }
 
+.home-backstage .section-title {
+  color: #fff;
+  text-shadow: 0 12px 36px rgba(0, 0, 0, 0.32);
+}
+
+.home-backstage .section-copy {
+  color: rgba(255, 255, 255, 0.76);
+}
+
 .split-grid {
   grid-template-columns: repeat(2, minmax(0, 1fr));
   align-items: start;
