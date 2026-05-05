@@ -213,7 +213,7 @@
     "contact.info.title": "We are available to clarify, collaborate and welcome new connections.",
     "contact.info.copy": "Use the channels below to get in touch with the Rise Up team.",
     "contact.email.title": "Institutional email",
-    "contact.email.value": "Usa o formulário de contacto",
+    "contact.email.value": "riseup.ismai@gmail.com",
     "contact.location.title": "Address",
     "contact.location.value": "",
     "contact.social.title": "Social media",
