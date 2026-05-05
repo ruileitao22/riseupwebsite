@@ -61,6 +61,117 @@
     "producao audiovisual": "produção audiovisual"
   };
 
+  const projectEnglishFallbacks = {
+    deeplearn25: {
+      category: "International Conference",
+      description: "Participation in logistics coordination and media production at one of Europe’s leading academic AI conferences.",
+      tags: ["media", "logistics", "artificial intelligence"],
+      details: {
+        meta: "Date: July 2025 | Role: communications team",
+        points: [
+          "Support with participant accreditation and session management.",
+          "Capture and editing of audiovisual content from talks, networking and the hackathon.",
+          "Documentation and promotion of the event’s main moments.",
+          "Production of videos used in a Porto Canal TV segment about DeepLearn."
+        ]
+      }
+    },
+    "hoje-2025": {
+      title: "HOJE - National Exhibition of Young Entrepreneurs 2025",
+      category: "Hackathon",
+      description: "Participation in the organization and management of HOJE 2025, part of the National Exhibition of Young Entrepreneurs by Fundação da Juventude.",
+      tags: ["hackathon", "entrepreneurship", "Fundação da Juventude"],
+      details: {
+        meta: "Date: June 3 and 4, 2025 | Location: Alfândega do Porto",
+        points: [
+          "Planning and logistics for the hackathon.",
+          "Communication management, including invitations to mentors and speakers.",
+          "Continuous follow-up and support for participating teams.",
+          "Coordination of final presentations and material delivery."
+        ],
+        result: "Highlight: presentation of the Move Verde project, winner of two awards."
+      }
+    },
+    "protocolo-aiesec": {
+      title: "Partnership protocol with AIESEC",
+      category: "Strategic Partnership",
+      description: "Establishment of a partnership with AIESEC to promote personal development, youth leadership, networking and international opportunities.\nCo-organization of the event \"Transforma o teu futuro\", held on April 29, 2025 with workshops, talks and interactive activities for students from several fields.",
+      tags: ["partnership", "leadership", "networking"],
+      details: { meta: "Period: March 2025 - present" }
+    },
+    "qual-o-valor-das-coisas": {
+      title: "What is the value of things? - Financial Literacy Workshops",
+      category: "Training",
+      description: "Development and delivery of financial literacy workshops for university students, with practical content and an interactive educational approach.",
+      tags: ["financial literacy", "training", "students"],
+      details: {
+        meta: "Period: September 2024 to January 2025",
+        points: [
+          "Creation of content about budgeting, saving, investing and taxes.",
+          "Team leadership in activity preparation and logistics planning.",
+          "Adaptation of complex topics into clear and applicable formats.",
+          "Promotion of a collaborative and participatory environment among students."
+        ]
+      }
+    },
+    "challanje-2024": {
+      title: "Organization of the ChallANJE 2024 event",
+      category: "Organization",
+      description: "Planning and execution of the event in collaboration between Rise Up and ANJE, focused on operational coordination, multimedia content capture and real-time digital communication.",
+      tags: ["event", "organization", "communication"],
+      details: {
+        meta: "Period: September 2024 to November 2024 | Location: Leixões Cruise Terminal",
+        brands: "Featured companies: Porsche, Super Bock Group, Pedaços de Cacau, RFM and Bosch."
+      }
+    },
+    "hoje-2024": {
+      title: "HOJE - Young Entrepreneurs HackathON 2024",
+      category: "Event",
+      description: "First edition of Fundação da Juventude’s initiative, part of the National Exhibition of Young Entrepreneurs 2024.",
+      tags: ["hackathon", "event", "entrepreneurship"],
+      details: {
+        meta: "Date: May 27, 2024 (9:00-20:00) | Location: Alfândega do Porto Congress Centre",
+        points: [
+          "Connection between young talent and leading brands in Portugal.",
+          "Generation of new perspectives and ideas applicable to real challenges.",
+          "Development of viable solutions in an intensive work context.",
+          "Strengthening brand visibility and valuing young talent."
+        ],
+        brands: "Participating brands: Fruut, Super Bock, Ambar, Capgemini and Artnetic.",
+        result: "Scale: approximately 100 participants."
+      }
+    },
+    "tedx-figueiro-dos-vinhos": {
+      title: "TEDx Figueiró dos Vinhos",
+      category: "Multimedia Production",
+      description: "Responsibility for audiovisual coverage and post-production of the event, focused on editorial quality and compliance with TEDx standards.",
+      tags: ["video", "photography", "post-production"],
+      details: {
+        meta: "Date: May 2024",
+        points: [
+          "Video capture of talks, behind the scenes and audience interaction.",
+          "Photographic coverage for communication and archive.",
+          "Creation of short-form content for social media.",
+          "Editing of full talks for publication on the official TEDx YouTube channel."
+        ]
+      }
+    },
+    "challanje-2023": {
+      category: "Creativity Marathon",
+      tags: ["creativity", "communication", "operations"],
+      details: {
+        points: [
+          "Participation in the 4th edition, with 150 students and 6 companies.",
+          "Development of the event communication plan.",
+          "Operational management with a team of 30 young volunteers.",
+          "Resolution of last-minute challenges and unforeseen issues."
+        ]
+      }
+    }
+  };
+
+  let publicProjects = [];
+
   function getConfig() {
     const source = window.RISEUP_SUPABASE || {};
     const publicKey = source.publicKey || source.anonKey || source.publishableKey || source.key || "";
@@ -269,18 +380,22 @@
     return projectTagReplacements[clean] || normalizeProjectText(clean);
   }
 
-  function normalizeStructuredCopy(value) {
+  function normalizeStructuredCopy(value, keyName = "") {
     if (typeof value === "string") {
       return normalizeProjectText(value);
     }
 
     if (Array.isArray(value)) {
-      return value.map((item) => normalizeStructuredCopy(item));
+      return value.map((item) => normalizeStructuredCopy(item, keyName));
     }
 
     if (value && typeof value === "object") {
+      if (keyName === "translations") {
+        return value;
+      }
+
       return Object.fromEntries(
-        Object.entries(value).map(([key, entryValue]) => [key, normalizeStructuredCopy(entryValue)])
+        Object.entries(value).map(([key, entryValue]) => [key, normalizeStructuredCopy(entryValue, key)])
       );
     }
 
@@ -302,6 +417,47 @@
             .join(", ")
           : project.tags,
       details: normalizeStructuredCopy(project.details)
+    };
+  }
+
+  function getCurrentLanguage() {
+    return document.documentElement.lang === "en" ? "en" : "pt";
+  }
+
+  function getProjectTranslation(project, lang) {
+    const translations = project?.details?.translations;
+    if (!translations || typeof translations !== "object") {
+      return {};
+    }
+
+    const copy = translations[lang];
+    return copy && typeof copy === "object" ? copy : {};
+  }
+
+  function getProjectFallback(project, lang) {
+    return lang === "en" ? projectEnglishFallbacks[project.slug] || {} : {};
+  }
+
+  function localizeProject(project, lang) {
+    if (lang !== "en") {
+      return project;
+    }
+
+    const fallback = getProjectFallback(project, lang);
+    const translation = getProjectTranslation(project, lang);
+    const details = {
+      ...(project.details || {}),
+      ...(fallback.details || {}),
+      ...(translation.details || {})
+    };
+
+    return {
+      ...project,
+      title: translation.title || fallback.title || project.title,
+      category: translation.category || fallback.category || project.category,
+      description: translation.description || fallback.description || project.description,
+      tags: translation.tags || fallback.tags || project.tags,
+      details
     };
   }
 
@@ -494,6 +650,7 @@
   }
 
   function renderProject(project) {
+    const lang = getCurrentLanguage();
     const article = createElement("article", "project-entry surface-card reveal is-visible");
     const gallery = createElement("div", "project-gallery");
     gallery.setAttribute("aria-label", `Galeria ${project.title}`);
@@ -549,7 +706,7 @@
 
     const externalLink = safeUrl(project.external_link);
     if (externalLink) {
-      const link = createElement("a", "button button-secondary public-project-link", "Abrir projeto");
+      const link = createElement("a", "button button-secondary public-project-link", lang === "en" ? "Open project" : "Abrir projeto");
       link.href = externalLink;
       link.target = "_blank";
       link.rel = "noreferrer";
@@ -566,9 +723,19 @@
       return;
     }
 
+    const renderProjects = () => {
+      const localizedProjects = publicProjects.map((project) => localizeProject(project, getCurrentLanguage()));
+      list.replaceChildren(...localizedProjects.map(renderProject));
+      updateProjectsSeo(localizedProjects);
+
+      if (typeof window.initProjectCarousels === "function") {
+        window.initProjectCarousels();
+      }
+    };
+
     try {
       const projects = await supabaseSelect("projects", {
-        select: "id,title,description,image_url,image_urls,project_date,category,tags,external_link,status,details,sort_order",
+        select: "id,slug,title,description,image_url,image_urls,project_date,category,tags,external_link,status,details,sort_order",
         status: "eq.published",
         order: "sort_order.asc,project_date.desc"
       });
@@ -580,12 +747,9 @@
         return;
       }
 
-      list.replaceChildren(...normalizedProjects.map(renderProject));
-      updateProjectsSeo(normalizedProjects);
-
-      if (typeof window.initProjectCarousels === "function") {
-        window.initProjectCarousels();
-      }
+      publicProjects = normalizedProjects;
+      renderProjects();
+      document.addEventListener("riseup:languagechange", renderProjects);
     } catch (error) {
       console.warn("Rise Up projects data fallback:", error);
     }

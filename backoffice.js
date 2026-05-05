@@ -355,22 +355,69 @@
     return projectTagReplacements[clean] || normalizeProjectText(clean);
   }
 
-  function normalizeStructuredCopy(value) {
+  function normalizeStructuredCopy(value, keyName = "") {
     if (typeof value === "string") {
       return normalizeProjectText(value);
     }
 
     if (Array.isArray(value)) {
-      return value.map((item) => normalizeStructuredCopy(item));
+      return value.map((item) => normalizeStructuredCopy(item, keyName));
     }
 
     if (value && typeof value === "object") {
+      if (keyName === "translations") {
+        return value;
+      }
+
       return Object.fromEntries(
-        Object.entries(value).map(([key, entryValue]) => [key, normalizeStructuredCopy(entryValue)])
+        Object.entries(value).map(([key, entryValue]) => [key, normalizeStructuredCopy(entryValue, key)])
       );
     }
 
     return value;
+  }
+
+  function getProjectTranslation(project, lang) {
+    const translations = project?.details?.translations;
+    if (!translations || typeof translations !== "object") {
+      return {};
+    }
+
+    const copy = translations[lang];
+    return copy && typeof copy === "object" ? copy : {};
+  }
+
+  function buildProjectDetails(existingDetails, englishCopy) {
+    const details = existingDetails && typeof existingDetails === "object" && !Array.isArray(existingDetails)
+      ? { ...existingDetails }
+      : {};
+    const translations = details.translations && typeof details.translations === "object" && !Array.isArray(details.translations)
+      ? { ...details.translations }
+      : {};
+
+    const cleanEnglishCopy = Object.fromEntries(
+      Object.entries(englishCopy).filter(([, value]) => {
+        if (Array.isArray(value)) {
+          return value.length > 0;
+        }
+
+        return Boolean(value);
+      })
+    );
+
+    if (Object.keys(cleanEnglishCopy).length) {
+      translations.en = cleanEnglishCopy;
+    } else {
+      delete translations.en;
+    }
+
+    if (Object.keys(translations).length) {
+      details.translations = translations;
+    } else {
+      delete details.translations;
+    }
+
+    return details;
   }
 
   function normalizeProjectRecord(project) {
@@ -2249,6 +2296,11 @@
     setField(form, "project_date", project?.project_date || "");
     setField(form, "status", project?.status || "draft");
     setField(form, "description", project?.description || "");
+    const englishCopy = getProjectTranslation(project, "en");
+    setField(form, "title_en", englishCopy.title || "");
+    setField(form, "category_en", englishCopy.category || "");
+    setField(form, "description_en", englishCopy.description || "");
+    setField(form, "tags_en", Array.isArray(englishCopy.tags) ? englishCopy.tags.join(", ") : "");
     setField(form, "external_link", project?.external_link || "");
     setField(form, "tags", Array.isArray(project?.tags) ? project.tags.join(", ") : "");
     form.elements.sort_order.min = "1";
@@ -2302,7 +2354,12 @@
       external_link: form.elements.external_link.value.trim() || null,
       status: nextStatus,
       sort_order: normalizedSortOrder,
-      details: existing?.details || {},
+      details: buildProjectDetails(existing?.details || {}, {
+        title: form.elements.title_en.value.trim(),
+        category: form.elements.category_en.value.trim(),
+        description: form.elements.description_en.value.trim(),
+        tags: splitTags(form.elements.tags_en.value)
+      }),
       slug: existing?.slug || slugify(title)
     };
 

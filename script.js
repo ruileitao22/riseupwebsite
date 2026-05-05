@@ -152,8 +152,8 @@
     "legends.card3.copy": "Value journeys that continue to inspire new generations to grow within Rise Up.",
 
     "projects.eyebrow": "Projects",
-    "projects.title": "Projects, initiatives and experiences that reflect Rise Up’s work.",
-    "projects.copy": "This area presents Rise Up’s main fields of action and the kinds of experiences that help connect creativity, execution and impact in practical and professional contexts.",
+    "projects.title": "Events and initiatives with real impact in Rise Up’s journey.",
+    "projects.copy": "This page brings together the main projects Rise Up has been involved in, from hackathons and academic events to financial literacy initiatives, multimedia production and strategic partnerships.",
     "projects.panel.title": "Areas of action",
     "projects.panel.copy": "Rise Up develops initiatives focused on communication, strategy, activation and practical experience, reinforcing skills and institutional presence.",
     "projects.card.status": "Area of action",
