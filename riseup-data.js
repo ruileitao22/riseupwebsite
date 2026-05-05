@@ -335,17 +335,21 @@
       return "";
     }
 
+    const lang = document.documentElement.lang === "en" ? "en" : "pt";
+    const prefix = lang === "en" ? "At Rise Up since" : "Na Rise Up desde";
+    const locale = lang === "en" ? "en-GB" : "pt-PT";
+
     if (month && year) {
       const date = new Date(Number(year), Number(month) - 1, 1);
       if (!Number.isNaN(date.getTime())) {
-        return `Na Rise Up desde ${new Intl.DateTimeFormat(document.documentElement.lang || "pt-PT", {
+        return `${prefix} ${new Intl.DateTimeFormat(locale, {
           month: "long",
           year: "numeric"
         }).format(date)}`;
       }
     }
 
-    return `Na Rise Up desde ${year || month}`;
+    return `${prefix} ${year || month}`;
   }
 
   function parseDetails(details) {
@@ -604,7 +608,11 @@
         appendText(body, "h3", "member-name", member.name);
         appendText(body, "span", "member-role", member.role);
         appendText(body, "p", "member-copy", member.description);
-        appendText(body, "p", "public-member-joined", formatJoined(member.joined_month, member.joined_year));
+        const joined = appendText(body, "p", "public-member-joined", formatJoined(member.joined_month, member.joined_year));
+        if (joined) {
+          joined.dataset.joinedMonth = member.joined_month || "";
+          joined.dataset.joinedYear = member.joined_year || "";
+        }
 
         const linksWrap = createElement("div", "public-member-links");
         const linkedinUrl = safeUrl(member.linkedin_url);
@@ -631,7 +639,7 @@
         const memberProjects = projectsByMember.get(member.id) || [];
         if (memberProjects.length) {
           const projectsBlock = createElement("div", "public-member-projects");
-          appendText(projectsBlock, "strong", null, "Projetos");
+          appendText(projectsBlock, "strong", null, document.documentElement.lang === "en" ? "Projects" : "Projetos");
           const projectList = createElement("ul");
           memberProjects.forEach((project) => {
             appendText(projectList, "li", null, project.title);
@@ -642,6 +650,16 @@
 
         card.append(photoWrap, body);
         list.appendChild(card);
+      });
+
+      document.addEventListener("riseup:languagechange", () => {
+        list.querySelectorAll(".public-member-joined").forEach((element) => {
+          element.textContent = formatJoined(element.dataset.joinedMonth, element.dataset.joinedYear);
+        });
+
+        list.querySelectorAll(".public-member-projects strong").forEach((element) => {
+          element.textContent = document.documentElement.lang === "en" ? "Projects" : "Projetos";
+        });
       });
     } catch (error) {
       console.warn("Rise Up team data fallback:", error);
