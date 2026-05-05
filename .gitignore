@@ -3,3 +3,13 @@ Thumbs.db
 Desktop.ini
 
 .vercel
+
+# Local/internal material. The repository is public.
+backoffice.html
+backoffice.css
+backoffice.js
+SUPABASE_SETUP.md
+supabase-setup.sql
+documentos/
+img/_arquivo/
+img/riseup legends/
