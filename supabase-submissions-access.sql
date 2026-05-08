@@ -1,16 +1,4 @@
-create or replace function public.can_manage_contacts()
-returns boolean
-language sql
-stable
-security definer
-set search_path = public
-as $$
-  select public.current_user_role() in ('admin', 'communication_team');
-$$;
-
 grant usage on schema public to anon, authenticated;
-grant execute on function public.can_manage_hr() to authenticated;
-grant execute on function public.can_manage_contacts() to authenticated;
 
 alter table public.join_applications enable row level security;
 alter table public.contact_submissions enable row level security;
