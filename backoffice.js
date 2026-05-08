@@ -1749,6 +1749,14 @@
       const actions = createElement("div", "bo-row-actions");
       actions.appendChild(createElement("span", "bo-pill", formatSubmissionStatus(record.status)));
       actions.appendChild(createElement("span", "bo-pill", (record.language || "PT").toUpperCase()));
+
+      if (canManageHr()) {
+        const remove = createElement("button", "bo-button bo-button-danger", "Apagar");
+        remove.type = "button";
+        remove.addEventListener("click", () => deleteJoinApplication(record));
+        actions.appendChild(remove);
+      }
+
       row.append(body, actions);
       list.appendChild(row);
     });
@@ -2943,6 +2951,33 @@
       setGlobalStatus("Avaliação apagada.", "success");
     } catch (error) {
       setStatus(status, getErrorMessage(error), "error");
+    }
+  }
+
+  async function deleteJoinApplication(record) {
+    requireHrAccess();
+
+    if (!record?.id || !window.confirm(`Apagar a candidatura de ${record.name || "esta pessoa"}? Esta a\u00e7\u00e3o remove o registo do Supabase.`)) {
+      return;
+    }
+
+    try {
+      setGlobalStatus("A apagar candidatura...");
+      const { error } = await state.client
+        .from(table("joinApplications"))
+        .delete()
+        .eq("id", record.id);
+
+      if (error) {
+        throw error;
+      }
+
+      await loadJoinApplications();
+      await recordAudit("Candidatura apagada", "join_application", record.name || record.email || String(record.id));
+      renderApplicationList();
+      setGlobalStatus("Candidatura apagada.", "success");
+    } catch (error) {
+      setGlobalStatus(getErrorMessage(error), "error");
     }
   }
 
