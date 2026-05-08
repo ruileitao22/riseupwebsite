@@ -126,7 +126,7 @@
     },
     hr_team: {
       label: "Equipa Recursos Humanos",
-      summary: "Acesso ao Perfil e \u00e0 p\u00e1gina Recursos Humanos."
+      summary: "Acesso ao Perfil, Equipa e Recursos Humanos."
     },
     member: {
       label: "Membro",
@@ -249,6 +249,10 @@
     return ["admin", "hr_team"].includes(getCurrentRole());
   }
 
+  function canManageTeam() {
+    return ["admin", "hr_team"].includes(getCurrentRole());
+  }
+
   function isAdmin() {
     return getCurrentRole() === "admin";
   }
@@ -272,8 +276,12 @@
   }
 
   function canAccessView(view) {
-    if (view === "dashboard" || view === "team") {
+    if (view === "dashboard") {
       return isAdmin();
+    }
+
+    if (view === "team") {
+      return canManageTeam();
     }
 
     if (view === "projects") {
@@ -929,7 +937,7 @@
       .select("*")
       .order("name", { ascending: true });
 
-    if (!isAdmin() && !canManageProjects()) {
+    if (!canManageTeam() && !canManageProjects()) {
       query = query.eq("user_id", state.user.id);
     }
 
@@ -1401,7 +1409,7 @@
     });
 
     if (!state.team.length) {
-      const message = isAdmin()
+      const message = canManageTeam()
         ? "Ainda não existem perfis. Usa o botão Novo membro para criar a primeira conta."
         : "O teu perfil ainda não foi gerado. Confirma se o SQL de setup foi executado depois de criares a conta.";
       list.appendChild(createElement("p", "bo-empty", message));
