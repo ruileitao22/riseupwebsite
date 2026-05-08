@@ -45,6 +45,8 @@
     applicationStatusFilter: "all",
     contactSearch: "",
     contactStatusFilter: "all",
+    applicationAccessMissing: false,
+    contactAccessMissing: false,
     projectPreviewUrls: [],
     dragProjectImageId: "",
     activeView: "dashboard",
@@ -711,6 +713,13 @@
     );
   }
 
+  function isPermissionDeniedError(error) {
+    return Boolean(
+      error?.code === "42501"
+      || /permission denied/i.test(error?.message || "")
+    );
+  }
+
   function createElement(tag, className, text) {
     const element = document.createElement(tag);
     if (className) {
@@ -1058,6 +1067,8 @@
   }
 
   async function loadJoinApplications() {
+    state.applicationAccessMissing = false;
+
     if (!canManageHr()) {
       state.joinApplications = [];
       return;
@@ -1068,6 +1079,12 @@
       .select("id,name,email,phone_contact,course,study_year,motivation,linkedin,age,source_page,page_url,language,status,submitted_at")
       .order("submitted_at", { ascending: false });
 
+    if (error && (isMissingRelationError(error) || isPermissionDeniedError(error))) {
+      state.applicationAccessMissing = true;
+      state.joinApplications = [];
+      return;
+    }
+
     if (error) {
       throw error;
     }
@@ -1076,6 +1093,8 @@
   }
 
   async function loadContactSubmissions() {
+    state.contactAccessMissing = false;
+
     if (!canManageContacts()) {
       state.contactSubmissions = [];
       return;
@@ -1085,6 +1104,12 @@
       .from(table("contactSubmissions"))
       .select("id,name,email,message,source_page,page_url,language,status,submitted_at")
       .order("submitted_at", { ascending: false });
+
+    if (error && (isMissingRelationError(error) || isPermissionDeniedError(error))) {
+      state.contactAccessMissing = true;
+      state.contactSubmissions = [];
+      return;
+    }
 
     if (error) {
       throw error;
@@ -1681,6 +1706,11 @@
     list.replaceChildren();
     const visibleApplications = getFilteredApplications();
 
+    if (state.applicationAccessMissing) {
+      list.appendChild(createElement("p", "bo-empty", "As candidaturas ainda n\u00e3o est\u00e3o acess\u00edveis. Executa o ficheiro supabase-submissions-access.sql no Supabase para ativar esta leitura."));
+      return;
+    }
+
     if (!state.joinApplications.length) {
       list.appendChild(createElement("p", "bo-empty", "Ainda n\u00e3o existem candidaturas submetidas pelo website."));
       return;
@@ -1748,6 +1778,11 @@
 
     list.replaceChildren();
     const visibleSubmissions = getFilteredContactSubmissions();
+
+    if (state.contactAccessMissing) {
+      list.appendChild(createElement("p", "bo-empty", "Os pedidos de contacto ainda n\u00e3o est\u00e3o acess\u00edveis. Executa o ficheiro supabase-submissions-access.sql no Supabase para ativar esta leitura."));
+      return;
+    }
 
     if (!state.contactSubmissions.length) {
       list.appendChild(createElement("p", "bo-empty", "Ainda n\u00e3o existem pedidos de contacto submetidos pelo website."));
@@ -3005,6 +3040,8 @@
       state.applicationStatusFilter = "all";
       state.contactSearch = "";
       state.contactStatusFilter = "all";
+      state.applicationAccessMissing = false;
+      state.contactAccessMissing = false;
       state.hrSetupMissing = false;
       state.activeHrView = "guide";
       showAuthView();
