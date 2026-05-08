@@ -51,6 +51,7 @@
             <div class="bo-nav-main">
               <button type="button" class="is-active" data-view-button="dashboard" data-admin-only aria-pressed="true">Painel</button>
               <button type="button" data-view-button="projects" aria-pressed="false">Projetos</button>
+              <button type="button" data-view-button="contacts" aria-pressed="false">Contactos</button>
               <button type="button" data-view-button="team" aria-pressed="false">Equipa</button>
               <button type="button" data-view-button="hr" aria-pressed="false">Recursos Humanos</button>
             </div>
@@ -555,6 +556,37 @@
           </div>
         </section>
 
+        <section class="bo-section" data-section="contacts">
+          <div class="bo-section-head">
+            <div>
+              <p class="bo-kicker">Comunica&ccedil;&atilde;o</p>
+              <h2>Pedidos de contacto</h2>
+            </div>
+            <p class="bo-section-note">
+              Consulta os pedidos submetidos atrav&eacute;s do formul&aacute;rio do website.
+            </p>
+          </div>
+
+          <article class="bo-panel">
+            <div class="bo-list-tools">
+              <label>
+                <span class="bo-field-label">Pesquisar</span>
+                <input type="search" placeholder="Nome, email, mensagem ou origem" data-contact-submission-search />
+              </label>
+              <label>
+                <span class="bo-field-label">Estado</span>
+                <select data-contact-submission-status-filter>
+                  <option value="all">Todos</option>
+                  <option value="new">Novos</option>
+                  <option value="read">Lidos</option>
+                  <option value="archived">Arquivados</option>
+                </select>
+              </label>
+            </div>
+            <div class="bo-list" data-contact-submission-list></div>
+          </article>
+        </section>
+
         <section class="bo-section" data-section="hr">
           <div class="bo-section-head">
             <div>
@@ -589,6 +621,7 @@
             </div>
             <div class="bo-segmented" role="tablist" aria-label="Vistas de Recursos Humanos">
               <button type="button" class="is-active" data-hr-view-button="guide">Gui&atilde;o da entrevista</button>
+              <button type="button" data-hr-view-button="applications">Candidaturas</button>
               <button type="button" data-hr-view-button="evaluation">Grelha de avalia&ccedil;&atilde;o</button>
             </div>
           </article>
@@ -701,6 +734,34 @@
                 </ul>
               </article>
             </div>
+          </div>
+
+          <div class="bo-hr-view" data-hr-view="applications">
+            <article class="bo-panel">
+              <div class="bo-list-head">
+                <div>
+                  <p class="bo-kicker">Website</p>
+                  <h3>Candidaturas submetidas</h3>
+                  <p>Consulta os dados enviados pelo formul&aacute;rio Junta-te a N&oacute;s antes de preparar entrevistas.</p>
+                </div>
+              </div>
+              <div class="bo-list-tools">
+                <label>
+                  <span class="bo-field-label">Pesquisar</span>
+                  <input type="search" placeholder="Nome, email, curso ou motiva&ccedil;&atilde;o" data-application-search />
+                </label>
+                <label>
+                  <span class="bo-field-label">Estado</span>
+                  <select data-application-status-filter>
+                    <option value="all">Todas</option>
+                    <option value="new">Novas</option>
+                    <option value="read">Lidas</option>
+                    <option value="archived">Arquivadas</option>
+                  </select>
+                </label>
+              </div>
+              <div class="bo-list" data-application-list></div>
+            </article>
           </div>
 
           <div class="bo-hr-view" data-hr-view="evaluation">

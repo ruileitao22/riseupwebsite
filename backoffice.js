@@ -5,6 +5,8 @@
     projects: "projects",
     projectMembers: "project_members",
     interviewEvaluations: "interview_evaluations",
+    joinApplications: "join_applications",
+    contactSubmissions: "contact_submissions",
     auditLogs: "audit_logs"
   };
 
@@ -26,6 +28,8 @@
     projects: [],
     projectMembers: [],
     interviewEvaluations: [],
+    joinApplications: [],
+    contactSubmissions: [],
     auditLogs: [],
     projectImageItems: [],
     projectMemberSelection: new Set(),
@@ -37,6 +41,10 @@
     teamStatusFilter: "all",
     hrSearch: "",
     hrDecisionFilter: "all",
+    applicationSearch: "",
+    applicationStatusFilter: "all",
+    contactSearch: "",
+    contactStatusFilter: "all",
     projectPreviewUrls: [],
     dragProjectImageId: "",
     activeView: "dashboard",
@@ -122,7 +130,7 @@
     },
     communication_team: {
       label: "Equipa Comunica\u00e7\u00e3o",
-      summary: "Acesso ao Perfil e Projetos."
+      summary: "Acesso ao Perfil, Projetos e Pedidos de Contacto."
     },
     hr_team: {
       label: "Equipa Recursos Humanos",
@@ -172,6 +180,12 @@
     hrEvaluationList: "[data-hr-evaluation-list]",
     hrSearch: "[data-hr-search]",
     hrDecisionFilter: "[data-hr-decision-filter]",
+    applicationList: "[data-application-list]",
+    applicationSearch: "[data-application-search]",
+    applicationStatusFilter: "[data-application-status-filter]",
+    contactSubmissionList: "[data-contact-submission-list]",
+    contactSubmissionSearch: "[data-contact-submission-search]",
+    contactSubmissionStatusFilter: "[data-contact-submission-status-filter]",
     hrForm: "[data-hr-form]",
     hrFormTitle: "[data-hr-form-title]",
     hrFormStatus: "[data-hr-form-status]",
@@ -241,6 +255,10 @@
     return ["admin", "communication_team"].includes(getCurrentRole());
   }
 
+  function canManageContacts() {
+    return ["admin", "communication_team"].includes(getCurrentRole());
+  }
+
   function canDeleteProjects() {
     return isAdmin();
   }
@@ -286,6 +304,10 @@
 
     if (view === "projects") {
       return canManageProjects();
+    }
+
+    if (view === "contacts") {
+      return canManageContacts();
     }
 
     if (view === "hr") {
@@ -587,6 +609,35 @@
       month: "long",
       year: "numeric"
     }).format(date);
+  }
+
+  function formatDateTime(value) {
+    if (!value) {
+      return "Sem data";
+    }
+
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) {
+      return value;
+    }
+
+    return new Intl.DateTimeFormat("pt-PT", {
+      day: "2-digit",
+      month: "long",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit"
+    }).format(date);
+  }
+
+  function formatSubmissionStatus(value) {
+    const labels = {
+      new: "Novo",
+      read: "Lido",
+      archived: "Arquivado"
+    };
+
+    return labels[value] || value || "Sem estado";
   }
 
   function formatDecisionLabel(value) {
@@ -1006,6 +1057,42 @@
     state.interviewEvaluations = (data || []).map((record) => normalizeEvaluationRecord(record));
   }
 
+  async function loadJoinApplications() {
+    if (!canManageHr()) {
+      state.joinApplications = [];
+      return;
+    }
+
+    const { data, error } = await state.client
+      .from(table("joinApplications"))
+      .select("id,name,email,phone_contact,course,study_year,motivation,linkedin,age,source_page,page_url,language,status,submitted_at")
+      .order("submitted_at", { ascending: false });
+
+    if (error) {
+      throw error;
+    }
+
+    state.joinApplications = data || [];
+  }
+
+  async function loadContactSubmissions() {
+    if (!canManageContacts()) {
+      state.contactSubmissions = [];
+      return;
+    }
+
+    const { data, error } = await state.client
+      .from(table("contactSubmissions"))
+      .select("id,name,email,message,source_page,page_url,language,status,submitted_at")
+      .order("submitted_at", { ascending: false });
+
+    if (error) {
+      throw error;
+    }
+
+    state.contactSubmissions = data || [];
+  }
+
   async function loadAuditLogs() {
     state.auditLogs = getLocalAuditLogs();
 
@@ -1040,6 +1127,8 @@
     await loadTeam();
     await loadProjects();
     await loadInterviewEvaluations();
+    await loadJoinApplications();
+    await loadContactSubmissions();
     await loadAuditLogs();
     showAppView();
     renderAll();
@@ -1059,6 +1148,8 @@
     renderProjectList();
     renderProjectMemberOptions();
     renderInterviewEvaluationList();
+    renderApplicationList();
+    renderContactSubmissionList();
     renderHrSection();
   }
 
@@ -1559,6 +1650,138 @@
       edit.addEventListener("click", () => openInterviewEvaluationForm(record));
       actions.appendChild(edit);
 
+      row.append(body, actions);
+      list.appendChild(row);
+    });
+  }
+
+  function getFilteredApplications() {
+    const query = normalizeSearchValue(state.applicationSearch);
+    return state.joinApplications.filter((record) => {
+      const searchable = normalizeSearchValue([
+        record.name,
+        record.email,
+        record.phone_contact,
+        record.course,
+        record.study_year,
+        record.motivation
+      ].filter(Boolean).join(" "));
+      const matchesSearch = !query || searchable.includes(query);
+      const matchesStatus = state.applicationStatusFilter === "all" || record.status === state.applicationStatusFilter;
+      return matchesSearch && matchesStatus;
+    });
+  }
+
+  function renderApplicationList() {
+    const list = $(selectors.applicationList);
+    if (!list) {
+      return;
+    }
+
+    list.replaceChildren();
+    const visibleApplications = getFilteredApplications();
+
+    if (!state.joinApplications.length) {
+      list.appendChild(createElement("p", "bo-empty", "Ainda n\u00e3o existem candidaturas submetidas pelo website."));
+      return;
+    }
+
+    if (!visibleApplications.length) {
+      list.appendChild(createElement("p", "bo-empty", "Nenhuma candidatura corresponde aos filtros ativos."));
+      return;
+    }
+
+    visibleApplications.forEach((record) => {
+      const row = createElement("article", "bo-list-row bo-submission-row");
+      const body = createElement("div");
+      body.appendChild(createElement("h3", null, record.name || "Sem nome"));
+      body.appendChild(createElement("p", null, `${record.email || "Sem email"} - ${record.phone_contact || "Sem contacto"} - ${formatDateTime(record.submitted_at)}`));
+
+      const courseParts = [record.course, record.study_year ? `${record.study_year}.\u00ba ano` : "", record.age ? `${record.age} anos` : ""].filter(Boolean);
+      if (courseParts.length) {
+        body.appendChild(createElement("p", null, courseParts.join(" - ")));
+      }
+
+      if (record.linkedin) {
+        const linkLine = createElement("p");
+        const link = createElement("a", null, "LinkedIn");
+        link.href = record.linkedin;
+        link.target = "_blank";
+        link.rel = "noopener";
+        linkLine.append("Perfil: ", link);
+        body.appendChild(linkLine);
+      }
+
+      if (record.motivation) {
+        body.appendChild(createElement("p", null, record.motivation));
+      }
+
+      const actions = createElement("div", "bo-row-actions");
+      actions.appendChild(createElement("span", "bo-pill", formatSubmissionStatus(record.status)));
+      actions.appendChild(createElement("span", "bo-pill", (record.language || "PT").toUpperCase()));
+      row.append(body, actions);
+      list.appendChild(row);
+    });
+  }
+
+  function getFilteredContactSubmissions() {
+    const query = normalizeSearchValue(state.contactSearch);
+    return state.contactSubmissions.filter((record) => {
+      const searchable = normalizeSearchValue([
+        record.name,
+        record.email,
+        record.message,
+        record.source_page,
+        record.page_url
+      ].filter(Boolean).join(" "));
+      const matchesSearch = !query || searchable.includes(query);
+      const matchesStatus = state.contactStatusFilter === "all" || record.status === state.contactStatusFilter;
+      return matchesSearch && matchesStatus;
+    });
+  }
+
+  function renderContactSubmissionList() {
+    const list = $(selectors.contactSubmissionList);
+    if (!list) {
+      return;
+    }
+
+    list.replaceChildren();
+    const visibleSubmissions = getFilteredContactSubmissions();
+
+    if (!state.contactSubmissions.length) {
+      list.appendChild(createElement("p", "bo-empty", "Ainda n\u00e3o existem pedidos de contacto submetidos pelo website."));
+      return;
+    }
+
+    if (!visibleSubmissions.length) {
+      list.appendChild(createElement("p", "bo-empty", "Nenhum pedido corresponde aos filtros ativos."));
+      return;
+    }
+
+    visibleSubmissions.forEach((record) => {
+      const row = createElement("article", "bo-list-row bo-submission-row");
+      const body = createElement("div");
+      body.appendChild(createElement("h3", null, record.name || "Sem nome"));
+      body.appendChild(createElement("p", null, `${record.email || "Sem email"} - ${formatDateTime(record.submitted_at)}`));
+
+      if (record.message) {
+        body.appendChild(createElement("p", null, record.message));
+      }
+
+      if (record.page_url) {
+        const pageLine = createElement("p");
+        const link = createElement("a", null, record.source_page || "P\u00e1gina de origem");
+        link.href = record.page_url;
+        link.target = "_blank";
+        link.rel = "noopener";
+        pageLine.append("Origem: ", link);
+        body.appendChild(pageLine);
+      }
+
+      const actions = createElement("div", "bo-row-actions");
+      actions.appendChild(createElement("span", "bo-pill", formatSubmissionStatus(record.status)));
+      actions.appendChild(createElement("span", "bo-pill", (record.language || "PT").toUpperCase()));
       row.append(body, actions);
       list.appendChild(row);
     });
@@ -2689,7 +2912,7 @@
   }
 
   function showHrView(view) {
-    state.activeHrView = view === "evaluation" ? "evaluation" : "guide";
+    state.activeHrView = ["guide", "evaluation", "applications"].includes(view) ? view : "guide";
 
     $all("[data-hr-view]").forEach((panel) => {
       panel.classList.toggle("is-active", panel.dataset.hrView === state.activeHrView);
@@ -2721,6 +2944,7 @@
       profile: "Perfil",
       team: "Equipa",
       projects: "Projetos",
+      contacts: "Contactos",
       hr: "Recursos Humanos"
     };
     $(selectors.pageTitle).textContent = titles[view] || "BackOffice";
@@ -2766,6 +2990,8 @@
       state.projects = [];
       state.projectMembers = [];
       state.interviewEvaluations = [];
+      state.joinApplications = [];
+      state.contactSubmissions = [];
       state.projectMemberSelection = new Set();
       state.projectMemberSearch = "";
       state.projectMemberSearchOpen = false;
@@ -2775,6 +3001,10 @@
       state.teamStatusFilter = "all";
       state.hrSearch = "";
       state.hrDecisionFilter = "all";
+      state.applicationSearch = "";
+      state.applicationStatusFilter = "all";
+      state.contactSearch = "";
+      state.contactStatusFilter = "all";
       state.hrSetupMissing = false;
       state.activeHrView = "guide";
       showAuthView();
@@ -2870,6 +3100,22 @@
     $(selectors.hrDecisionFilter)?.addEventListener("change", (event) => {
       state.hrDecisionFilter = event.currentTarget.value;
       renderInterviewEvaluationList();
+    });
+    $(selectors.applicationSearch)?.addEventListener("input", (event) => {
+      state.applicationSearch = event.currentTarget.value;
+      renderApplicationList();
+    });
+    $(selectors.applicationStatusFilter)?.addEventListener("change", (event) => {
+      state.applicationStatusFilter = event.currentTarget.value;
+      renderApplicationList();
+    });
+    $(selectors.contactSubmissionSearch)?.addEventListener("input", (event) => {
+      state.contactSearch = event.currentTarget.value;
+      renderContactSubmissionList();
+    });
+    $(selectors.contactSubmissionStatusFilter)?.addEventListener("change", (event) => {
+      state.contactStatusFilter = event.currentTarget.value;
+      renderContactSubmissionList();
     });
   }
 
