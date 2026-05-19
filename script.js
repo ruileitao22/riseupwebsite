@@ -300,6 +300,8 @@ const uiMessages = {
     contactSuccess: "Mensagem enviada com sucesso. Vamos responder assim que possível.",
     submissionError: "Não foi possível enviar o formulário neste momento. Tenta novamente.",
     supabaseConfigError: "Falta configurar o Supabase para receber os formulários deste site.",
+    blockedSubmission: "Não foi possível validar este envio. Atualiza a página e tenta novamente.",
+    invalidUrl: "Confirma que o link começa por https:// e é válido.",
     sending: "A enviar...",
     courseNoResults: "Não encontrámos nenhum curso com essa pesquisa.",
     menuOpen: "Abrir menu",
@@ -312,6 +314,8 @@ const uiMessages = {
     contactSuccess: "Message sent successfully. We will reply as soon as possible.",
     submissionError: "We could not send the form right now. Please try again.",
     supabaseConfigError: "Supabase is not configured yet for this website forms.",
+    blockedSubmission: "We could not validate this submission. Refresh the page and try again.",
+    invalidUrl: "Check that the link starts with https:// and is valid.",
     sending: "Sending...",
     courseNoResults: "We could not find any degree matching that search.",
     menuOpen: "Open menu",
@@ -320,6 +324,38 @@ const uiMessages = {
 };
 
 let currentLanguage = "pt";
+
+const submissionSecurity = {
+  contact: {
+    table: "contact_submissions",
+    minElapsedMs: 800,
+    fields: {
+      name: 120,
+      email: 254,
+      message: 2000
+    }
+  },
+  application: {
+    table: "join_applications",
+    minElapsedMs: 800,
+    fields: {
+      name: 120,
+      email: 254,
+      phone: 40,
+      course: 160,
+      motivation: 3000,
+      linkedin: 300,
+      source_page: 80,
+      page_url: 500,
+      user_agent: 300
+    }
+  }
+};
+
+const submissionStartTimes = new WeakMap();
+const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+const phonePattern = /^\+?[0-9][0-9\s().-]{6,24}$/;
+const allowedStudyYears = new Set(["1", "2", "3", "4+"]);
 
 const degreeOptions = [
   { title: "Arte Multimédia", cycle: "Licenciatura", area: "Comunicação e Tecnologias" },
@@ -730,13 +766,13 @@ function initProjectCarousels() {
     prevButton.type = "button";
     prevButton.className = "project-carousel-button prev";
     prevButton.setAttribute("aria-label", "Imagem anterior");
-    prevButton.innerHTML = "&#10094;";
+    prevButton.textContent = "\u2039";
 
     const nextButton = document.createElement("button");
     nextButton.type = "button";
     nextButton.className = "project-carousel-button next";
     nextButton.setAttribute("aria-label", "Imagem seguinte");
-    nextButton.innerHTML = "&#10095;";
+    nextButton.textContent = "\u203a";
 
     const parent = gallery.parentNode;
     if (!(parent instanceof Node)) {
@@ -893,7 +929,7 @@ function initCourseAutocomplete() {
 
   const closePanel = () => {
     panel.hidden = true;
-    panel.innerHTML = "";
+    panel.replaceChildren();
     optionButtons = [];
     activeIndex = -1;
     input.setAttribute("aria-expanded", "false");
@@ -920,12 +956,12 @@ function initCourseAutocomplete() {
 
   const renderPanel = (query = input.value) => {
     const matches = getFilteredCourses(query);
-    panel.innerHTML = "";
+    panel.replaceChildren();
 
     if (!matches.length) {
       const emptyState = document.createElement("div");
       emptyState.className = "autocomplete-empty";
-      emptyState.innerHTML = uiMessages[currentLanguage].courseNoResults;
+      emptyState.textContent = uiMessages[currentLanguage].courseNoResults;
       panel.appendChild(emptyState);
       panel.hidden = false;
       input.setAttribute("aria-expanded", "true");
@@ -1105,35 +1141,194 @@ function setSubmitButtonState(button, isLoading) {
   button.textContent = isLoading ? uiMessages[currentLanguage].sending : button.dataset.defaultLabel;
 }
 
-function getFormSubmissionPayload(form) {
+function createPublicError(message) {
+  const error = new Error(message);
+  error.publicMessage = message;
+  return error;
+}
+
+function getPublicErrorMessage(error) {
+  return error?.publicMessage || uiMessages[currentLanguage].submissionError;
+}
+
+function cleanText(value, maxLength, options = {}) {
+  const text = String(value || "")
+    .replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F]/g, "")
+    .trim();
+  const normalized = options.collapseWhitespace
+    ? text.replace(/\s+/g, " ")
+    : text.replace(/\r\n?/g, "\n");
+
+  return normalized.slice(0, maxLength);
+}
+
+function getFieldText(form, name, maxLength, options = {}) {
+  return cleanText(form.querySelector(`[name="${name}"]`)?.value || "", maxLength, options);
+}
+
+function requireValue(value) {
+  if (!value) {
+    throw createPublicError(uiMessages[currentLanguage].validationError);
+  }
+
+  return value;
+}
+
+function normalizeEmail(value) {
+  const email = cleanText(value, 254, { collapseWhitespace: true }).toLowerCase();
+  if (!emailPattern.test(email)) {
+    throw createPublicError(uiMessages[currentLanguage].validationError);
+  }
+
+  return email;
+}
+
+function normalizeOptionalHttpsUrl(value, options = {}) {
+  const clean = cleanText(value, options.maxLength || 300, { collapseWhitespace: true });
+  if (!clean) {
+    return null;
+  }
+
+  try {
+    const url = new URL(clean);
+    if (url.protocol !== "https:") {
+      throw new Error("Unsafe protocol");
+    }
+
+    if (options.linkedinOnly) {
+      const host = url.hostname.toLowerCase().replace(/^www\./, "");
+      if (host !== "linkedin.com" && !host.endsWith(".linkedin.com")) {
+        throw new Error("Unexpected host");
+      }
+    }
+
+    return url.href.slice(0, options.maxLength || 300);
+  } catch (error) {
+    throw createPublicError(uiMessages[currentLanguage].invalidUrl);
+  }
+}
+
+function getSafeCurrentUrl() {
+  try {
+    const url = new URL(window.location.href);
+    if (url.protocol !== "http:" && url.protocol !== "https:") {
+      return "";
+    }
+
+    url.hash = "";
+    return url.href.slice(0, 500);
+  } catch (error) {
+    return "";
+  }
+}
+
+function getSubmissionType(form) {
+  const type = form.dataset.formType || "";
+  if (!submissionSecurity[type]) {
+    throw createPublicError(uiMessages[currentLanguage].blockedSubmission);
+  }
+
+  return type;
+}
+
+function getSubmissionTable(form, config) {
+  const type = getSubmissionType(form);
+  const expectedTable = submissionSecurity[type].table;
+  const configuredTable = config.tables?.[type] || expectedTable;
+
+  return configuredTable === expectedTable ? configuredTable : "";
+}
+
+function configureFormSecurity(form) {
+  const type = form.dataset.formType || "";
+  const settings = submissionSecurity[type];
+  if (!settings) {
+    return;
+  }
+
+  Object.entries(settings.fields).forEach(([name, maxLength]) => {
+    const field = form.querySelector(`[name="${name}"]`);
+    if (field && !field.hasAttribute("maxlength")) {
+      field.setAttribute("maxlength", String(maxLength));
+    }
+  });
+
+  if (!form.querySelector("[data-security-honeypot]")) {
+    const honeypot = document.createElement("input");
+    honeypot.type = "text";
+    honeypot.name = "website";
+    honeypot.tabIndex = -1;
+    honeypot.autocomplete = "off";
+    honeypot.setAttribute("aria-hidden", "true");
+    honeypot.setAttribute("data-security-honeypot", "");
+    honeypot.style.cssText = "position:absolute;left:-100vw;width:1px;height:1px;opacity:0;pointer-events:none;";
+    form.appendChild(honeypot);
+  }
+
+  submissionStartTimes.set(form, Date.now());
+  form.addEventListener("reset", () => {
+    window.setTimeout(() => submissionStartTimes.set(form, Date.now()), 0);
+  });
+}
+
+function assertHumanSubmission(form) {
+  const type = getSubmissionType(form);
+  const startedAt = submissionStartTimes.get(form) || 0;
+  const elapsed = Date.now() - startedAt;
+  const honeypot = form.querySelector("[data-security-honeypot]");
+
+  if (honeypot?.value || elapsed < submissionSecurity[type].minElapsedMs) {
+    throw createPublicError(uiMessages[currentLanguage].blockedSubmission);
+  }
+}
+
+function getBaseSubmissionPayload(form) {
   const basePayload = {
-    source_page: document.body?.dataset.page || form.dataset.formType || "",
-    page_url: window.location.href,
-    language: currentLanguage,
-    user_agent: navigator.userAgent || ""
+    source_page: cleanText(document.body?.dataset.page || form.dataset.formType || "", 80, { collapseWhitespace: true }),
+    page_url: getSafeCurrentUrl(),
+    language: currentLanguage === "en" ? "en" : "pt",
+    user_agent: cleanText(navigator.userAgent || "", 300, { collapseWhitespace: true })
   };
 
-  if (form.dataset.formType === "application") {
-    const ageValue = form.querySelector("[name=\"age\"]")?.value.trim() || "";
+  return basePayload;
+}
+
+function getFormSubmissionPayload(form) {
+  const type = getSubmissionType(form);
+  const basePayload = getBaseSubmissionPayload(form);
+
+  if (type === "application") {
+    const fields = submissionSecurity.application.fields;
+    const studyYear = getFieldText(form, "study-year", 8, { collapseWhitespace: true });
+    const ageValue = Number.parseInt(getFieldText(form, "age", 3, { collapseWhitespace: true }), 10);
+    const phone = getFieldText(form, "phone", fields.phone, { collapseWhitespace: true });
+
+    if (!allowedStudyYears.has(studyYear) || !Number.isInteger(ageValue) || ageValue < 16 || ageValue > 99 || !phonePattern.test(phone)) {
+      throw createPublicError(uiMessages[currentLanguage].validationError);
+    }
 
     return {
       ...basePayload,
-      name: form.querySelector("[name=\"name\"]")?.value.trim() || "",
-      email: form.querySelector("[name=\"email\"]")?.value.trim() || "",
-      phone_contact: form.querySelector("[name=\"phone\"]")?.value.trim() || "",
-      course: form.querySelector("[name=\"course\"]")?.value.trim() || "",
-      study_year: form.querySelector("[name=\"study-year\"]")?.value.trim() || "",
-      motivation: form.querySelector("[name=\"motivation\"]")?.value.trim() || "",
-      linkedin: form.querySelector("[name=\"linkedin\"]")?.value.trim() || null,
-      age: ageValue ? Number(ageValue) : null
+      name: requireValue(getFieldText(form, "name", fields.name, { collapseWhitespace: true })),
+      email: normalizeEmail(form.querySelector("[name=\"email\"]")?.value || ""),
+      phone_contact: phone,
+      course: requireValue(getFieldText(form, "course", fields.course, { collapseWhitespace: true })),
+      study_year: studyYear,
+      motivation: requireValue(getFieldText(form, "motivation", fields.motivation)),
+      linkedin: normalizeOptionalHttpsUrl(form.querySelector("[name=\"linkedin\"]")?.value || "", {
+        maxLength: fields.linkedin,
+        linkedinOnly: true
+      }),
+      age: ageValue
     };
   }
 
+  const fields = submissionSecurity.contact.fields;
   return {
     ...basePayload,
-    name: form.querySelector("[name=\"name\"]")?.value.trim() || "",
-    email: form.querySelector("[name=\"email\"]")?.value.trim() || "",
-    message: form.querySelector("[name=\"message\"]")?.value.trim() || ""
+    name: requireValue(getFieldText(form, "name", fields.name, { collapseWhitespace: true })),
+    email: normalizeEmail(form.querySelector("[name=\"email\"]")?.value || ""),
+    message: requireValue(getFieldText(form, "message", fields.message))
   };
 }
 
@@ -1141,11 +1336,13 @@ async function submitFormToSupabase(table, payload) {
   const config = getSupabaseConfig();
 
   if (!isSupabaseConfigured(config)) {
-    throw new Error(uiMessages[currentLanguage].supabaseConfigError);
+    throw createPublicError(uiMessages[currentLanguage].supabaseConfigError);
   }
 
   const response = await fetch(`${config.url}/rest/v1/${encodeURIComponent(table)}`, {
     method: "POST",
+    credentials: "omit",
+    referrerPolicy: "strict-origin-when-cross-origin",
     headers: {
       apikey: config.publicKey,
       Authorization: `Bearer ${config.publicKey}`,
@@ -1156,12 +1353,17 @@ async function submitFormToSupabase(table, payload) {
   });
 
   if (!response.ok) {
-    throw new Error(await readSupabaseError(response));
+    const detail = await readSupabaseError(response);
+    const error = new Error(detail);
+    error.publicMessage = uiMessages[currentLanguage].submissionError;
+    throw error;
   }
 }
 
 function initForms() {
   document.querySelectorAll("form[data-form-type]").forEach((form) => {
+    configureFormSecurity(form);
+
     form.addEventListener("submit", async (event) => {
       event.preventDefault();
 
@@ -1186,25 +1388,25 @@ function initForms() {
         return;
       }
 
-      const config = getSupabaseConfig();
-      const table = form.dataset.supabaseTable || config.tables?.[form.dataset.formType] || "";
-      if (!table) {
-        statusElement.textContent = uiMessages[currentLanguage].supabaseConfigError;
-        statusElement.classList.add("error");
-        return;
-      }
-
       const successMessageKey = form.dataset.formType === "application" ? "applicationSuccess" : "contactSuccess";
 
       try {
+        assertHumanSubmission(form);
+        const config = getSupabaseConfig();
+        const table = getSubmissionTable(form, config);
+        if (!table) {
+          throw createPublicError(uiMessages[currentLanguage].supabaseConfigError);
+        }
+
+        const payload = getFormSubmissionPayload(form);
         setSubmitButtonState(submitButton, true);
-        await submitFormToSupabase(table, getFormSubmissionPayload(form));
+        await submitFormToSupabase(table, payload);
         statusElement.textContent = uiMessages[currentLanguage][successMessageKey];
         statusElement.classList.add("success");
         form.reset();
       } catch (error) {
         console.error("Supabase form submission failed:", error);
-        statusElement.textContent = error instanceof Error && error.message ? error.message : uiMessages[currentLanguage].submissionError;
+        statusElement.textContent = getPublicErrorMessage(error);
         statusElement.classList.add("error");
       } finally {
         setSubmitButtonState(submitButton, false);

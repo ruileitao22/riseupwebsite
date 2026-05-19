@@ -54,6 +54,11 @@
     hrSetupMissing: false
   };
 
+  const allowedImageMimeTypes = new Set(["image/jpeg", "image/png", "image/webp", "image/gif"]);
+  const maxImageUploadBytes = 8 * 1024 * 1024;
+  const minPasswordLength = 10;
+  const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+
   const projectTextReplacements = [
     ["HOJE - National Exhibition of Young Entrepreneurs 2025", "HOJE - Mostra Nacional de Jovens Empreendedores 2025"],
     ["Qual o valor das coisas? - Financial Literacy Workshops", "Qual o valor das coisas? - Workshops de Literacia Financeira"],
@@ -354,6 +359,85 @@
       .replace(/^-+|-+$/g, "");
 
     return clean || "upload";
+  }
+
+  function cleanText(value, maxLength = 500) {
+    return String(value || "")
+      .replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F]/g, "")
+      .trim()
+      .slice(0, maxLength);
+  }
+
+  function normalizeEmail(value) {
+    const email = cleanText(value, 254).toLowerCase();
+    if (email && !emailPattern.test(email)) {
+      throw new Error("Confirma que o email é válido.");
+    }
+
+    return email;
+  }
+
+  function safeUrl(value, options = {}) {
+    const clean = cleanText(value, options.maxLength || 800);
+    if (!clean) {
+      return "";
+    }
+
+    const hasScheme = /^[a-z][a-z0-9+.-]*:/i.test(clean);
+    if (options.allowRelative && !hasScheme && !clean.startsWith("//")) {
+      return clean.slice(0, options.maxLength || 800);
+    }
+
+    if (!options.allowRelative && !hasScheme) {
+      return "";
+    }
+
+    try {
+      const url = new URL(clean, window.location.href);
+      const allowedProtocols = options.allowedProtocols || ["http:", "https:"];
+      if (!allowedProtocols.includes(url.protocol)) {
+        return "";
+      }
+
+      if (options.linkedinOnly) {
+        const host = url.hostname.toLowerCase().replace(/^www\./, "");
+        if (host !== "linkedin.com" && !host.endsWith(".linkedin.com")) {
+          return "";
+        }
+      }
+
+      return url.href.slice(0, options.maxLength || 800);
+    } catch (error) {
+      return "";
+    }
+  }
+
+  function safeExternalUrl(value, options = {}) {
+    return safeUrl(value, {
+      ...options,
+      allowedProtocols: options.allowHttp ? ["http:", "https:"] : ["https:"]
+    });
+  }
+
+  function safeImageUrl(value) {
+    return safeUrl(value, {
+      allowRelative: true,
+      allowedProtocols: ["http:", "https:", "blob:"],
+      maxLength: 1000
+    });
+  }
+
+  function ensureValidUrl(value, options = {}) {
+    const original = cleanText(value, options.maxLength || 800);
+    const normalized = options.image
+      ? safeImageUrl(original)
+      : safeExternalUrl(original, options);
+
+    if (original && !normalized) {
+      throw new Error(options.message || "Confirma que o link é válido e começa por https://.");
+    }
+
+    return normalized || null;
   }
 
   function splitTags(value) {
@@ -902,8 +986,24 @@
     }
   }
 
+  function validateImageFile(file) {
+    if (!file) {
+      return;
+    }
+
+    if (!allowedImageMimeTypes.has(file.type)) {
+      throw new Error("Usa apenas imagens JPG, PNG, WebP ou GIF.");
+    }
+
+    if (file.size > maxImageUploadBytes) {
+      throw new Error("A imagem deve ter no máximo 8 MB.");
+    }
+  }
+
   async function optimizeImageFile(file, options = {}) {
-    if (!file?.type?.startsWith("image/") || file.type === "image/gif") {
+    validateImageFile(file);
+
+    if (file.type === "image/gif") {
       return file;
     }
 
@@ -1732,12 +1832,13 @@
         body.appendChild(createElement("p", null, courseParts.join(" - ")));
       }
 
-      if (record.linkedin) {
+      const linkedinUrl = safeExternalUrl(record.linkedin, { linkedinOnly: true, maxLength: 300 });
+      if (linkedinUrl) {
         const linkLine = createElement("p");
         const link = createElement("a", null, "LinkedIn");
-        link.href = record.linkedin;
+        link.href = linkedinUrl;
         link.target = "_blank";
-        link.rel = "noopener";
+        link.rel = "noopener noreferrer";
         linkLine.append("Perfil: ", link);
         body.appendChild(linkLine);
       }
@@ -1812,12 +1913,13 @@
         body.appendChild(createElement("p", null, record.message));
       }
 
-      if (record.page_url) {
+      const pageUrl = safeExternalUrl(record.page_url, { allowHttp: true, maxLength: 500 });
+      if (pageUrl) {
         const pageLine = createElement("p");
         const link = createElement("a", null, record.source_page || "P\u00e1gina de origem");
-        link.href = record.page_url;
+        link.href = pageUrl;
         link.target = "_blank";
-        link.rel = "noopener";
+        link.rel = "noopener noreferrer";
         pageLine.append("Origem: ", link);
         body.appendChild(pageLine);
       }
@@ -1905,7 +2007,21 @@
       return;
     }
 
-    const source = file ? URL.createObjectURL(file) : url;
+    if (file) {
+      try {
+        validateImageFile(file);
+      } catch (error) {
+        const status = form?.matches(selectors.teamForm) ? $(selectors.teamStatus) : $(selectors.profileStatus);
+        setStatus(status, getErrorMessage(error), "error");
+        return;
+      }
+    }
+
+    const source = file ? URL.createObjectURL(file) : safeImageUrl(url);
+    if (!source) {
+      return;
+    }
+
     if (file) {
       preview.dataset.objectUrl = source;
     }
@@ -1992,7 +2108,14 @@
   async function createTeamMemberAccount(form, statusElement) {
     requireAdmin();
 
-    const email = form.elements.email.value.trim();
+    let email = "";
+    try {
+      email = normalizeEmail(form.elements.email.value);
+    } catch (error) {
+      setStatus(statusElement, getErrorMessage(error), "error");
+      return null;
+    }
+
     const password = form.elements.account_password.value;
     const accountRole = backofficeRoles[form.elements.account_role.value]
       ? form.elements.account_role.value
@@ -2003,8 +2126,8 @@
       return null;
     }
 
-    if (password.length < 6) {
-      setStatus(statusElement, "A palavra-passe inicial deve ter pelo menos 6 caracteres.", "error");
+    if (password.length < minPasswordLength) {
+      setStatus(statusElement, `A palavra-passe inicial deve ter pelo menos ${minPasswordLength} caracteres.`, "error");
       return null;
     }
 
@@ -2079,16 +2202,34 @@
       return null;
     }
 
-    const payload = {
-      name: form.elements.name.value.trim(),
-      role: form.elements.role.value.trim(),
-      description: form.elements.description.value.trim() || null,
-      photo_url: form.elements.photo_url.value.trim() || null,
-      linkedin_url: form.elements.linkedin_url.value.trim() || null,
-      email: form.elements.email.value.trim() || null,
-      joined_month: safeNumber(form.elements.joined_month.value),
-      joined_year: safeNumber(form.elements.joined_year.value)
-    };
+    let payload;
+    try {
+      payload = {
+        name: cleanText(form.elements.name.value, 120),
+        role: cleanText(form.elements.role.value, 120),
+        description: cleanText(form.elements.description.value, 1200) || null,
+        photo_url: ensureValidUrl(form.elements.photo_url.value, {
+          image: true,
+          message: "A fotografia associada não é um URL seguro."
+        }),
+        linkedin_url: ensureValidUrl(form.elements.linkedin_url.value, {
+          linkedinOnly: true,
+          maxLength: 300,
+          message: "O LinkedIn deve ser um link https://linkedin.com válido."
+        }),
+        email: normalizeEmail(form.elements.email.value) || null,
+        joined_month: safeNumber(form.elements.joined_month.value),
+        joined_year: safeNumber(form.elements.joined_year.value)
+      };
+    } catch (error) {
+      setStatus(statusElement, getErrorMessage(error), "error");
+      return null;
+    }
+
+    if (!payload.name || !payload.role) {
+      setStatus(statusElement, "Preenche o nome e o cargo.", "error");
+      return null;
+    }
 
     if (allowAdminFields && form.elements.is_active) {
       payload.user_id = existing.user_id || null;
@@ -2169,8 +2310,8 @@
     const newPassword = form.elements.new_password.value;
     const confirmPassword = form.elements.confirm_password.value;
 
-    if (newPassword.length < 6) {
-      setStatus(status, "A nova palavra-passe deve ter pelo menos 6 caracteres.", "error");
+    if (newPassword.length < minPasswordLength) {
+      setStatus(status, `A nova palavra-passe deve ter pelo menos ${minPasswordLength} caracteres.`, "error");
       return;
     }
 
@@ -2366,7 +2507,7 @@
 
   function resetProjectImageItems(project) {
     clearProjectImageState();
-    state.projectImageItems = getProjectImageUrls(project).map((url, index) => ({
+    state.projectImageItems = getProjectImageUrls(project).map((url) => safeImageUrl(url)).filter(Boolean).map((url, index) => ({
       id: `existing-${index}-${randomId()}`,
       type: "existing",
       url
@@ -2376,6 +2517,13 @@
 
   function appendProjectImageFiles(files) {
     Array.from(files || []).forEach((file) => {
+      try {
+        validateImageFile(file);
+      } catch (error) {
+        setStatus($(selectors.projectStatus), getErrorMessage(error), "error");
+        return;
+      }
+
       const url = URL.createObjectURL(file);
       state.projectPreviewUrls.push(url);
       state.projectImageItems.push({
@@ -2462,6 +2610,11 @@
 
     const grid = createElement("div", "bo-image-preview-grid");
     state.projectImageItems.forEach((item, index) => {
+      const imageUrl = safeImageUrl(item.url);
+      if (!imageUrl) {
+        return;
+      }
+
       const figure = createElement("figure", "bo-image-thumb bo-image-sortable");
       figure.draggable = true;
       figure.dataset.imageId = item.id;
@@ -2491,7 +2644,7 @@
 
       const media = createElement("div", "bo-image-thumb-media");
       const img = createElement("img");
-      img.src = item.url;
+      img.src = imageUrl;
       img.alt = index === 0 ? "Principal - Foto de capa" : `Imagem ${index + 1}`;
       img.loading = "lazy";
 
@@ -2605,7 +2758,7 @@
     const id = form.elements.id.value || randomId();
     const existing = state.projects.find((project) => project.id === id);
     const titleField = form.querySelector('[name="title"]');
-    const title = titleField?.value.trim() || existing?.title?.trim() || "";
+    const title = cleanText(titleField?.value || existing?.title || "", 160);
 
     if (!title) {
       setStatus(status, "Preenche o tÃ­tulo do projeto antes de guardar.", "error");
@@ -2619,19 +2772,30 @@
       ? form.elements.status.value
       : "draft";
 
+    let externalLink = null;
+    try {
+      externalLink = ensureValidUrl(form.elements.external_link.value, {
+        maxLength: 500,
+        message: "O link externo deve ser um URL https:// válido."
+      });
+    } catch (error) {
+      setStatus(status, getErrorMessage(error), "error");
+      return;
+    }
+
     const payload = {
       title,
-      description: form.elements.description.value.trim() || null,
+      description: cleanText(form.elements.description.value, 3000) || null,
       project_date: form.elements.project_date.value || null,
-      category: form.elements.category.value.trim() || null,
+      category: cleanText(form.elements.category.value, 120) || null,
       tags: splitTags(form.elements.tags.value),
-      external_link: form.elements.external_link.value.trim() || null,
+      external_link: externalLink,
       status: nextStatus,
       sort_order: normalizedSortOrder,
       details: buildProjectDetails(existing?.details || {}, {
-        title: form.elements.title_en.value.trim(),
-        category: form.elements.category_en.value.trim(),
-        description: form.elements.description_en.value.trim(),
+        title: cleanText(form.elements.title_en.value, 160),
+        category: cleanText(form.elements.category_en.value, 120),
+        description: cleanText(form.elements.description_en.value, 3000),
         tags: splitTags(form.elements.tags_en.value)
       }),
       slug: existing?.slug || slugify(title)
@@ -2643,8 +2807,11 @@
       for (const item of state.projectImageItems) {
         if (item.type === "new" && item.file) {
           orderedImageUrls.push(await uploadFile(item.file, bucket("projectImages"), `projects/${id}`));
-        } else if (item.url) {
-          orderedImageUrls.push(item.url);
+        } else {
+          const existingUrl = safeImageUrl(item.url);
+          if (existingUrl) {
+            orderedImageUrls.push(existingUrl);
+          }
         }
       }
 
