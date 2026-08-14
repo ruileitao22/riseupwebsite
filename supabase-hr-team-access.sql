@@ -5,7 +5,7 @@ stable
 security definer
 set search_path = public
 as $$
-  select public.current_user_role() in ('admin', 'hr_team');
+  select public.current_user_role() in ('admin', 'coordinator', 'vice_coordinator', 'hr_team');
 $$;
 
 drop policy if exists "Public can read active team members" on public.team_members;

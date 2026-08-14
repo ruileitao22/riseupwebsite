@@ -17,7 +17,7 @@ revoke all on public.join_applications from anon, authenticated;
 grant insert on public.contact_submissions to anon, authenticated;
 grant insert on public.join_applications to anon, authenticated;
 grant select, delete on public.join_applications to authenticated;
-grant select on public.contact_submissions to authenticated;
+grant select, update, delete on public.contact_submissions to authenticated;
 
 drop policy if exists "Allow public inserts on contact_submissions" on public.contact_submissions;
 create policy "Allow public inserts on contact_submissions"
@@ -56,7 +56,7 @@ create policy "HR can read join applications"
       select 1
       from public.user_profiles profile
       where profile.id = auth.uid()
-        and profile.role in ('admin', 'hr_team')
+        and profile.role in ('admin', 'coordinator', 'vice_coordinator', 'hr_team')
     )
   );
 
@@ -70,7 +70,7 @@ create policy "HR can delete join applications"
       select 1
       from public.user_profiles profile
       where profile.id = auth.uid()
-        and profile.role in ('admin', 'hr_team')
+        and profile.role in ('admin', 'coordinator', 'vice_coordinator', 'hr_team')
     )
   );
 
@@ -84,7 +84,43 @@ create policy "Communication can read contact submissions"
       select 1
       from public.user_profiles profile
       where profile.id = auth.uid()
-        and profile.role in ('admin', 'communication_team')
+        and profile.role in ('admin', 'coordinator', 'vice_coordinator', 'communication_team', 'team_leader_communication', 'team_leader_commercial')
+    )
+  );
+
+drop policy if exists "Communication can update contact submissions" on public.contact_submissions;
+create policy "Communication can update contact submissions"
+  on public.contact_submissions
+  for update
+  to authenticated
+  using (
+    exists (
+      select 1
+      from public.user_profiles profile
+      where profile.id = auth.uid()
+        and profile.role in ('admin', 'coordinator', 'vice_coordinator', 'communication_team', 'team_leader_communication', 'team_leader_commercial')
+    )
+  )
+  with check (
+    exists (
+      select 1
+      from public.user_profiles profile
+      where profile.id = auth.uid()
+        and profile.role in ('admin', 'coordinator', 'vice_coordinator', 'communication_team', 'team_leader_communication', 'team_leader_commercial')
+    )
+  );
+
+drop policy if exists "Communication can delete contact submissions" on public.contact_submissions;
+create policy "Communication can delete contact submissions"
+  on public.contact_submissions
+  for delete
+  to authenticated
+  using (
+    exists (
+      select 1
+      from public.user_profiles profile
+      where profile.id = auth.uid()
+        and profile.role in ('admin', 'coordinator', 'vice_coordinator', 'communication_team', 'team_leader_communication', 'team_leader_commercial')
     )
   );
 
@@ -221,7 +257,7 @@ stable
 security definer
 set search_path = public
 as $$
-  select public.current_user_role() in ('admin', 'hr_team');
+  select public.current_user_role() in ('admin', 'coordinator', 'vice_coordinator', 'hr_team', 'team_leader_hr');
 $$;
 
 drop policy if exists "Public can read active team members" on public.team_members;
@@ -244,6 +280,32 @@ create policy "Admins and HR can update team members and members update own"
   to authenticated
   using (public.can_manage_team() or user_id = auth.uid())
   with check (public.can_manage_team() or user_id = auth.uid());
+
+create or replace function public.protect_team_member_role()
+returns trigger
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  if auth.uid() is not null
+    and new.role is distinct from old.role
+    and not public.can_manage_team() then
+    raise exception 'Only Human Resources and administrators can change member roles.'
+      using errcode = '42501';
+  end if;
+
+  return new;
+end;
+$$;
+
+revoke all on function public.protect_team_member_role() from public;
+
+drop trigger if exists protect_team_member_role_before_update on public.team_members;
+create trigger protect_team_member_role_before_update
+  before update of role on public.team_members
+  for each row
+  execute function public.protect_team_member_role();
 
 create or replace function public.sync_auth_user_backoffice_profile(
   target_user_id uuid,
