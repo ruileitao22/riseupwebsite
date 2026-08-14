@@ -12,32 +12,44 @@
     <script src="backoffice.js" defer></script>
   </head>
   <body>
-    <section class="bo-auth" data-auth-view>
+    <section class="bo-auth-boot" data-auth-boot aria-live="polite" aria-label="A iniciar sessão">
+      <div class="bo-auth-boot-content">
+        <img class="bo-auth-boot-logo" src="img/riseup-logo.png" alt="Rise Up" />
+        <span class="bo-auth-boot-spinner" aria-hidden="true"></span>
+        <p>A iniciar o teu espaço de trabalho...</p>
+      </div>
+    </section>
+
+    <section class="bo-auth" data-auth-view hidden>
       <div class="bo-auth-card">
-        <div class="bo-auth-intro">
-          <img class="bo-logo" src="img/riseup-logo.png" alt="Rise Up" />
-          <div>
-            <p class="bo-kicker">BackOffice</p>
-            <h1>Gestão Rise Up</h1>
-            <p>Equipa, projetos e publicações num espaço interno simples, seguro e pronto para crescer.</p>
+        <div class="bo-auth-form-panel">
+          <div class="bo-auth-intro">
+            <a class="bo-auth-brand" href="index.html" aria-label="Voltar ao site da Rise Up">
+              <img class="bo-logo" src="img/riseup-logo.png" alt="Rise Up" />
+            </a>
+            <div>
+              <p class="bo-auth-eyebrow">Backoffice</p>
+              <h1>Iniciar sessão</h1>
+              <p class="bo-auth-welcome">Bem-vindo, Riser!</p>
+            </div>
           </div>
+
+          <form class="bo-form" data-login-form>
+            <label>
+              <span>Email</span>
+              <input type="email" name="email" autocomplete="email" placeholder="nome@riseupmaia.pt" required />
+            </label>
+            <label>
+              <span>Palavra-passe</span>
+              <input type="password" name="password" autocomplete="current-password" placeholder="Introduz a tua palavra-passe" required />
+            </label>
+            <button class="bo-button bo-button-primary" type="submit">Entrar no backoffice</button>
+            <p class="bo-status" data-login-status></p>
+          </form>
+
+          <p class="bo-auth-help">Acesso reservado aos membros da Rise Up.</p>
         </div>
 
-        <form class="bo-form" data-login-form>
-          <div class="bo-form-head">
-            <h2>Entrar</h2>
-          </div>
-          <label>
-            Email
-            <input type="email" name="email" autocomplete="email" required />
-          </label>
-          <label>
-            Palavra-passe
-            <input type="password" name="password" autocomplete="current-password" required />
-          </label>
-          <button class="bo-button bo-button-primary" type="submit">Entrar</button>
-          <p class="bo-status" data-login-status></p>
-        </form>
       </div>
     </section>
 
@@ -49,19 +61,26 @@
           </a>
           <nav class="bo-nav" aria-label="BackOffice">
             <div class="bo-nav-main">
-              <button type="button" class="is-active" data-view-button="dashboard" data-admin-only aria-pressed="true">Painel</button>
-              <button type="button" data-view-button="projects" aria-pressed="false">Projetos</button>
-              <button type="button" data-view-button="contacts" aria-pressed="false">Contactos</button>
-              <button type="button" data-view-button="team" aria-pressed="false">Equipa</button>
-              <button type="button" data-view-button="hr" aria-pressed="false">Recursos Humanos</button>
+              <button type="button" class="is-active" data-view-button="dashboard" aria-pressed="true"><span class="bo-nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="m3 11.5 9-7.5 9 7.5"/><path d="M5.5 10.5V20h13v-9.5"/><path d="M9.5 20v-6h5v6"/></svg></span>Dashboard</button>
+              <button type="button" data-view-button="todo" aria-pressed="false"><span class="bo-nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M9 3v3h6V3"/><path d="m8 13 2.2 2.2L16 9.5"/></svg></span>To-Do</button>
+              <button type="button" data-view-button="projects" aria-pressed="false"><span class="bo-nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M3.5 7.5h6l2-2h3l2 2h4v12h-17z"/><path d="M3.5 10.5h17"/></svg></span>Projetos</button>
+              <button type="button" data-view-button="commercial" aria-pressed="false"><span class="bo-nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 20V10"/><path d="M10 20V4"/><path d="M16 20v-7"/><path d="M2.5 20.5h19"/></svg></span>Comercial</button>
+              <button type="button" data-view-button="team" aria-pressed="false"><span class="bo-nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3"/><circle cx="17" cy="9" r="2.5"/><path d="M3.5 20a5.5 5.5 0 0 1 11 0"/><path d="M14 15a4.5 4.5 0 0 1 6.5 4"/></svg></span>Equipa</button>
+              <button type="button" data-view-button="hr" aria-pressed="false"><span class="bo-nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M20.5 9.5c0 5-8.5 10-8.5 10s-8.5-5-8.5-10A4.5 4.5 0 0 1 12 7a4.5 4.5 0 0 1 8.5 2.5Z"/><path d="M8 12h2l1-2 2 4 1-2h2"/></svg></span>Recursos Humanos</button>
+              <button type="button" data-view-button="communication" aria-pressed="false"><span class="bo-nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 10.5v3l13 5v-13z"/><path d="M7 14.5 8.5 20H12l-1.5-4.2"/><path d="M20 9v6"/></svg></span>Comunicação</button>
+              <button type="button" data-view-button="documents" aria-pressed="false"><span class="bo-nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M6 3h8l4 4v14H6z"/><path d="M14 3v5h5"/><path d="M9 12h6M9 16h6"/></svg></span>Documentos</button>
+              <button type="button" data-view-button="contacts" aria-pressed="false"><span class="bo-nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m4 7 8 6 8-6"/></svg></span>Contactos</button>
+              <button type="button" data-view-button="settings" aria-pressed="false"><span class="bo-nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 7h10M18 7h2M4 17h2M10 17h10M9 4v6M8 14v6"/><circle cx="16" cy="7" r="2"/><circle cx="8" cy="17" r="2"/></svg></span>Definições</button>
             </div>
             <span class="bo-nav-divider" aria-hidden="true"></span>
             <button type="button" class="bo-nav-profile" data-view-button="profile" aria-label="Perfil" title="Perfil" aria-pressed="false">
-              <span class="bo-sr-only">Perfil</span>
-              <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-                <path d="M12 12.2a4.1 4.1 0 1 0 0-8.2 4.1 4.1 0 0 0 0 8.2Z"></path>
-                <path d="M4.5 19.3a7.8 7.8 0 0 1 15 0"></path>
-              </svg>
+              <span class="bo-nav-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                  <path d="M12 12.2a4.1 4.1 0 1 0 0-8.2 4.1 4.1 0 0 0 0 8.2Z"></path>
+                  <path d="M4.5 19.3a7.8 7.8 0 0 1 15 0"></path>
+                </svg>
+              </span>
+              <span class="bo-profile-label">Perfil</span>
             </button>
           </nav>
         </div>
@@ -73,6 +92,11 @@
             <p class="bo-kicker">BackOffice</p>
             <h1 data-page-title>Painel</h1>
           </div>
+          <div class="bo-global-search">
+            <label class="bo-sr-only" for="bo-global-search-input">Pesquisar no backoffice</label>
+            <input id="bo-global-search-input" type="search" placeholder="Pesquisar" autocomplete="off" role="combobox" aria-autocomplete="list" aria-controls="bo-global-search-results" aria-expanded="false" data-global-search />
+            <div class="bo-global-search-results" id="bo-global-search-results" role="listbox" aria-label="Resultados da pesquisa" data-global-search-results hidden></div>
+          </div>
           <div class="bo-user">
             <span data-user-email></span>
             <strong data-user-role></strong>
@@ -81,9 +105,34 @@
         </header>
 
         <p class="bo-status bo-global-status" data-global-status></p>
+        <div class="bo-view-as-banner" data-view-as-banner hidden>
+          <span class="bo-view-as-banner-icon" aria-hidden="true">◎</span>
+          <div><strong>Modo de pré-visualização ativo</strong><span data-view-as-banner-role></span></div>
+          <button class="bo-button bo-button-ghost" type="button" data-reset-view-as>Voltar à vista real</button>
+        </div>
 
-        <section class="bo-section is-active" data-section="dashboard" data-admin-only>
+        <section class="bo-section is-active" data-section="dashboard">
           <div class="bo-dashboard-grid">
+            <div class="bo-welcome">
+              <div><p class="bo-kicker">O teu espaço</p><h2>Olá, <span data-dashboard-name>membro Rise Up</span>.</h2><p>Acompanha o que precisa da tua atenção e mantém a equipa em movimento.</p></div>
+              <time data-dashboard-date></time>
+            </div>
+            <div class="bo-metrics bo-metrics-personal">
+              <article><small>As minhas tarefas</small><span data-metric-my-tasks>0</span><p>Pendentes</p></article>
+              <article class="bo-progress-metric"><small>Progresso semanal</small><span data-metric-progress>0%</span><div><i data-progress-bar></i></div></article>
+            </div>
+            <div class="bo-dashboard-primary">
+              <article class="bo-panel bo-performance-card">
+                <div class="bo-list-head"><div><p class="bo-kicker">Atividade</p><h3>Ritmo da equipa</h3><p>Tarefas concluídas nos últimos sete dias.</p></div><span class="bo-soft-badge">Esta semana</span></div>
+                <svg class="bo-line-chart" viewBox="0 0 720 190" role="img" aria-label="Gráfico da atividade semanal"><defs><linearGradient id="activity-fill" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#69a8ff" stop-opacity=".28"/><stop offset="1" stop-color="#69a8ff" stop-opacity="0"/></linearGradient></defs><path class="bo-chart-area" d="M10 155 C95 145 120 72 205 110 S330 155 405 92 S525 44 590 70 S660 48 710 26 L710 185 L10 185 Z"/><path class="bo-chart-line" d="M10 155 C95 145 120 72 205 110 S330 155 405 92 S525 44 590 70 S660 48 710 26"/><g class="bo-chart-grid"><path d="M10 35H710"/><path d="M10 85H710"/><path d="M10 135H710"/><path d="M10 185H710"/></g></svg>
+                <div class="bo-chart-labels"><span>Seg</span><span>Ter</span><span>Qua</span><span>Qui</span><span>Sex</span><span>Sáb</span><span>Dom</span></div>
+              </article>
+              <article class="bo-panel bo-announcement-card"><div class="bo-list-head"><div><p class="bo-kicker">Coordenação</p><h3>Avisos</h3></div></div><div class="bo-compact-list" data-dashboard-notices></div></article>
+            </div>
+            <div class="bo-dashboard-triple">
+              <article class="bo-panel"><div class="bo-list-head"><div><p class="bo-kicker">Agenda</p><h3>Próximos eventos</h3></div></div><div class="bo-compact-list" data-dashboard-events></div></article>
+              <article class="bo-panel"><div class="bo-list-head"><div><p class="bo-kicker">Equipa</p><h3>Próximas reuniões</h3></div></div><div class="bo-compact-list" data-dashboard-meetings></div></article>
+            </div>
             <div class="bo-metrics">
               <article>
                 <small>Equipa</small>
@@ -114,16 +163,6 @@
                 <div class="bo-list" data-dashboard-tasks></div>
               </article>
 
-              <article class="bo-panel">
-                <div class="bo-list-head">
-                  <div>
-                    <p class="bo-kicker">Hist&oacute;rico</p>
-                    <h3>&Uacute;ltimas altera&ccedil;&otilde;es</h3>
-                    <p>Registo r&aacute;pido das a&ccedil;&otilde;es feitas no backoffice.</p>
-                  </div>
-                </div>
-                <div class="bo-list" data-activity-list></div>
-              </article>
             </div>
 
             <article class="bo-panel bo-access-panel">
@@ -149,6 +188,106 @@
           </div>
         </section>
 
+        <section class="bo-section" data-section="todo">
+          <div class="bo-section-head"><div><p class="bo-kicker">Organização pessoal</p><h2>To-Do</h2><p>Cria, acompanha e conclui tarefas individuais ou de equipa.</p></div><button class="bo-button bo-button-primary" type="button" data-new-task>Nova tarefa</button></div>
+          <div class="bo-filter-tabs" role="group" aria-label="Filtrar tarefas"><button class="is-active" type="button" data-task-filter="open">Em aberto</button><button type="button" data-task-filter="mine">Atribuídas a mim</button><button type="button" data-task-filter="created">Criadas por mim</button><button type="button" data-task-filter="done">Concluídas</button></div>
+          <form class="bo-panel bo-form bo-task-form" data-task-form hidden>
+            <div class="bo-form-head"><div><p class="bo-kicker">Tarefa</p><h3 data-task-form-title>Nova tarefa</h3></div><button class="bo-icon-button" type="button" data-close-task-form aria-label="Fechar">×</button></div>
+            <input type="hidden" name="id" />
+            <label class="bo-field-full">Título<input type="text" name="title" maxlength="180" required /></label>
+            <label class="bo-field-full">Descrição<textarea name="description" rows="3" maxlength="2000"></textarea></label>
+            <label>Prioridade<select name="priority"><option value="low">Baixa</option><option value="medium" selected>Média</option><option value="high">Alta</option><option value="urgent">Urgente</option></select></label>
+            <label>Prazo<input type="date" name="due_date" /></label>
+            <label>Responsáveis<select name="assigned_to" data-task-assignee multiple required aria-describedby="task-assignee-hint"></select><small class="bo-field-hint" id="task-assignee-hint">Podes selecionar uma ou várias pessoas.</small></label>
+            <label>Projeto<select name="project_id" data-task-project><option value="">Sem projeto</option></select></label>
+            <div class="bo-actions bo-field-full"><button class="bo-button bo-button-primary" type="submit">Guardar tarefa</button><button class="bo-button bo-button-danger" type="button" data-delete-task hidden>Apagar</button></div>
+            <p class="bo-status bo-field-full" data-task-status></p>
+          </form>
+          <div class="bo-task-board" data-task-list></div>
+          <p class="bo-setup-notice" data-workspace-setup hidden>Executa <strong>supabase-workspace-setup.sql</strong> no Supabase para ativar a sincronização destas áreas.</p>
+        </section>
+
+        <section class="bo-section" data-section="communication">
+          <div class="bo-section-head"><div><p class="bo-kicker">Comunicação</p><h2>Planeamento editorial</h2><p>Produz, revê e agenda conteúdos sem perder o contexto dos projetos.</p></div></div>
+          <div class="bo-communication-overview"><article class="bo-panel"><div class="bo-list-head"><div><h3>Próximos 7 dias</h3><p>Publicações agendadas e itens que precisam de atenção.</p></div><span class="bo-soft-badge" data-communication-week-count></span></div><div class="bo-compact-list" data-communication-week></div></article><article class="bo-panel bo-module-wide"><div class="bo-list-head"><div><h3>Calendário editorial</h3><p>Visão mensal das publicações e campanhas.</p></div><span class="bo-soft-badge" data-current-month></span></div><div class="bo-editorial-calendar" data-editorial-calendar></div></article></div>
+          <form class="bo-panel bo-form" data-publication-form hidden><div class="bo-form-head"><div><p class="bo-kicker">Conteúdo</p><h3 data-publication-form-title>Nova publicação</h3></div><button class="bo-icon-button" type="button" data-close-publication-form aria-label="Fechar">×</button></div><input type="hidden" name="id" /><label class="bo-field-full">Título<input type="text" name="title" maxlength="180" required /></label><label>Canal<select name="channel"><option>Instagram</option><option>LinkedIn</option><option>Facebook</option><option>TikTok</option><option>YouTube</option></select></label><label>Responsável<select name="owner_id" data-publication-owner></select></label><label>Estado<select name="status"><option value="idea">Ideia</option><option value="draft">Em produção</option><option value="in_review">Em revisão</option><option value="scheduled">Agendada</option><option value="published">Publicada</option></select></label><label>Agendamento<input type="datetime-local" name="scheduled_for" /></label><label>Projeto associado<select name="project_id" data-publication-project><option value="">Sem projeto associado</option></select></label><label class="bo-field-full">Copy / legenda<textarea name="copy" rows="4" placeholder="Texto preparado para a publicação"></textarea></label><label class="bo-field-full">Link para design ou recurso<input type="url" name="asset_url" placeholder="https://..." /></label><label class="bo-field-full">Feedback de revisão<textarea name="review_notes" rows="3" placeholder="Aprovação ou alterações pedidas"></textarea></label><label class="bo-field-full">Notas internas<textarea name="notes" rows="3"></textarea></label><div class="bo-publication-review-actions bo-field-full"><span>Revisão</span><button class="bo-button bo-button-ghost" type="button" data-review-publication="changes">Pedir alterações</button><button class="bo-button bo-button-primary" type="button" data-review-publication="approve">Aprovar</button></div><div class="bo-actions bo-field-full"><button class="bo-button bo-button-primary" type="submit">Guardar publicação</button></div><p class="bo-status bo-field-full" data-publication-status></p></form>
+          <article class="bo-panel"><div class="bo-list-head"><div><h3>Quadro de conteúdos</h3><p>Move cada peça pelo fluxo de trabalho.</p></div><button class="bo-button bo-button-primary" type="button" data-new-publication>Adicionar conteúdo</button></div><div class="bo-communication-board" data-communication-board></div></article>
+          <div class="bo-module-grid bo-communication-resources"><article class="bo-panel bo-resource-card"><span class="bo-resource-icon">▧</span><h3>Banco de imagens</h3><p>Fotografias e recursos para campanhas.</p><button class="bo-button bo-button-ghost" type="button" data-open-communication-drive="imagem">Abrir biblioteca</button></article><article class="bo-panel bo-resource-card"><span class="bo-resource-icon">T</span><h3>Templates</h3><p>Apresentações, stories e publicações.</p><button class="bo-button bo-button-ghost" type="button" data-open-communication-drive="template">Consultar</button></article><article class="bo-panel bo-resource-card"><span class="bo-resource-icon">◒</span><h3>Identidade visual</h3><p>Logótipos, cores, tipografia e regras.</p><button class="bo-button bo-button-ghost" type="button" data-open-communication-drive="identidade">Ver guia</button></article></div>
+        </section>
+
+        <section class="bo-section" data-section="commercial">
+          <div class="bo-section-head"><div><p class="bo-kicker">Comercial</p><h2>Oportunidades</h2><p>Acompanha cada contacto desde o primeiro interesse até ao projeto.</p></div><button class="bo-button bo-button-primary" type="button" data-new-opportunity>Adicionar oportunidade</button></div>
+          <div class="bo-commercial-metrics"><article class="bo-panel"><span>Oportunidades ativas</span><strong data-commercial-active-count>0</strong></article><article class="bo-panel"><span>Valor potencial</span><strong data-commercial-pipeline-value>0 €</strong></article><article class="bo-panel"><span>Follow-ups em atraso</span><strong data-commercial-overdue-count>0</strong></article></div>
+          <div class="bo-commercial-overview"><article class="bo-panel"><div class="bo-list-head"><div><h3>Próximas ações</h3><p>Contactos a fazer e reuniões a preparar.</p></div></div><div class="bo-compact-list" data-commercial-follow-ups></div></article><article class="bo-panel"><div class="bo-list-head"><div><h3>Como usar</h3><p>Regista a próxima ação em todas as oportunidades para o funil nunca parar.</p></div></div><p class="bo-empty-soft">Quando uma oportunidade é ganha, a equipa de Projetos pode convertê-la num novo projeto.</p></article></div>
+          <form class="bo-panel bo-form" data-opportunity-form hidden><div class="bo-form-head"><div><p class="bo-kicker">Oportunidade</p><h3 data-opportunity-form-title>Nova oportunidade</h3></div><button class="bo-icon-button" type="button" data-close-opportunity-form aria-label="Fechar">×</button></div><input type="hidden" name="id" /><label>Empresa / organização<input type="text" name="company_name" maxlength="180" required /></label><label>Origem<select name="origin"><option value="manual">Registo manual</option><option value="website">Contacto do website</option><option value="referral">Recomendação</option><option value="event">Evento</option><option value="other">Outro</option></select></label><label>Nome de contacto<input type="text" name="contact_name" maxlength="160" /></label><label>Email de contacto<input type="email" name="contact_email" maxlength="254" /></label><label>Telefone<input type="tel" name="contact_phone" maxlength="40" /></label><label>Responsável<select name="owner_id" data-opportunity-owner></select></label><label>Serviço / interesse<input type="text" name="service_interest" maxlength="180" placeholder="Ex.: organização de evento" /></label><label>Fase<select name="stage"><option value="new">Novo contacto</option><option value="qualified">Qualificação</option><option value="meeting">Reunião marcada</option><option value="proposal">Proposta enviada</option><option value="negotiation">Negociação</option><option value="won">Ganho</option><option value="lost">Não avançou</option></select></label><label>Próxima ação<input type="text" name="next_action" maxlength="180" placeholder="Ex.: ligar para validar briefing" /></label><label>Data da próxima ação<input type="datetime-local" name="next_action_at" /></label><label>Valor estimado (€)<input type="number" name="estimated_value" min="0" step="0.01" /></label><label class="bo-field-full">Notas<textarea name="notes" rows="4" placeholder="Contexto, necessidades e decisões tomadas."></textarea></label><div class="bo-actions bo-field-full"><button class="bo-button bo-button-primary" type="submit">Guardar oportunidade</button><button class="bo-button bo-button-danger" type="button" data-delete-opportunity hidden>Apagar</button></div><p class="bo-status bo-field-full" data-opportunity-status></p></form>
+          <article class="bo-panel"><div class="bo-list-head"><div><h3>Funil comercial</h3><p>Arrasta as oportunidades entre fases.</p></div><button class="bo-button bo-button-ghost" type="button" data-new-opportunity>Adicionar oportunidade</button></div><div class="bo-commercial-board" data-commercial-board></div></article>
+        </section>
+
+        <section class="bo-section" data-section="documents">
+          <div class="bo-section-head"><div><h2>Documentos</h2><p>Ficheiros e ligações internas da Rise Up.</p></div><button class="bo-button bo-button-ghost" type="button" data-new-document>Adicionar ligação</button></div>
+          <article class="bo-panel bo-drive-browser">
+            <div class="bo-drive-head">
+              <div><h3>Google Drive</h3><p>Pasta partilhada da Rise Up</p></div>
+              <span class="bo-drive-status" data-drive-status>A ligar…</span>
+            </div>
+            <div class="bo-drive-toolbar">
+              <div class="bo-drive-breadcrumbs" data-drive-breadcrumbs><button type="button" data-drive-root>Drive Rise Up</button></div>
+              <div class="bo-drive-toolbar-actions">
+                <label class="bo-drive-search">
+                  <span class="bo-sr-only">Pesquisar nesta pasta</span>
+                  <input type="search" placeholder="Pesquisar nesta pasta" autocomplete="off" data-drive-search />
+                </label>
+                <div class="bo-actions" data-drive-write-actions hidden>
+                  <button class="bo-button bo-button-ghost" type="button" data-drive-new-folder>Nova pasta</button>
+                  <button class="bo-button bo-button-primary" type="button" data-drive-upload>Carregar ficheiro</button>
+                  <input class="bo-sr-only" type="file" data-drive-file-input />
+                </div>
+              </div>
+            </div>
+            <form class="bo-drive-folder-form" data-drive-folder-form hidden><label>Nome da pasta<input type="text" name="name" maxlength="180" required /></label><button class="bo-button bo-button-primary" type="submit">Criar</button><button class="bo-button bo-button-ghost" type="button" data-drive-cancel-folder>Cancelar</button></form>
+            <div class="bo-drive-summary"><span data-drive-count>0 itens</span><span>Ordenado por nome</span></div>
+            <div class="bo-drive-list" data-drive-list aria-live="polite"></div>
+            <p class="bo-status" data-drive-message></p>
+          </article>
+
+          <dialog class="bo-drive-preview" data-drive-preview>
+            <div class="bo-drive-preview-head"><div><p class="bo-kicker">Pré-visualização</p><h3 data-drive-preview-title>Documento</h3></div><button class="bo-icon-button" type="button" data-drive-close-preview aria-label="Fechar">×</button></div>
+            <div class="bo-drive-preview-body" data-drive-preview-body></div>
+            <div class="bo-actions"><a class="bo-button bo-button-primary" href="#" target="_blank" rel="noopener" data-drive-open-original>Abrir e editar na Drive</a></div>
+          </dialog>
+
+          <form class="bo-panel bo-form" data-document-form hidden><div class="bo-form-head"><h3>Adicionar documento</h3><button class="bo-icon-button" type="button" data-close-document-form aria-label="Fechar">×</button></div><label class="bo-field-full">Nome<input type="text" name="title" maxlength="180" required /></label><label>Categoria<select name="category"><option value="statutes">Estatutos</option><option value="regulations">Regulamentos</option><option value="templates">Templates</option><option value="minutes">Atas</option><option value="guides">Guias internos</option><option value="brand">Identidade visual</option><option value="project">Projeto</option></select></label><label>Ligação ao ficheiro<input type="url" name="file_url" placeholder="https://..." required /></label><label>Projeto<select name="project_id" data-document-project><option value="">Geral</option></select></label><div class="bo-actions bo-field-full"><button class="bo-button bo-button-primary" type="submit">Guardar documento</button></div><p class="bo-status bo-field-full" data-document-form-status></p></form>
+          <section class="bo-document-library"><div class="bo-document-library-head"><div><h3>Ligações guardadas</h3><p>Referências organizadas por categoria.</p></div></div><div class="bo-document-categories" data-document-categories></div><div class="bo-list-tools"><label><span class="bo-field-label">Pesquisar</span><input type="search" placeholder="Nome do documento" data-document-search /></label><label><span class="bo-field-label">Categoria</span><select data-document-filter><option value="all">Todas</option><option value="statutes">Estatutos</option><option value="regulations">Regulamentos</option><option value="templates">Templates</option><option value="minutes">Atas</option><option value="guides">Guias internos</option><option value="brand">Identidade visual</option><option value="project">Projetos</option></select></label></div><div class="bo-document-list" data-document-list></div></section>
+        </section>
+
+        <section class="bo-section" data-section="settings">
+          <div class="bo-section-head"><div><h2>Definições</h2><p>Pré-visualização de acessos por cargo.</p></div></div>
+          <div class="bo-settings-layout">
+            <article class="bo-panel bo-role-selector-panel">
+              <div class="bo-settings-panel-head"><h3>Cargo</h3><p>Seleciona uma opção para adaptar a navegação.</p></div>
+              <div class="bo-role-option-groups" data-view-as-options></div>
+            </article>
+            <aside class="bo-panel bo-role-preview-panel">
+              <div class="bo-role-preview-top"><span>Pré-visualização</span><span data-view-as-badge>Vista real</span></div>
+              <div class="bo-role-preview-identity"><div><small>Vista atual</small><h3 data-view-as-title>Administrador</h3></div></div>
+              <div class="bo-role-preview-summary" data-view-as-summary></div>
+              <div class="bo-role-access"><span class="bo-field-label">Áreas visíveis</span><div class="bo-role-access-list" data-view-as-access></div></div>
+              <button class="bo-button bo-button-ghost bo-role-reset" type="button" data-reset-view-as>Voltar à vista de Administrador</button>
+              <p class="bo-settings-note">O cargo real não é alterado e esta escolha não é guardada.</p>
+            </aside>
+          </div>
+          <article class="bo-panel bo-settings-audit-panel" data-admin-only>
+            <div class="bo-list-head">
+              <div>
+                <p class="bo-kicker">Hist&oacute;rico</p>
+                <h3>&Uacute;ltimas altera&ccedil;&otilde;es</h3>
+                <p>Registo r&aacute;pido das a&ccedil;&otilde;es feitas no backoffice.</p>
+              </div>
+            </div>
+            <div class="bo-list" data-activity-list></div>
+          </article>
+        </section>
+
         <section class="bo-section" data-section="profile">
           <div class="bo-section-head">
             <div>
@@ -160,46 +299,62 @@
             </p>
           </div>
 
+          <div class="bo-profile-overview">
+            <article class="bo-panel"><p class="bo-kicker">Associação</p><h3>O meu percurso</h3><div class="bo-compact-list" data-profile-history></div></article>
+            <article class="bo-panel"><p class="bo-kicker">To-Do</p><h3>Tarefas atribuídas</h3><div class="bo-compact-list" data-profile-tasks></div></article>
+          </div>
+
           <p class="bo-empty" data-profile-empty hidden></p>
 
-          <form class="bo-panel bo-form" data-profile-form hidden>
-            <div class="bo-form-head">
-              <h3>Editar perfil</h3>
+          <form class="bo-panel bo-form bo-profile-edit" data-profile-form hidden>
+            <div class="bo-form-head bo-profile-edit-head">
+              <div class="bo-profile-edit-title">
+                <p class="bo-kicker">Conta pessoal</p>
+                <h3>Editar perfil</h3>
+                <p>Atualiza a informação que identifica o teu percurso na Rise Up.</p>
+              </div>
+
+              <div class="bo-profile-photo-control">
+                <div class="bo-photo-preview-card" data-photo-preview>
+                  <div class="bo-photo-preview-frame">
+                    <img data-photo-preview-image alt="Pré-visualização da fotografia de perfil" hidden />
+                    <p class="bo-photo-preview-empty" data-photo-preview-empty>Foto</p>
+                  </div>
+                  <p class="bo-field-hint" data-photo-preview-caption>Fotografia atual do perfil.</p>
+                  <div class="bo-photo-crop-controls" data-photo-crop-controls hidden>
+                    <label>
+                      <span>Zoom</span>
+                      <input type="range" min="1" max="3" step="0.01" value="1" data-photo-zoom aria-label="Zoom da fotografia" />
+                    </label>
+                    <button class="bo-button bo-button-ghost" type="button" data-reset-photo-crop>Repor enquadramento</button>
+                    <p>Arrasta a fotografia para ajustar o enquadramento.</p>
+                  </div>
+                </div>
+
+                <div class="bo-profile-photo-actions">
+                  <button class="bo-button bo-button-ghost bo-profile-photo-menu-trigger" type="button" data-photo-menu-trigger aria-expanded="false" aria-controls="profile-photo-menu">Editar foto de perfil</button>
+                  <div class="bo-profile-photo-menu" id="profile-photo-menu" data-photo-menu hidden>
+                    <button type="button" data-add-profile-photo>Adicionar nova foto</button>
+                    <button type="button" data-edit-current-photo>Editar foto atual</button>
+                  </div>
+                  <input class="bo-profile-photo-file-input" type="file" name="photo" accept="image/jpeg,image/png,image/webp,image/gif" />
+                </div>
+              </div>
             </div>
 
             <input type="hidden" name="id" />
+            <input type="hidden" name="photo_url" />
 
             <label>
               Nome
               <input type="text" name="name" required />
             </label>
 
-            <label>
-              Cargo
-              <input type="text" name="role" required />
+            <label class="bo-profile-managed-field">
+              <span class="bo-label-line">Cargo <span class="bo-managed-badge">Gerido por RH</span></span>
+              <input type="text" name="role" required readonly aria-readonly="true" aria-describedby="profile-role-hint" />
+              <span class="bo-field-hint" id="profile-role-hint">Só Recursos Humanos e administradores podem alterar este campo.</span>
             </label>
-
-            <label class="bo-field-full">
-              Descrição
-              <textarea name="description" rows="4"></textarea>
-            </label>
-
-            <input type="hidden" name="photo_url" />
-
-            <label>
-              Fotografia
-              <input type="file" name="photo" accept="image/jpeg,image/png,image/webp,image/gif" />
-              <span class="bo-field-hint">Escolhe uma nova imagem para substituir a fotografia atual.</span>
-            </label>
-
-            <div class="bo-photo-preview-card" data-photo-preview>
-              <span class="bo-field-label">Pr&eacute;-visualiza&ccedil;&atilde;o</span>
-              <div class="bo-photo-preview-frame">
-                <img data-photo-preview-image alt="Pr&eacute;-visualiza&ccedil;&atilde;o da fotografia de perfil" hidden />
-                <p class="bo-photo-preview-empty" data-photo-preview-empty>Sem fotografia carregada.</p>
-              </div>
-              <p class="bo-field-hint" data-photo-preview-caption>Mostra a fotografia atual ou a nova imagem antes de guardar.</p>
-            </div>
 
             <label>
               <span class="bo-label-line">LinkedIn <span class="bo-label-note">(coloca o link do perfil)</span></span>
@@ -209,6 +364,11 @@
             <label>
               Email
               <input type="email" name="email" />
+            </label>
+
+            <label class="bo-field-full">
+              Descrição
+              <textarea name="description" rows="4" placeholder="Escreve uma breve apresentação sobre ti e o teu papel na Rise Up."></textarea>
             </label>
 
             <label>
@@ -235,7 +395,7 @@
               <input type="number" name="joined_year" min="2000" max="2100" />
             </label>
 
-            <div class="bo-actions">
+            <div class="bo-actions bo-profile-edit-actions">
               <button class="bo-button bo-button-primary" type="submit">Guardar perfil</button>
             </div>
             <p class="bo-status" data-profile-form-status></p>
@@ -265,6 +425,15 @@
             </div>
             <p class="bo-status" data-password-form-status></p>
           </form>
+
+          <article class="bo-panel bo-account-danger" data-account-danger hidden>
+            <div>
+              <p class="bo-kicker">Zona de perigo</p>
+              <h3>Apagar conta</h3>
+              <p>Remove permanentemente o teu acesso e os dados associados à conta.</p>
+            </div>
+            <button class="bo-button bo-button-danger" type="button" data-request-account-deletion>Apagar a minha conta</button>
+          </article>
         </section>
 
         <section class="bo-section" data-section="team">
@@ -278,12 +447,13 @@
             </p>
           </div>
 
-          <div class="bo-workspace">
+          <div class="bo-workspace bo-team-workspace">
             <div class="bo-panel">
               <div class="bo-list-head">
                 <div>
-                  <p class="bo-kicker">Membros</p>
-                  <h3>Lista de perfis</h3>
+                  <p class="bo-kicker">Pessoas</p>
+                  <h3>A nossa equipa</h3>
+                  <p>Organizada por área para encontrares rapidamente cada pessoa.</p>
                 </div>
                 <button class="bo-button bo-button-primary" type="button" data-new-team-member data-admin-only>Novo membro</button>
               </div>
@@ -304,51 +474,53 @@
               <div class="bo-list" data-team-list></div>
             </div>
 
-            <form class="bo-panel bo-form" data-team-form hidden>
-              <div class="bo-form-head">
-                <h3 data-team-form-title>Editar membro</h3>
-                <button class="bo-icon-button" type="button" data-close-team-form aria-label="Fechar">x</button>
+            <form class="bo-panel bo-form bo-team-edit-page" data-team-form hidden>
+              <div class="bo-form-head bo-team-edit-head">
+                <div>
+                  <button class="bo-back-button" type="button" data-close-team-form aria-label="Voltar à equipa"><span aria-hidden="true">←</span> Voltar à equipa</button>
+                  <h3 data-team-form-title>Editar membro</h3>
+                  <p>Atualiza os dados, fotografia e permissões deste membro.</p>
+                </div>
               </div>
 
               <input type="hidden" name="id" />
-
-              <label>
-                Nome
-                <input type="text" name="name" required />
-              </label>
-
-              <label>
-                Cargo
-                <input type="text" name="role" required />
-              </label>
-
-              <label class="bo-field-full">
-                Descri&ccedil;&atilde;o
-                <textarea name="description" rows="4"></textarea>
-              </label>
-
               <input type="hidden" name="photo_url" />
-
-              <label>
-                Fotografia
-                <input type="file" name="photo" accept="image/jpeg,image/png,image/webp,image/gif" />
-                <span class="bo-field-hint">Escolhe uma nova imagem para substituir a fotografia atual.</span>
-              </label>
-
-              <div class="bo-photo-preview-card" data-photo-preview>
+              <section class="bo-team-form-section bo-team-profile-section">
+                <div class="bo-team-section-heading"><div><p class="bo-kicker">Perfil público</p><h4>Informação principal</h4><p>Os dados e a fotografia que aparecem na página da equipa.</p></div></div>
+                <div class="bo-team-profile-layout">
+                  <div class="bo-team-fields-grid">
+                    <label>Nome<input type="text" name="name" required /></label>
+                    <label class="bo-team-managed-role"><span class="bo-label-line">Cargo <span class="bo-managed-badge">Gerido pelo acesso</span></span><input type="text" name="role" required readonly aria-readonly="true" aria-describedby="team-role-hint" /><span class="bo-field-hint" id="team-role-hint">Atualiza automaticamente quando alteras o acesso ao BackOffice.</span></label>
+                    <label class="bo-team-field-wide">Descri&ccedil;&atilde;o<textarea name="description" rows="4"></textarea></label>
+                    <label class="bo-team-field-wide"><span class="bo-label-line">LinkedIn <span class="bo-label-note">(opcional)</span></span><input type="url" name="linkedin_url" placeholder="https://www.linkedin.com/in/..." /></label>
+                  </div>
+                  <aside class="bo-photo-preview-card bo-team-photo-card" data-photo-preview>
                 <span class="bo-field-label">Pr&eacute;-visualiza&ccedil;&atilde;o</span>
                 <div class="bo-photo-preview-frame">
                   <img data-photo-preview-image alt="Pr&eacute;-visualiza&ccedil;&atilde;o da fotografia do membro" hidden />
                   <p class="bo-photo-preview-empty" data-photo-preview-empty>Sem fotografia carregada.</p>
                 </div>
                 <p class="bo-field-hint" data-photo-preview-caption>Mostra a fotografia atual ou a nova imagem antes de guardar.</p>
-              </div>
+                <div class="bo-photo-crop-controls" data-photo-crop-controls hidden>
+                  <label><span>Zoom</span><input type="range" min="1" max="3" step="0.01" value="1" data-photo-zoom aria-label="Zoom da fotografia" /></label>
+                  <button class="bo-button bo-button-ghost" type="button" data-reset-photo-crop>Repor enquadramento</button>
+                  <p>Arrasta a fotografia para ajustar o enquadramento.</p>
+                </div>
+                <div class="bo-profile-photo-actions">
+                  <button class="bo-button bo-button-ghost bo-profile-photo-menu-trigger" type="button" data-photo-menu-trigger aria-expanded="false">Editar foto de perfil</button>
+                  <div class="bo-profile-photo-menu" data-photo-menu hidden>
+                    <button type="button" data-add-profile-photo>Adicionar nova foto</button>
+                    <button type="button" data-edit-current-photo>Editar foto atual</button>
+                  </div>
+                  <input class="bo-profile-photo-file-input" type="file" name="photo" accept="image/jpeg,image/png,image/webp,image/gif" />
+                </div>
+                  </aside>
+                </div>
+              </section>
 
-              <label>
-                <span class="bo-label-line">LinkedIn <span class="bo-label-note">(coloca o link do perfil)</span></span>
-                <input type="url" name="linkedin_url" placeholder="https://www.linkedin.com/in/..." />
-              </label>
-
+              <section class="bo-team-form-section">
+                <div class="bo-team-section-heading"><div><p class="bo-kicker">Acesso</p><h4>Dados internos</h4><p>Contacto, permissões e data de entrada.</p></div></div>
+                <div class="bo-team-fields-grid">
               <label>
                 Email
                 <input type="email" name="email" />
@@ -365,8 +537,16 @@
                 Acesso BackOffice
                 <select name="account_role">
                   <option value="member">Membro</option>
-                  <option value="communication_team">Equipa Comunicação</option>
-                  <option value="hr_team">Equipa Recursos Humanos</option>
+                  <option value="communication_team">Comunicação</option>
+                  <option value="projects_innovation_team">Projetos e Inovação</option>
+                  <option value="commercial_team">Comercial</option>
+                  <option value="hr_team">Recursos Humanos</option>
+                  <option value="team_leader_communication">Team Líder — Comunicação</option>
+                  <option value="team_leader_projects_innovation">Team Líder — Projetos e Inovação</option>
+                  <option value="team_leader_commercial">Team Líder — Comercial</option>
+                  <option value="team_leader_hr">Team Líder — Recursos Humanos</option>
+                  <option value="coordinator">Coordenador</option>
+                  <option value="vice_coordinator">Vice-Coordenadora</option>
                   <option value="admin">Administrador</option>
                 </select>
               </label>
@@ -394,13 +574,23 @@
                 Ano de entrada
                 <input type="number" name="joined_year" min="2000" max="2100" />
               </label>
+                </div>
+              </section>
 
+              <section class="bo-team-form-section bo-team-visibility-section">
+                <div class="bo-team-section-heading"><div><p class="bo-kicker">Visibilidade</p><h4>Estado do perfil</h4></div></div>
               <label class="bo-check" data-admin-only>
                 <input type="checkbox" name="is_active" checked />
                 Ativo no site público
               </label>
 
-              <div class="bo-actions">
+              <label class="bo-check bo-legend-toggle" data-admin-only>
+                <input type="checkbox" name="is_legend" />
+                <span><strong>Rise Up Legend</strong><small>Fica visível na página Rise Up Legends e no capítulo final da equipa.</small></span>
+              </label>
+              </section>
+
+              <div class="bo-actions bo-team-edit-actions">
                 <button class="bo-button bo-button-primary" type="submit">Guardar perfil</button>
                 <button class="bo-button bo-button-danger" type="button" data-delete-team-member data-admin-only>Apagar perfil</button>
               </div>
@@ -414,14 +604,20 @@
             <div>
               <p class="bo-kicker">Projetos</p>
               <h2>Projetos e associa&ccedil;&otilde;es</h2>
-            </div>
-            <div class="bo-actions">
-              <button class="bo-button bo-button-primary" type="button" data-new-project>Novo projeto</button>
+              <p>Planeia, documenta e publica cada iniciativa num só lugar.</p>
             </div>
           </div>
 
-          <div class="bo-workspace">
-            <div class="bo-panel">
+          <div class="bo-workspace bo-project-workspace">
+            <div class="bo-panel bo-project-list-panel">
+              <div class="bo-list-head">
+                <div>
+                  <p class="bo-kicker">Portefólio</p>
+                  <h3>Todos os projetos</h3>
+                  <p>Consulta o estado, a equipa e os prazos de cada iniciativa.</p>
+                </div>
+                <button class="bo-button bo-button-primary" type="button" data-new-project data-project-manager-only>Novo projeto</button>
+              </div>
               <div class="bo-list-tools">
                 <label>
                   <span class="bo-field-label">Pesquisar</span>
@@ -441,117 +637,122 @@
               <div class="bo-list" data-project-list></div>
             </div>
 
-            <form class="bo-panel bo-form" data-project-form hidden>
-              <div class="bo-form-head">
-                <h3 data-project-form-title>Editar projeto</h3>
-                <button class="bo-icon-button" type="button" data-close-project-form aria-label="Fechar">x</button>
+            <form class="bo-panel bo-form bo-project-edit-page" data-project-form hidden>
+              <div class="bo-form-head bo-project-edit-head">
+                <div>
+                  <button class="bo-back-button" type="button" data-close-project-form aria-label="Voltar aos projetos"><span aria-hidden="true">←</span> Voltar aos projetos</button>
+                  <div class="bo-project-title-line">
+                    <div>
+                      <p class="bo-kicker">Projeto</p>
+                      <h3 data-project-form-title>Editar projeto</h3>
+                      <p>Centraliza a informação, os conteúdos e as pessoas envolvidas.</p>
+                    </div>
+                    <span class="bo-project-status-preview" data-project-status-preview>Rascunho</span>
+                  </div>
+                </div>
               </div>
 
               <input type="hidden" name="id" />
 
-              <label>
-                Título
-                <input type="text" name="title" required />
-              </label>
-
-              <label>
-                Categoria
-                <input type="text" name="category" />
-              </label>
-
-              <label>
-                Data
-                <input type="date" name="project_date" />
-              </label>
-
-              <label>
-                Estado
-                <select name="status" required>
-                  <option value="draft">Rascunho</option>
-                  <option value="in_review">Em revis&atilde;o</option>
-                  <option value="published">Publicado</option>
-                  <option value="archived">Arquivado</option>
-                </select>
-              </label>
-
-              <label class="bo-field-full">
-                Descri&ccedil;&atilde;o
-                <textarea name="description" rows="5"></textarea>
-              </label>
-
-              <label>
-                T&iacute;tulo em ingl&ecirc;s
-                <input type="text" name="title_en" />
-              </label>
-
-              <label>
-                Categoria em ingl&ecirc;s
-                <input type="text" name="category_en" />
-              </label>
-
-              <label class="bo-field-full">
-                Descri&ccedil;&atilde;o em ingl&ecirc;s
-                <textarea name="description_en" rows="5"></textarea>
-                <span class="bo-field-hint">Usado automaticamente no site p&uacute;blico quando o visitante escolhe EN.</span>
-              </label>
-
-              <label>
-                Tags em ingl&ecirc;s
-                <input type="text" name="tags_en" placeholder="media, logistics, artificial intelligence" />
-              </label>
-
-              <div class="bo-field-full bo-image-field">
-                <div>
-                  <span class="bo-field-label">Imagens do projeto</span>
-                  <span class="bo-field-hint">A primeira imagem &eacute; a capa. Usa imagens horizontais, idealmente 1600x1200 px. O backoffice otimiza imagens grandes antes de enviar.</span>
+              <section class="bo-project-form-section bo-project-overview-section">
+                <div class="bo-project-section-heading">
+                  <div><span class="bo-project-section-number">01</span><div><p class="bo-kicker">Visão geral</p><h4>Identidade do projeto</h4><p>A informação essencial para reconhecer e acompanhar esta iniciativa.</p></div></div>
                 </div>
-                <input class="bo-sr-only" type="file" name="image" accept="image/jpeg,image/png,image/webp,image/gif" multiple data-project-image-input />
-                <input type="hidden" name="image_url" />
-                <div class="bo-image-preview" data-project-image-preview></div>
-              </div>
+                <div class="bo-project-fields-grid">
+                  <label class="bo-project-field-wide">Título<input type="text" name="title" required /></label>
+                  <label>Cliente ou parceiro<input type="text" name="client_name" maxlength="180" /></label>
+                  <label>Categoria<input type="text" name="category" /></label>
+                  <label>Data do projeto<input type="date" name="project_date" /></label>
+                  <label>Prazo<input type="date" name="deadline" /></label>
+                  <label class="bo-project-field-wide">Descri&ccedil;&atilde;o<textarea name="description" rows="5"></textarea></label>
+                  <label class="bo-project-field-wide">Tags<input type="text" name="tags" placeholder="media, logística, inteligência artificial" /><span class="bo-field-hint">Separadas por vírgulas. Ajudam a organizar o projeto e a melhorar os dados de SEO.</span></label>
+                </div>
+              </section>
 
-              <label>
-                Link externo
-                <input type="url" name="external_link" placeholder="https://..." />
-              </label>
+              <section class="bo-project-form-section">
+                <div class="bo-project-section-heading">
+                  <div><span class="bo-project-section-number">02</span><div><p class="bo-kicker">Conteúdo internacional</p><h4>Versão em inglês</h4><p>Usada automaticamente no site público quando o visitante escolhe EN.</p></div></div>
+                </div>
+                <div class="bo-project-fields-grid">
+                  <label>T&iacute;tulo em ingl&ecirc;s<input type="text" name="title_en" /></label>
+                  <label>Categoria em ingl&ecirc;s<input type="text" name="category_en" /></label>
+                  <label class="bo-project-field-wide">Descri&ccedil;&atilde;o em ingl&ecirc;s<textarea name="description_en" rows="5"></textarea></label>
+                  <label class="bo-project-field-wide">Tags em ingl&ecirc;s<input type="text" name="tags_en" placeholder="media, logistics, artificial intelligence" /></label>
+                </div>
+              </section>
 
-              <label>
-                Tags
-                <input type="text" name="tags" placeholder="media, logística, inteligência artificial" />
-                <span class="bo-field-hint">Separadas por vírgulas. Aparecem no projeto e alimentam os dados de SEO.</span>
-              </label>
+              <section class="bo-project-form-section bo-project-gallery-section">
+                <div class="bo-project-section-heading">
+                  <div><span class="bo-project-section-number">03</span><div><p class="bo-kicker">Galeria</p><h4>Imagens do projeto</h4><p>Constrói uma apresentação visual consistente e escolhe a capa.</p></div></div>
+                </div>
+                <div class="bo-image-field">
+                  <div class="bo-project-gallery-intro">
+                    <span class="bo-field-label">Fotografias</span>
+                    <span class="bo-field-hint">A primeira imagem é a capa. Usa imagens horizontais, idealmente 1600 × 1200 px. Arrasta para reordenar.</span>
+                  </div>
+                  <input class="bo-sr-only" type="file" name="image" accept="image/jpeg,image/png,image/webp,image/gif" multiple data-project-image-input />
+                  <input type="hidden" name="image_url" />
+                  <div class="bo-image-preview" data-project-image-preview></div>
+                </div>
+              </section>
 
-              <label>
-                Ordem na lista
-                <input type="number" name="sort_order" min="1" step="1" />
-                <span class="bo-field-hint">1 aparece primeiro. Se colocares um projeto numa posi&ccedil;&atilde;o j&aacute; ocupada, os restantes descem automaticamente.</span>
-              </label>
-
-              <fieldset class="bo-field-full bo-member-picker">
-                <legend>Pessoas envolvidas</legend>
+              <section class="bo-project-form-section">
+                <div class="bo-project-section-heading">
+                  <div><span class="bo-project-section-number">04</span><div><p class="bo-kicker">Colaboração</p><h4>Equipa e responsáveis</h4><p>Define quem participa e quem lidera o trabalho.</p></div></div>
+                </div>
+                <fieldset class="bo-member-picker">
+                <legend class="bo-sr-only">Equipa e responsáveis</legend>
                 <div class="bo-member-picker-head">
-                  <span class="bo-field-hint">Seleciona os membros ligados a este projeto.</span>
-                  <div class="bo-member-picker-tools">
-                    <button class="bo-button bo-button-ghost bo-member-picker-search-button" type="button" data-project-member-search-toggle>
-                      Pesquisar pessoas
-                    </button>
-                    <div class="bo-member-picker-search" data-project-member-search-wrap hidden>
-                      <label class="bo-sr-only" for="project-member-search">Pesquisar pessoas envolvidas</label>
-                      <input id="project-member-search" type="search" placeholder="Nome ou email" data-project-member-search />
-                      <button class="bo-button bo-button-ghost" type="button" data-project-member-search-clear>Limpar</button>
+                  <div>
+                    <strong>Quem participa neste projeto?</strong>
+                    <span class="bo-field-hint">Adiciona pessoas à equipa e destaca quem fica responsável.</span>
+                  </div>
+                  <div class="bo-member-picker-search" data-project-member-search-wrap>
+                    <label for="project-member-search">Pesquisar</label>
+                    <div class="bo-member-picker-search-control">
+                      <input id="project-member-search" type="search" placeholder="Nome ou email" autocomplete="off" data-project-member-search />
+                      <button class="bo-search-clear" type="button" data-project-member-search-clear hidden>Limpar</button>
                     </div>
                   </div>
                 </div>
+                <div class="bo-project-responsible-teams">
+                  <div>
+                    <span class="bo-field-label">Equipas completas</span>
+                    <span class="bo-field-hint">Um clique adiciona todos os membros da área como responsáveis.</span>
+                  </div>
+                  <div class="bo-team-shortcuts" data-project-responsible-teams></div>
+                </div>
+                <div class="bo-project-member-list-head">
+                  <div>
+                    <span class="bo-field-label">Pessoas</span>
+                    <span class="bo-field-hint">“Na equipa” inclui a pessoa; “Responsável” dá-lhe responsabilidade pelo projeto.</span>
+                  </div>
+                  <span class="bo-project-member-summary" data-project-member-summary></span>
+                </div>
                 <div data-project-member-options></div>
-              </fieldset>
+                </fieldset>
+              </section>
 
-              <div class="bo-actions">
-                <button class="bo-button bo-button-primary" type="submit">Guardar projeto</button>
-                <button class="bo-button bo-button-ghost" type="button" data-preview-project>Pr&eacute;-visualizar</button>
-                <button class="bo-button bo-button-danger" type="button" data-archive-project>Arquivar</button>
-                <button class="bo-button bo-button-danger" type="button" data-delete-project data-admin-only>Apagar definitivo</button>
-              </div>
-              <p class="bo-status" data-project-form-status></p>
+              <section class="bo-project-form-section bo-project-publishing-section">
+                <div class="bo-project-section-heading">
+                  <div><span class="bo-project-section-number">05</span><div><p class="bo-kicker">Publicação</p><h4>Estado e visibilidade</h4><p>Controla quando e onde o projeto fica disponível.</p></div></div>
+                </div>
+                <div class="bo-project-fields-grid">
+                  <label>Estado<select name="status" required><option value="draft">Rascunho</option><option value="in_review">Em revis&atilde;o</option><option value="published">Publicado</option><option value="archived">Arquivado</option></select></label>
+                  <label>Ordem na lista<input type="number" name="sort_order" min="1" step="1" /><span class="bo-field-hint">1 aparece primeiro; os restantes ajustam-se automaticamente.</span></label>
+                  <label class="bo-project-field-wide">Link externo<input type="url" name="external_link" placeholder="https://..." /><span class="bo-field-hint">Opcional. Usa apenas uma ligação segura que complemente o projeto.</span></label>
+                </div>
+              </section>
+
+              <footer class="bo-project-edit-footer">
+                <p class="bo-status" data-project-form-status aria-live="polite"></p>
+                <div class="bo-actions bo-project-secondary-actions">
+                  <button class="bo-button bo-button-ghost" type="button" data-preview-project>Pr&eacute;-visualizar</button>
+                  <button class="bo-button bo-button-danger" type="button" data-archive-project>Arquivar</button>
+                  <button class="bo-button bo-button-danger" type="button" data-delete-project data-admin-only>Apagar definitivo</button>
+                </div>
+                <button class="bo-button bo-button-primary bo-project-save-button" type="submit">Guardar projeto</button>
+              </footer>
             </form>
           </div>
         </section>
@@ -591,14 +792,160 @@
           <div class="bo-section-head">
             <div>
               <p class="bo-kicker">Recursos Humanos</p>
-              <h2>Entrevistas e avalia&ccedil;&otilde;es</h2>
+              <h2>Pessoas e organiza&ccedil;&atilde;o</h2>
             </div>
             <p class="bo-section-note">
-              Segue o gui&atilde;o, conduz a conversa com crit&eacute;rio e regista cada decis&atilde;o no mesmo fluxo.
+              Gere a equipa, planeia o ano e acompanha presen&ccedil;as, cargos, recrutamento e estrutura interna.
             </p>
           </div>
 
-          <article class="bo-panel bo-hr-overview">
+          <div class="bo-hr-module-cards" role="tablist" aria-label="Módulos de Recursos Humanos">
+            <button class="bo-hr-module-card is-active" type="button" role="tab" aria-selected="true" data-hr-module-button="schedule">
+              <span class="bo-hr-module-icon" aria-hidden="true">12</span>
+              <span><strong>Cronograma anual</strong><small>Marcos, mandatos e atividades planeadas.</small></span>
+              <span class="bo-hr-module-arrow" aria-hidden="true">→</span>
+            </button>
+            <button class="bo-hr-module-card" type="button" role="tab" aria-selected="false" data-hr-module-button="calendar">
+              <span class="bo-hr-module-icon bo-hr-module-icon-calendar" aria-hidden="true"></span>
+              <span><strong>Calendário de eventos</strong><small>Formações, reuniões e momentos de equipa.</small></span>
+              <span class="bo-hr-module-arrow" aria-hidden="true">→</span>
+            </button>
+            <button class="bo-hr-module-card" type="button" role="tab" aria-selected="false" data-hr-module-button="attendance">
+              <span class="bo-hr-module-icon bo-hr-module-icon-check" aria-hidden="true"></span>
+              <span><strong>Presenças</strong><small>Registo e acompanhamento de participação.</small></span>
+              <span class="bo-hr-module-arrow" aria-hidden="true">→</span>
+            </button>
+            <button class="bo-hr-module-card" type="button" role="tab" aria-selected="false" data-hr-module-button="roles">
+              <span class="bo-hr-module-icon bo-hr-module-icon-history" aria-hidden="true"></span>
+              <span><strong>Histórico de cargos</strong><small>Percurso de cada membro na associação.</small></span>
+              <span class="bo-hr-module-arrow" aria-hidden="true">→</span>
+            </button>
+            <button class="bo-hr-module-card" type="button" role="tab" aria-selected="false" data-hr-module-button="applications">
+              <span class="bo-hr-module-icon bo-hr-module-icon-applications" aria-hidden="true"></span>
+              <span><strong>Candidaturas</strong><small>Submissões, análise e acompanhamento do recrutamento.</small></span>
+              <span class="bo-hr-module-arrow" aria-hidden="true">→</span>
+            </button>
+            <button class="bo-hr-module-card" type="button" role="tab" aria-selected="false" data-hr-module-button="organization">
+              <span class="bo-hr-module-icon bo-hr-module-icon-organization" aria-hidden="true"></span>
+              <span><strong>Organigrama</strong><small>Estrutura, cargos e linhas de responsabilidade.</small></span>
+              <span class="bo-hr-module-arrow" aria-hidden="true">→</span>
+            </button>
+          </div>
+
+          <div class="bo-panel bo-hr-module-workspace">
+            <section class="bo-hr-module-view is-active" role="tabpanel" data-hr-module-view="schedule">
+              <div class="bo-list-head">
+                <div><p class="bo-kicker">Planeamento</p><h3>Cronograma anual</h3><p>Consulta e regista os principais marcos do ano.</p></div>
+                <button class="bo-button bo-button-primary" type="button" data-new-hr-milestone>Novo marco</button>
+              </div>
+              <form class="bo-form bo-hr-inline-form" data-hr-milestone-form hidden>
+                <div class="bo-form-head"><h3>Novo marco</h3><button class="bo-icon-button" type="button" data-close-hr-milestone-form aria-label="Fechar">×</button></div>
+                <label>Título<input name="title" type="text" maxlength="180" required /></label>
+                <label>Data e hora<input name="starts_at" type="datetime-local" required /></label>
+                <label>Termina em<input name="ends_at" type="datetime-local" /></label>
+                <label>Local<input name="location" type="text" maxlength="180" /></label>
+                <label class="bo-field-full">Descrição<textarea name="description" rows="3" maxlength="1000"></textarea></label>
+                <div class="bo-actions bo-field-full"><button class="bo-button bo-button-primary" type="submit">Guardar marco</button></div>
+                <p class="bo-status bo-field-full" data-hr-milestone-status></p>
+              </form>
+              <div class="bo-hr-record-list" data-hr-schedule-list></div>
+            </section>
+
+            <section class="bo-hr-module-view" role="tabpanel" data-hr-module-view="calendar">
+              <div class="bo-list-head">
+                <div><p class="bo-kicker">Agenda</p><h3>Calendário de eventos</h3><p>Formações, reuniões e atividades da equipa.</p></div>
+                <button class="bo-button bo-button-primary" type="button" data-new-hr-event>Novo evento</button>
+              </div>
+              <form class="bo-form bo-hr-inline-form" data-hr-event-form hidden>
+                <div class="bo-form-head"><h3>Novo evento</h3><button class="bo-icon-button" type="button" data-close-hr-event-form aria-label="Fechar">×</button></div>
+                <label>Título<input name="title" type="text" maxlength="180" required /></label>
+                <label>Tipo<select name="event_type"><option value="event">Evento</option><option value="meeting">Reunião</option></select></label>
+                <label>Data e hora<input name="starts_at" type="datetime-local" required /></label>
+                <label>Termina em<input name="ends_at" type="datetime-local" /></label>
+                <label>Local<input name="location" type="text" maxlength="180" /></label>
+                <label class="bo-field-full">Descrição<textarea name="description" rows="3" maxlength="1000"></textarea></label>
+                <div class="bo-actions bo-field-full"><button class="bo-button bo-button-primary" type="submit">Guardar evento</button></div>
+                <p class="bo-status bo-field-full" data-hr-event-status></p>
+              </form>
+              <div class="bo-hr-record-list" data-hr-calendar-list></div>
+            </section>
+
+            <section class="bo-hr-module-view" role="tabpanel" data-hr-module-view="attendance">
+              <div class="bo-list-head">
+                <div><p class="bo-kicker">Participação</p><h3>Registo de presenças</h3><p>Seleciona uma atividade e atualiza a presença de cada membro.</p></div>
+              </div>
+              <label class="bo-hr-event-picker"><span class="bo-field-label">Evento ou reunião</span><select data-attendance-event></select></label>
+              <form data-attendance-form>
+                <div class="bo-attendance-list" data-attendance-list></div>
+                <div class="bo-actions bo-hr-attendance-actions"><button class="bo-button bo-button-primary" type="submit">Guardar presenças</button></div>
+                <p class="bo-status" data-attendance-status></p>
+              </form>
+            </section>
+
+            <section class="bo-hr-module-view" role="tabpanel" data-hr-module-view="roles">
+              <div class="bo-list-head">
+                <div><p class="bo-kicker">Equipa</p><h3>Histórico de cargos</h3><p>Regista e consulta o percurso dos membros na associação.</p></div>
+                <button class="bo-button bo-button-primary" type="button" data-new-role-history>Novo registo</button>
+              </div>
+              <form class="bo-form bo-hr-inline-form" data-role-history-form hidden>
+                <div class="bo-form-head"><h3>Novo cargo</h3><button class="bo-icon-button" type="button" data-close-role-history-form aria-label="Fechar">×</button></div>
+                <label>Membro<select name="member_id" data-role-history-member required></select></label>
+                <label>Cargo<input name="role_title" type="text" maxlength="120" required /></label>
+                <label>Início<input name="started_on" type="date" required /></label>
+                <label>Fim<input name="ended_on" type="date" /></label>
+                <label class="bo-field-full">Notas<textarea name="notes" rows="3" maxlength="1000"></textarea></label>
+                <div class="bo-actions bo-field-full"><button class="bo-button bo-button-primary" type="submit">Guardar cargo</button></div>
+                <p class="bo-status bo-field-full" data-role-history-status></p>
+              </form>
+              <div class="bo-hr-record-list" data-role-history-list></div>
+            </section>
+
+            <section class="bo-hr-module-view" role="tabpanel" data-hr-module-view="applications">
+              <div class="bo-list-head">
+                <div>
+                  <p class="bo-kicker">Recrutamento</p>
+                  <h3>Candidaturas submetidas</h3>
+                  <p>Consulta e acompanha os dados enviados através do formulário Junta-te a Nós.</p>
+                </div>
+              </div>
+              <div class="bo-list-tools">
+                <label>
+                  <span class="bo-field-label">Pesquisar</span>
+                  <input type="search" placeholder="Nome, email, curso ou motivação" data-application-search />
+                </label>
+                <label>
+                  <span class="bo-field-label">Estado</span>
+                  <select data-application-status-filter>
+                    <option value="all">Todas</option>
+                    <option value="new">Novas</option>
+                    <option value="read">Lidas</option>
+                    <option value="archived">Arquivadas</option>
+                  </select>
+                </label>
+              </div>
+              <div class="bo-list" data-application-list></div>
+            </section>
+
+            <section class="bo-hr-module-view" role="tabpanel" data-hr-module-view="organization">
+              <div class="bo-list-head bo-org-chart-head">
+                <div><p class="bo-kicker">Estrutura</p><h3>Organigrama da Rise Up</h3><p>Cria cargos, escolhe os membros e define de forma simples quem reporta a quem.</p></div>
+                <div class="bo-actions">
+                  <button class="bo-button bo-button-ghost" type="button" data-add-org-node>Adicionar cargo</button>
+                  <button class="bo-button bo-button-primary" type="button" data-save-org-chart>Guardar organigrama</button>
+                  <button class="bo-button bo-button-ghost" type="button" data-export-org-pdf>Exportar PDF</button>
+                </div>
+              </div>
+              <div class="bo-org-chart-help">
+                <span><strong>1.</strong> Adiciona um cargo</span>
+                <span><strong>2.</strong> Escolhe a pessoa</span>
+                <span><strong>3.</strong> Define a chefia direta</span>
+              </div>
+              <div class="bo-org-chart-canvas" data-org-chart></div>
+              <p class="bo-status" data-org-chart-status></p>
+            </section>
+          </div>
+
+          <article class="bo-panel bo-hr-overview" hidden>
             <div class="bo-hr-overview-main">
               <div class="bo-hr-overview-copy">
                 <p class="bo-kicker">Fluxo</p>
@@ -621,12 +968,11 @@
             </div>
             <div class="bo-segmented" role="tablist" aria-label="Vistas de Recursos Humanos">
               <button type="button" class="is-active" data-hr-view-button="guide">Gui&atilde;o da entrevista</button>
-              <button type="button" data-hr-view-button="applications">Candidaturas</button>
               <button type="button" data-hr-view-button="evaluation">Grelha de avalia&ccedil;&atilde;o</button>
             </div>
           </article>
 
-          <div class="bo-hr-view is-active" data-hr-view="guide">
+          <div class="bo-hr-view is-active" data-hr-view="guide" hidden>
             <article class="bo-panel bo-hr-guide-primary">
               <div class="bo-hr-guide-head">
                 <div>
@@ -736,35 +1082,7 @@
             </div>
           </div>
 
-          <div class="bo-hr-view" data-hr-view="applications">
-            <article class="bo-panel">
-              <div class="bo-list-head">
-                <div>
-                  <p class="bo-kicker">Website</p>
-                  <h3>Candidaturas submetidas</h3>
-                  <p>Consulta os dados enviados pelo formul&aacute;rio Junta-te a N&oacute;s antes de preparar entrevistas.</p>
-                </div>
-              </div>
-              <div class="bo-list-tools">
-                <label>
-                  <span class="bo-field-label">Pesquisar</span>
-                  <input type="search" placeholder="Nome, email, curso ou motiva&ccedil;&atilde;o" data-application-search />
-                </label>
-                <label>
-                  <span class="bo-field-label">Estado</span>
-                  <select data-application-status-filter>
-                    <option value="all">Todas</option>
-                    <option value="new">Novas</option>
-                    <option value="read">Lidas</option>
-                    <option value="archived">Arquivadas</option>
-                  </select>
-                </label>
-              </div>
-              <div class="bo-list" data-application-list></div>
-            </article>
-          </div>
-
-          <div class="bo-hr-view" data-hr-view="evaluation">
+          <div class="bo-hr-view" data-hr-view="evaluation" hidden>
             <div class="bo-hr-live-layout">
               <aside class="bo-panel bo-hr-live-guide" aria-label="Gui&atilde;o da entrevista em direto">
                 <div class="bo-hr-live-guide-head">
@@ -1066,5 +1384,27 @@
         </section>
       </main>
     </div>
+    <dialog class="bo-photo-crop-dialog" data-photo-crop-dialog aria-labelledby="photo-crop-dialog-title">
+      <div class="bo-photo-crop-dialog-panel">
+        <h2 id="photo-crop-dialog-title">Mover e redimensionar</h2>
+        <div class="bo-photo-crop-stage" data-photo-crop-stage>
+          <img data-photo-crop-dialog-image alt="Ajustar enquadramento da fotografia" />
+          <span class="bo-photo-crop-mask" aria-hidden="true"></span>
+        </div>
+        <label class="bo-photo-crop-dialog-zoom"><span>Zoom</span><input type="range" min="1" max="3" step="0.01" value="1" data-photo-crop-dialog-zoom aria-label="Zoom da fotografia" /></label>
+        <div class="bo-photo-crop-dialog-actions">
+          <button class="bo-button bo-button-ghost" type="button" data-close-photo-crop-dialog>Cancelar</button>
+          <button class="bo-button bo-button-primary" type="button" data-confirm-photo-crop>Escolher</button>
+        </div>
+      </div>
+    </dialog>
+    <dialog class="bo-account-delete-dialog" data-account-delete-dialog aria-labelledby="account-delete-dialog-title">
+      <div class="bo-account-delete-dialog-panel">
+        <span class="bo-account-delete-icon" aria-hidden="true">!</span>
+        <div><p class="bo-kicker">Ação irreversível</p><h2 id="account-delete-dialog-title">Apagar a tua conta?</h2><p>A tua conta será apagada da base de dados, incluindo o acesso ao BackOffice e o perfil associado. Esta ação não pode ser desfeita.</p></div>
+        <div class="bo-account-delete-dialog-actions"><button class="bo-button bo-button-ghost" type="button" data-cancel-account-deletion>Cancelar</button><button class="bo-button bo-button-danger" type="button" data-confirm-account-deletion>Sim, apagar conta</button></div>
+        <p class="bo-status" data-account-delete-status></p>
+      </div>
+    </dialog>
   </body>
 </html>

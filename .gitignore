@@ -3,6 +3,14 @@ Thumbs.db
 Desktop.ini
 
 .vercel
+.next
+node_modules
+coverage
+output/
+tmp/
+*.tsbuildinfo
+.env*
+!.env.example
 
 # Local/internal material. The repository is public.
 SUPABASE_SETUP.md
