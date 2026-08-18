@@ -80,7 +80,8 @@ export async function getTaskRecipients(taskId: string): Promise<{ task: TaskRec
 export async function sendAssignmentEmails(taskId: string, recipientIds: string[]) {
   const { task, recipients } = await getTaskRecipients(taskId);
   const targetIds = new Set(recipientIds);
-  await Promise.all(recipients.filter((recipient) => targetIds.has(recipient.id)).map((recipient) => {
+  const targets = recipients.filter((recipient) => targetIds.has(recipient.id));
+  await Promise.all(targets.map((recipient) => {
     const greeting = recipient.name ? `Olá, ${recipient.name}` : "Olá";
     const due = formatDueDate(task.due_date);
     return sendEmail({
@@ -91,6 +92,7 @@ export async function sendAssignmentEmails(taskId: string, recipientIds: string[
       html: `<p>${escapeHtml(greeting)},</p><p>Foi-te atribuída uma nova tarefa na Rise Up.</p><p><strong>${escapeHtml(task.title)}</strong><br>Prioridade: ${escapeHtml(priorityLabel(task.priority))}<br>Prazo: ${escapeHtml(due)}</p>${task.description ? `<p>${escapeHtml(task.description)}</p>` : ""}<p><a href="${taskUrl()}">Abrir tarefa no BackOffice</a></p>`
     });
   }));
+  return { sent: targets.length, requested: targetIds.size };
 }
 
 function portugalDate(offsetDays = 0) {

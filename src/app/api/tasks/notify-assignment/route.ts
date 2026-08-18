@@ -10,8 +10,8 @@ export async function POST(request: NextRequest) {
     if (!canAssignTasks(identity.role)) return NextResponse.json({ error: "Sem permissão para enviar notificações de tarefas." }, { status: 403 });
     const body = await request.json() as { taskId?: string; recipientIds?: string[] };
     if (!body.taskId || !Array.isArray(body.recipientIds) || !body.recipientIds.every((id) => typeof id === "string")) return NextResponse.json({ error: "Pedido inválido." }, { status: 400 });
-    await sendAssignmentEmails(body.taskId, body.recipientIds);
-    return NextResponse.json({ ok: true });
+    const result = await sendAssignmentEmails(body.taskId, body.recipientIds);
+    return NextResponse.json({ ok: true, ...result });
   } catch (error) {
     console.error("Task assignment notification failed", error);
     return NextResponse.json({ error: "Não foi possível enviar a notificação por email." }, { status: 502 });
