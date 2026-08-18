@@ -318,13 +318,24 @@
   }
 
   async function notifyNewTaskAssignees(taskId, recipientIds) {
-    if (workspace.preview || !recipientIds.length || !core().session?.access_token) return;
+    if (workspace.preview || !recipientIds.length) return { sent: 0, requested: 0 };
+    const { data, error } = await client().auth.getSession();
+    if (error || !data.session?.access_token) {
+      throw new Error("A tarefa foi guardada, mas a sessão expirou antes do envio do email. Volta a iniciar sessão.");
+    }
     const response = await fetch("/api/tasks/notify-assignment", {
       method: "POST",
-      headers: { "Content-Type": "application/json", Authorization: `Bearer ${core().session.access_token}` },
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${data.session.access_token}` },
       body: JSON.stringify({ taskId, recipientIds })
     });
-    if (!response.ok) throw new Error("A tarefa foi guardada, mas o email não foi enviado.");
+    const body = await response.json().catch(() => ({}));
+    if (!response.ok) throw new Error(body.error || "A tarefa foi guardada, mas o email não foi enviado.");
+    if (body.sent !== recipientIds.length) {
+      throw new Error(body.sent
+        ? `A tarefa foi guardada, mas só ${body.sent} de ${recipientIds.length} emails foram enviados.`
+        : "A tarefa foi guardada, mas nenhum email foi enviado. Confirma o email dos responsáveis.");
+    }
+    return body;
   }
 
   async function saveTask(event) {
