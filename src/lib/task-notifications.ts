@@ -31,6 +31,10 @@ function taskUrl() {
   return `${appUrl()}/backoffice`;
 }
 
+function logoUrl() {
+  return `${appUrl()}/img/riseup-logo.png`;
+}
+
 function priorityLabel(priority: string) {
   return ({ low: "Baixa", medium: "Média", high: "Alta", urgent: "Urgente" })[priority] || "Média";
 }
@@ -38,6 +42,73 @@ function priorityLabel(priority: string) {
 function formatDueDate(value: string | null) {
   if (!value) return "Sem prazo";
   return new Intl.DateTimeFormat("pt-PT", { day: "2-digit", month: "long", year: "numeric", timeZone: "Europe/Lisbon" }).format(new Date(`${value}T12:00:00Z`));
+}
+
+function emailLayout(input: { preheader: string; eyebrow: string; title: string; intro: string; content: string; ctaLabel: string }) {
+  return `<!doctype html>
+<html lang="pt">
+  <head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${escapeHtml(input.title)}</title></head>
+  <body style="margin:0;padding:0;background:#f2f5f9;color:#101820;font-family:Arial,Helvetica,sans-serif;">
+    <div style="display:none;max-height:0;overflow:hidden;opacity:0;color:transparent;">${escapeHtml(input.preheader)}</div>
+    <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="width:100%;background:#f2f5f9;">
+      <tr><td align="center" style="padding:32px 16px;">
+        <table role="presentation" width="600" cellspacing="0" cellpadding="0" border="0" style="width:100%;max-width:600px;background:#ffffff;border:1px solid #dfe6ee;border-radius:18px;overflow:hidden;box-shadow:0 10px 30px rgba(16,24,32,.08);">
+          <tr><td align="center" style="padding:28px 32px 22px;background:#ffffff;"><img src="${logoUrl()}" width="148" alt="Rise Up" style="display:block;width:148px;max-width:100%;height:auto;border:0;"></td></tr>
+          <tr><td style="height:5px;background:#1697e5;font-size:0;line-height:0;">&nbsp;</td></tr>
+          <tr><td style="padding:36px 40px 14px;">
+            <div style="margin:0 0 10px;color:#168bd2;font-size:12px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;">${escapeHtml(input.eyebrow)}</div>
+            <h1 style="margin:0 0 14px;color:#101820;font-size:28px;line-height:1.2;font-weight:750;">${escapeHtml(input.title)}</h1>
+            <p style="margin:0;color:#5c6875;font-size:16px;line-height:1.65;">${escapeHtml(input.intro)}</p>
+          </td></tr>
+          <tr><td style="padding:18px 40px 8px;">${input.content}</td></tr>
+          <tr><td style="padding:24px 40px 38px;">
+            <table role="presentation" cellspacing="0" cellpadding="0" border="0"><tr><td style="border-radius:10px;background:#101820;"><a href="${taskUrl()}" style="display:inline-block;padding:14px 22px;color:#ffffff;font-size:15px;font-weight:700;text-decoration:none;border-radius:10px;">${escapeHtml(input.ctaLabel)} &nbsp;→</a></td></tr></table>
+          </td></tr>
+          <tr><td style="padding:22px 40px;background:#f8fafc;border-top:1px solid #e7edf3;color:#7b8794;font-size:12px;line-height:1.6;">Mensagem automática do BackOffice da Rise Up.<br>Recebeste este email por estares associado a uma tarefa.</td></tr>
+        </table>
+      </td></tr>
+    </table>
+  </body>
+</html>`;
+}
+
+export function renderAssignmentEmail(task: TaskRecord, recipient: Recipient) {
+  const due = formatDueDate(task.due_date);
+  const greeting = recipient.name ? `Olá, ${recipient.name}.` : "Olá.";
+  const description = task.description
+    ? `<div style="margin-top:16px;padding:16px 18px;background:#f8fafc;border:1px solid #e7edf3;border-radius:10px;color:#44515e;font-size:14px;line-height:1.65;">${escapeHtml(task.description)}</div>`
+    : "";
+  return emailLayout({
+    preheader: `Foi-te atribuída a tarefa ${task.title}.`,
+    eyebrow: "Nova tarefa",
+    title: task.title,
+    intro: `${greeting} Foi-te atribuída uma nova tarefa na Rise Up.`,
+    ctaLabel: "Abrir tarefa no BackOffice",
+    content: `<table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="width:100%;background:#f4f8fc;border:1px solid #dce8f2;border-radius:12px;"><tr><td width="50%" style="padding:16px 18px;border-right:1px solid #dce8f2;"><div style="margin-bottom:6px;color:#7a8794;font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;">Prioridade</div><div style="color:#101820;font-size:15px;font-weight:700;">${escapeHtml(priorityLabel(task.priority))}</div></td><td width="50%" style="padding:16px 18px;"><div style="margin-bottom:6px;color:#7a8794;font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;">Prazo</div><div style="color:#101820;font-size:15px;font-weight:700;">${escapeHtml(due)}</div></td></tr></table>${description}`
+  });
+}
+
+function taskSummaryList(items: TaskRecord[], accent: string) {
+  return `<table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="width:100%;">${items.map((task) => `<tr><td style="padding:0 0 10px;"><table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="width:100%;border:1px solid #e2e8ef;border-left:4px solid ${accent};border-radius:10px;"><tr><td style="padding:14px 16px;"><div style="color:#101820;font-size:15px;font-weight:700;line-height:1.4;">${escapeHtml(task.title)}</div>${task.due_date ? `<div style="margin-top:5px;color:#6d7985;font-size:12px;line-height:1.4;">Prazo: ${escapeHtml(formatDueDate(task.due_date))}</div>` : ""}</td></tr></table></td></tr>`).join("")}</table>`;
+}
+
+export function renderDailyTaskEmail(input: { recipient: Recipient; overdue: TaskRecord[]; dueTomorrow: TaskRecord[] }) {
+  const greeting = input.recipient.name ? `Olá, ${input.recipient.name}.` : "Olá.";
+  const overdueSection = input.overdue.length
+    ? `<div style="margin:0 0 20px;"><div style="margin:0 0 10px;color:#c74444;font-size:12px;font-weight:700;letter-spacing:1px;text-transform:uppercase;">Em atraso · ${input.overdue.length}</div>${taskSummaryList(input.overdue, "#ef6b6b")}</div>`
+    : "";
+  const tomorrowSection = input.dueTomorrow.length
+    ? `<div style="margin:0 0 8px;"><div style="margin:0 0 10px;color:#168bd2;font-size:12px;font-weight:700;letter-spacing:1px;text-transform:uppercase;">Prazo amanhã · ${input.dueTomorrow.length}</div>${taskSummaryList(input.dueTomorrow, "#1697e5")}</div>`
+    : "";
+  const total = input.overdue.length + input.dueTomorrow.length;
+  return emailLayout({
+    preheader: `Tens ${total} tarefa${total === 1 ? "" : "s"} a precisar da tua atenção.`,
+    eyebrow: "Resumo diário",
+    title: "As tuas prioridades",
+    intro: `${greeting} Aqui está o resumo das tarefas que precisam da tua atenção.`,
+    ctaLabel: "Abrir o To-Do",
+    content: `${overdueSection}${tomorrowSection}`
+  });
 }
 
 async function sendEmail(input: { to: string; subject: string; html: string; text: string; idempotencyKey: string }) {
@@ -89,7 +160,7 @@ export async function sendAssignmentEmails(taskId: string, recipientIds: string[
       subject: `Nova tarefa: ${task.title}`,
       idempotencyKey: `task-assigned-${task.id}-${recipient.id}`,
       text: `${greeting}. Foi-te atribuída a tarefa “${task.title}”. Prioridade: ${priorityLabel(task.priority)}. Prazo: ${due}. Abre o BackOffice: ${taskUrl()}`,
-      html: `<p>${escapeHtml(greeting)},</p><p>Foi-te atribuída uma nova tarefa na Rise Up.</p><p><strong>${escapeHtml(task.title)}</strong><br>Prioridade: ${escapeHtml(priorityLabel(task.priority))}<br>Prazo: ${escapeHtml(due)}</p>${task.description ? `<p>${escapeHtml(task.description)}</p>` : ""}<p><a href="${taskUrl()}">Abrir tarefa no BackOffice</a></p>`
+      html: renderAssignmentEmail(task, recipient)
     });
   }));
   return { sent: targets.length, requested: targetIds.size };
@@ -125,13 +196,12 @@ export async function sendDailyTaskEmails() {
     const overdueText = entry.overdue.map((task) => `• ${task.title} (prazo: ${formatDueDate(task.due_date)})`).join("\n");
     const tomorrowText = entry.dueTomorrow.map((task) => `• ${task.title}`).join("\n");
     const sections = [entry.overdue.length ? `Tarefas em atraso:\n${overdueText}` : "", entry.dueTomorrow.length ? `Para amanhã:\n${tomorrowText}` : ""].filter(Boolean).join("\n\n");
-    const htmlList = (items: TaskRecord[]) => `<ul>${items.map((task) => `<li><strong>${escapeHtml(task.title)}</strong>${task.due_date ? ` — ${escapeHtml(formatDueDate(task.due_date))}` : ""}</li>`).join("")}</ul>`;
     await sendEmail({
       to: entry.recipient.email,
       subject: entry.overdue.length ? `Rise Up: ${entry.overdue.length} tarefa(s) em atraso` : "Rise Up: tarefas com prazo amanhã",
       idempotencyKey: `task-daily-${today}-${entry.recipient.id}`,
       text: `${greeting}.\n\n${sections}\n\nAbre o BackOffice: ${taskUrl()}`,
-      html: `<p>${escapeHtml(greeting)},</p>${entry.overdue.length ? `<p><strong>Tarefas em atraso</strong></p>${htmlList(entry.overdue)}` : ""}${entry.dueTomorrow.length ? `<p><strong>Com prazo amanhã</strong></p>${htmlList(entry.dueTomorrow)}` : ""}<p><a href="${taskUrl()}">Abrir o To-Do no BackOffice</a></p>`
+      html: renderDailyTaskEmail(entry)
     });
   }));
   return { recipients: grouped.size, overdueTasks: records.filter((task) => task.due_date && task.due_date < today).length, dueTomorrowTasks: records.filter((task) => task.due_date === tomorrow).length };
