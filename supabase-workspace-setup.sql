@@ -152,6 +152,30 @@ create table if not exists public.communication_posts (
   constraint communication_posts_status_check check (status in ('idea', 'draft', 'in_review', 'scheduled', 'published'))
 );
 
+create table if not exists public.communication_requests (
+  id uuid primary key default gen_random_uuid(),
+  requester_id uuid not null references auth.users (id) on delete cascade,
+  title text not null,
+  description text not null,
+  channels text[] not null default '{}',
+  desired_publish_at timestamptz,
+  asset_url text,
+  status text not null default 'pending',
+  scheduled_for timestamptz,
+  rejection_reason text,
+  decided_by uuid references auth.users (id) on delete set null,
+  decided_at timestamptz,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+  constraint communication_requests_status_check check (status in ('pending', 'scheduled', 'rejected', 'completed')),
+  constraint communication_requests_channels_check check (cardinality(channels) > 0),
+  constraint communication_requests_decision_check check (
+    (status = 'pending' and scheduled_for is null and rejection_reason is null)
+    or (status in ('scheduled', 'completed') and scheduled_for is not null and rejection_reason is null)
+    or (status = 'rejected' and nullif(btrim(rejection_reason), '') is not null and scheduled_for is null)
+  )
+);
+
 create table if not exists public.workspace_documents (
   id uuid primary key default gen_random_uuid(),
   title text not null,
@@ -242,6 +266,8 @@ create index if not exists workspace_events_starts_at_idx on public.workspace_ev
 create index if not exists communication_posts_scheduled_for_idx on public.communication_posts (scheduled_for);
 create index if not exists communication_posts_project_status_idx on public.communication_posts (project_id, status);
 create index if not exists communication_posts_retention_expires_at_idx on public.communication_posts (retention_expires_at) where retention_expires_at is not null;
+create index if not exists communication_requests_requester_idx on public.communication_requests (requester_id, created_at desc);
+create index if not exists communication_requests_status_schedule_idx on public.communication_requests (status, scheduled_for);
 create index if not exists workspace_documents_category_idx on public.workspace_documents (category, created_at desc);
 create index if not exists commercial_opportunities_stage_idx on public.commercial_opportunities (stage, next_action_at);
 create index if not exists commercial_opportunities_owner_idx on public.commercial_opportunities (owner_id, next_action_at);
@@ -257,6 +283,46 @@ drop trigger if exists set_workspace_events_updated_at on public.workspace_event
 create trigger set_workspace_events_updated_at before update on public.workspace_events for each row execute function public.set_updated_at();
 drop trigger if exists set_communication_posts_updated_at on public.communication_posts;
 create trigger set_communication_posts_updated_at before update on public.communication_posts for each row execute function public.set_updated_at();
+drop trigger if exists set_communication_requests_updated_at on public.communication_requests;
+create trigger set_communication_requests_updated_at before update on public.communication_requests for each row execute function public.set_updated_at();
+
+create or replace function public.complete_due_communication_request()
+returns trigger
+language plpgsql
+set search_path = pg_catalog
+as $$
+begin
+  if new.status = 'scheduled' and new.scheduled_for <= now() then
+    new.status := 'completed';
+  end if;
+  return new;
+end;
+$$;
+
+revoke all on function public.complete_due_communication_request() from public;
+drop trigger if exists complete_due_communication_request_before_write on public.communication_requests;
+create trigger complete_due_communication_request_before_write
+before insert or update on public.communication_requests
+for each row execute function public.complete_due_communication_request();
+
+create or replace function public.protect_communication_request_identity()
+returns trigger
+language plpgsql
+set search_path = pg_catalog
+as $$
+begin
+  if new.requester_id is distinct from old.requester_id or new.created_at is distinct from old.created_at then
+    raise exception 'The communication request author cannot be changed.';
+  end if;
+  return new;
+end;
+$$;
+
+revoke all on function public.protect_communication_request_identity() from public;
+drop trigger if exists protect_communication_request_identity_before_update on public.communication_requests;
+create trigger protect_communication_request_identity_before_update
+before update on public.communication_requests
+for each row execute function public.protect_communication_request_identity();
 drop trigger if exists set_workspace_documents_updated_at on public.workspace_documents;
 create trigger set_workspace_documents_updated_at before update on public.workspace_documents for each row execute function public.set_updated_at();
 drop trigger if exists set_commercial_opportunities_updated_at on public.commercial_opportunities;
@@ -275,6 +341,7 @@ alter table public.workspace_task_assignees enable row level security;
 alter table public.workspace_notices enable row level security;
 alter table public.workspace_events enable row level security;
 alter table public.communication_posts enable row level security;
+alter table public.communication_requests enable row level security;
 alter table public.workspace_documents enable row level security;
 alter table public.commercial_opportunities enable row level security;
 alter table public.attendance_records enable row level security;
@@ -287,6 +354,7 @@ grant select, insert, update, delete on public.workspace_task_assignees to authe
 grant select, insert, update, delete on public.workspace_notices to authenticated;
 grant select, insert, update, delete on public.workspace_events to authenticated;
 grant select, insert, update, delete on public.communication_posts to authenticated;
+grant select, insert, update on public.communication_requests to authenticated;
 grant select, insert, update, delete on public.workspace_documents to authenticated;
 grant select, insert, update, delete on public.commercial_opportunities to authenticated;
 grant select, insert, update, delete on public.attendance_records to authenticated;
@@ -307,6 +375,10 @@ drop policy if exists "Members read events" on public.workspace_events;
 drop policy if exists "Coordination and HR manage events" on public.workspace_events;
 drop policy if exists "Members read communication posts" on public.communication_posts;
 drop policy if exists "Communication manages posts" on public.communication_posts;
+drop policy if exists "Members read own communication requests" on public.communication_requests;
+drop policy if exists "Members create communication requests" on public.communication_requests;
+drop policy if exists "Communication reads all communication requests" on public.communication_requests;
+drop policy if exists "Communication decides communication requests" on public.communication_requests;
 drop policy if exists "Commercial manages opportunities" on public.commercial_opportunities;
 drop policy if exists "Members read documents" on public.workspace_documents;
 drop policy if exists "Members upload documents" on public.workspace_documents;
@@ -365,6 +437,29 @@ create policy "Coordination and HR manage events" on public.workspace_events for
 create policy "Members read communication posts" on public.communication_posts for select to authenticated using (true);
 create policy "Communication manages posts" on public.communication_posts for all to authenticated
   using (public.can_manage_communication()) with check (public.can_manage_communication());
+create policy "Members read own communication requests" on public.communication_requests for select to authenticated
+  using (requester_id = (select auth.uid()));
+create policy "Members create communication requests" on public.communication_requests for insert to authenticated
+  with check (
+    requester_id = (select auth.uid())
+    and status = 'pending'
+    and scheduled_for is null
+    and rejection_reason is null
+    and decided_by is null
+    and decided_at is null
+  );
+create policy "Communication reads all communication requests" on public.communication_requests for select to authenticated
+  using ((select public.can_manage_communication()));
+create policy "Communication decides communication requests" on public.communication_requests for update to authenticated
+  using ((select public.can_manage_communication()))
+  with check (
+    (select public.can_manage_communication())
+    and (
+      (status = 'pending' and scheduled_for is null and rejection_reason is null)
+      or (status in ('scheduled', 'completed') and scheduled_for is not null and rejection_reason is null and decided_by = (select auth.uid()) and decided_at is not null)
+      or (status = 'rejected' and nullif(btrim(rejection_reason), '') is not null and scheduled_for is null and decided_by = (select auth.uid()) and decided_at is not null)
+    )
+  );
 create policy "Commercial manages opportunities" on public.commercial_opportunities for all to authenticated
   using ((select public.current_user_role()) in ('admin', 'coordinator', 'vice_coordinator', 'commercial_team', 'team_leader_commercial'))
   with check ((select public.current_user_role()) in ('admin', 'coordinator', 'vice_coordinator', 'commercial_team', 'team_leader_commercial'));
@@ -429,3 +524,6 @@ create policy "Owners manage workspace files" on storage.objects for update to a
   with check (owner_id = auth.uid()::text and ((bucket_id = 'workspace-documents' and public.can_lead_tasks()) or (bucket_id = 'communication-assets' and public.can_manage_communication())));
 create policy "Owners delete workspace files" on storage.objects for delete to authenticated
   using (owner_id = auth.uid()::text and ((bucket_id = 'workspace-documents' and public.can_lead_tasks()) or (bucket_id = 'communication-assets' and public.can_manage_communication())));
+
+-- Instalar o cron dos pedidos numa segunda execução, depois do commit deste setup:
+-- supabase-communication-requests-cron.sql

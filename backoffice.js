@@ -227,6 +227,7 @@
     communication: "Comunicação",
     documents: "Documentos",
     contacts: "Contactos",
+    "open-day": "Inscrições Open Day",
     profile: "Perfil"
   };
 
@@ -422,6 +423,10 @@
 
     if (["dashboard", "todo", "profile"].includes(view)) {
       return true;
+    }
+
+    if (view === "open-day") {
+      return ["coordinator", "vice_coordinator"].includes(role) || teamLeaderRoles.has(role);
     }
 
     if (view === "documents") {
@@ -4078,6 +4083,7 @@
       communication: "Comunicação",
       documents: "Documentos",
       contacts: "Contactos",
+    "open-day": "Inscrições Open Day",
       hr: "Recursos Humanos",
       settings: "Definições"
     };

@@ -2897,3 +2897,7 @@ body.ready .reveal.is-visible {
     display: none;
   }
 }
+
+/* Open Day announcement */
+body[data-page="home"] main{padding-top:145px}
+.open-day-banner{position:relative;z-index:2;margin:0 auto 18px;width:min(1180px,calc(100% - 40px));padding:17px 24px;border-radius:16px;background:#dff4f5;border:1px solid #bce6e9;display:flex;align-items:center;justify-content:space-between;gap:20px;color:#102d37}.open-day-banner>div{display:grid;gap:4px}.open-day-banner strong{font-size:15px}.open-day-banner>div>span{font-size:12px}.open-day-banner>a{white-space:nowrap;background:#102d37;color:white;border-radius:9px;padding:12px 18px;font-size:13px;font-weight:800;text-decoration:none}@media(max-width:600px){body[data-page="home"] main{padding-top:132px}.open-day-banner{padding:17px;align-items:flex-start;flex-direction:column;gap:13px}.open-day-banner>a{width:100%;text-align:center}}

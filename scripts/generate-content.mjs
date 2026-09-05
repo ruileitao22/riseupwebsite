@@ -65,7 +65,7 @@ await writeFile(
 );
 
 await mkdir(join(root, "public", "legacy"), { recursive: true });
-for (const file of ["style.css", "backoffice.css", "script.js", "riseup-data.js", "backoffice.js", "backoffice-workspace.js", "backoffice-selects.js"]) {
+for (const file of ["style.css", "backoffice.css", "script.js", "riseup-data.js", "backoffice.js", "backoffice-workspace.js", "backoffice-selects.js", "backoffice-open-day.js"]) {
   await cp(join(root, file), join(root, "public", "legacy", file));
 }
 for (const file of ["favicon.ico", "apple-touch-icon.png", "hero-desktop.png", "hero-mobile.png", "site.webmanifest"]) {

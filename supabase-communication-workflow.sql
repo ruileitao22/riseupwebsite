@@ -51,3 +51,8 @@ select cron.schedule(
   '15 3 * * *',
   $$delete from public.communication_posts where retention_expires_at <= now()$$
 );
+
+-- Os pedidos de comunicação têm agora um setup autónomo para impedir que o cron
+-- seja criado antes do commit da tabela. Executar, por esta ordem e separadamente:
+-- 1. supabase-communication-requests-setup.sql
+-- 2. supabase-communication-requests-cron.sql

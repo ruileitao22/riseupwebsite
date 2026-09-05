@@ -38,6 +38,17 @@ A área **Documentos**, os registos da biblioteca, os ficheiros privados e as ro
 
 Depois desta atualização, voltar a executar `supabase-workspace-setup.sql` no Supabase para instalar os novos cargos e respetivas políticas. Os valores antigos `member` e `team_leader` continuam aceites apenas para compatibilidade com contas existentes.
 
+## Pedidos de comunicação
+
+Qualquer membro autenticado pode submeter e acompanhar pedidos de comunicação no Dashboard. A aprovação, o agendamento e a não aprovação com motivo são feitos exclusivamente na aba **Comunicação**. Pedidos agendados passam automaticamente a concluídos depois da data de publicação.
+
+Para ativar o fluxo numa instalação existente, executar no editor SQL do Supabase, em duas execuções separadas e pela ordem indicada:
+
+1. `supabase-communication-requests-setup.sql` — cria e verifica a tabela.
+2. `supabase-communication-requests-cron.sql` — instala e verifica a conclusão automática.
+
+Confirmar também `SUPABASE_SERVICE_ROLE_KEY`, `RESEND_API_KEY` e `NEXT_PUBLIC_APP_URL` no ambiente da Vercel para as notificações por email.
+
 ## Google Drive no backoffice
 
 A secção Documentos usa como raiz a pasta `18mdhHygC7zUMlU7U0r_2lR5SXkvg2s8T`. A autenticação dos membros continua a ser feita apenas pelo Supabase. A ligação à Drive existe exclusivamente no servidor e utiliza a conta Google pessoal da Rise Up através de OAuth 2.0.

@@ -5,6 +5,7 @@
     notices: [],
     events: [],
     posts: [],
+    communicationRequests: [],
     opportunities: [],
     documents: [],
     attendance: [],
@@ -32,6 +33,7 @@
   const canAssign = () => isAdmin() || currentRole().startsWith("team_leader");
   const canManageHr = () => isAdmin() || ["hr_team", "team_leader_hr"].includes(currentRole());
   const canManageCommercial = () => isAdmin() || ["commercial_team", "team_leader_commercial"].includes(currentRole());
+  const canManageCommunication = () => isAdmin() || ["communication_team", "team_leader_communication"].includes(currentRole());
 
   const priorityLabels = { low: "Baixa", medium: "Média", high: "Alta", urgent: "Urgente" };
   const categoryLabels = { statutes: "Estatutos", regulations: "Regulamentos", templates: "Templates", minutes: "Atas", guides: "Guias internos", brand: "Identidade visual", project: "Projetos" };
@@ -77,6 +79,10 @@
     workspace.posts = [
       { id: "post-1", title: "Apresentação da nova equipa", channel: "Instagram", status: "scheduled", scheduled_for: plus(2, 12) },
       { id: "post-2", title: "Resumo do workshop", channel: "LinkedIn", status: "draft", scheduled_for: plus(6, 10) }
+    ];
+    workspace.communicationRequests = [
+      { id: "request-1", requester_id: currentUserId(), title: "Divulgar inscrições para o workshop", description: "Publicar o cartaz e o link de inscrição nas redes sociais.", channels: ["Instagram", "LinkedIn"], desired_publish_at: plus(3, 11), status: "pending", scheduled_for: null, rejection_reason: null, created_at: plus(-1) },
+      { id: "request-2", requester_id: currentUserId(), title: "Resumo do evento", description: "Partilhar fotografias e principais conclusões.", channels: ["Instagram"], status: "scheduled", scheduled_for: plus(2, 18), rejection_reason: null, created_at: plus(-3) }
     ];
     workspace.opportunities = [
       { id: "opportunity-1", company_name: "Associação Maia Ativa", contact_name: "Inês Costa", contact_email: "ines@maiaativa.pt", service_interest: "Workshop de empreendedorismo", stage: "qualified", owner_id: currentUserId(), next_action: "Preparar proposta", next_action_at: plus(2, 11), estimated_value: 850, origin: "website" },
@@ -128,6 +134,7 @@
       ["notices", "workspace_notices", "published_at"],
       ["events", "workspace_events", "starts_at"],
       ["posts", "communication_posts", "scheduled_for"],
+      ["communicationRequests", "communication_requests", "created_at"],
       ["opportunities", "commercial_opportunities", "created_at"],
       ["documents", "workspace_documents", "created_at"],
       ["attendance", "attendance_records", "created_at"],
@@ -187,6 +194,7 @@
     renderCompactList("[data-dashboard-events]", workspace.events.filter((item) => item.event_type !== "meeting"), "event");
     renderCompactList("[data-dashboard-meetings]", workspace.events.filter((item) => item.event_type === "meeting"), "event");
     renderDashboardTasks();
+    renderMyCommunicationRequests();
   }
 
   function getMemberName(userId) {
@@ -318,24 +326,13 @@
   }
 
   async function notifyNewTaskAssignees(taskId, recipientIds) {
-    if (workspace.preview || !recipientIds.length) return { sent: 0, requested: 0 };
-    const { data, error } = await client().auth.getSession();
-    if (error || !data.session?.access_token) {
-      throw new Error("A tarefa foi guardada, mas a sessão expirou antes do envio do email. Volta a iniciar sessão.");
-    }
+    if (workspace.preview || !recipientIds.length || !core().session?.access_token) return;
     const response = await fetch("/api/tasks/notify-assignment", {
       method: "POST",
-      headers: { "Content-Type": "application/json", Authorization: `Bearer ${data.session.access_token}` },
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${core().session.access_token}` },
       body: JSON.stringify({ taskId, recipientIds })
     });
-    const body = await response.json().catch(() => ({}));
-    if (!response.ok) throw new Error(body.error || "A tarefa foi guardada, mas o email não foi enviado.");
-    if (body.sent !== recipientIds.length) {
-      throw new Error(body.sent
-        ? `A tarefa foi guardada, mas só ${body.sent} de ${recipientIds.length} emails foram enviados.`
-        : "A tarefa foi guardada, mas nenhum email foi enviado. Confirma o email dos responsáveis.");
-    }
-    return body;
+    if (!response.ok) throw new Error("A tarefa foi guardada, mas o email não foi enviado.");
   }
 
   async function saveTask(event) {
@@ -418,6 +415,7 @@
   }
 
   function renderCommunication() {
+    renderCommunicationRequests();
     const month = new Intl.DateTimeFormat("pt-PT", { month: "long", year: "numeric" }).format(new Date());
     if ($("[data-current-month]")) $("[data-current-month]").textContent = month;
     const calendar = $("[data-editorial-calendar]");
@@ -519,6 +517,186 @@
   async function deleteOpportunity(item) { if (!window.confirm(`Apagar “${item.company_name}”? Esta ação não pode ser desfeita.`)) return; try { if (!workspace.preview) { const { error } = await client().from("commercial_opportunities").delete().eq("id", item.id); if (error) throw error; } workspace.opportunities = workspace.opportunities.filter((entry) => entry.id !== item.id); $("[data-opportunity-form]").hidden = true; renderCommercial(); } catch (error) { window.alert(error?.message || "Não foi possível apagar a oportunidade."); } }
   async function saveOpportunity(event) { event.preventDefault(); const form = event.currentTarget; const id = form.elements.id.value; const payload = { company_name: form.elements.company_name.value.trim(), contact_name: form.elements.contact_name.value.trim() || null, contact_email: form.elements.contact_email.value.trim() || null, contact_phone: form.elements.contact_phone.value.trim() || null, origin: form.elements.origin.value, service_interest: form.elements.service_interest.value.trim() || null, stage: form.elements.stage.value, owner_id: form.elements.owner_id.value || null, next_action: form.elements.next_action.value.trim() || null, next_action_at: form.elements.next_action_at.value ? new Date(form.elements.next_action_at.value).toISOString() : null, estimated_value: form.elements.estimated_value.value ? Number(form.elements.estimated_value.value) : null, notes: form.elements.notes.value.trim() || null }; const status = $("[data-opportunity-status]"); try { let record; if (workspace.preview) record = { id: id || crypto.randomUUID(), ...payload }; else { const query = id ? client().from("commercial_opportunities").update(payload).eq("id", id) : client().from("commercial_opportunities").insert(payload); const { data, error } = await query.select().single(); if (error) throw error; record = data; } const index = workspace.opportunities.findIndex((entry) => entry.id === id); if (index >= 0) workspace.opportunities[index] = record; else workspace.opportunities.unshift(record); status.textContent = "Oportunidade guardada."; status.className = "bo-status bo-field-full is-success"; form.hidden = true; renderCommercial(); } catch (error) { status.textContent = error?.message || "Não foi possível guardar a oportunidade."; status.className = "bo-status bo-field-full is-error"; } }
   function createOpportunityFromContact(contact) { if (!canManageCommercial()) return; api()?.showSection("commercial"); openOpportunityForm({ company_name: contact.name || contact.email || "Novo contacto", contact_name: contact.name || "", contact_email: contact.email || "", notes: contact.message || "", origin: "website" }); }
+
+  const communicationRequestStatusLabel = (status) => ({ pending: "A aguardar decisão", scheduled: "Aprovado · agendado", rejected: "Não aprovado", completed: "Concluído" })[status] || "A aguardar decisão";
+
+  function effectiveCommunicationRequestStatus(request) {
+    return request.status === "scheduled" && request.scheduled_for && new Date(request.scheduled_for) <= new Date() ? "completed" : request.status;
+  }
+
+  function communicationRequesterName(request) {
+    return core().team?.find((member) => member.user_id === request.requester_id)?.name
+      || (request.requester_id === currentUserId() ? core().user?.email?.split("@")[0] : "Membro Rise Up");
+  }
+
+  function createCommunicationRequestCard(request, manageable = false) {
+    const status = effectiveCommunicationRequestStatus(request);
+    const card = element("article", `bo-request-card is-${status}`);
+    const body = element("div");
+    body.append(element("h4", null, request.title), element("p", null, request.description));
+    body.appendChild(element("small", null, [request.channels?.join(", "), request.desired_publish_at ? `Pretendido: ${safeDate(request.desired_publish_at, true)}` : "Sem data pretendida", manageable ? `Pedido por ${communicationRequesterName(request)}` : ""].filter(Boolean).join(" · ")));
+    if (["scheduled", "completed"].includes(status) && request.scheduled_for) body.appendChild(element("p", null, `Publicação agendada para ${safeDate(request.scheduled_for, true)}.`));
+    if (status === "rejected" && request.rejection_reason) body.appendChild(element("p", "bo-request-reason", `Motivo: ${request.rejection_reason}`));
+    card.append(body, element("span", "bo-request-status", communicationRequestStatusLabel(status)));
+    if (manageable && status === "pending") {
+      const actions = element("div", "bo-request-actions");
+      const reject = element("button", "bo-button bo-button-ghost", "Não aprovar");
+      reject.type = "button";
+      reject.addEventListener("click", () => openCommunicationDecision(request, "reject"));
+      const approve = element("button", "bo-button bo-button-primary", "Aprovar e agendar");
+      approve.type = "button";
+      approve.addEventListener("click", () => openCommunicationDecision(request, "approve"));
+      actions.append(reject, approve);
+      card.appendChild(actions);
+    }
+    return card;
+  }
+
+  function renderMyCommunicationRequests() {
+    const list = $("[data-my-communication-requests]");
+    if (!list) return;
+    list.replaceChildren();
+    const records = workspace.communicationRequests.filter((request) => request.requester_id === currentUserId()).sort((a, b) => String(b.created_at).localeCompare(String(a.created_at)));
+    const pending = records.filter((request) => effectiveCommunicationRequestStatus(request) === "pending").length;
+    const badge = $("[data-my-communication-count]");
+    if (badge) {
+      badge.textContent = pending > 9 ? "9+" : String(pending);
+      badge.hidden = pending === 0;
+    }
+    if (!records.length) list.appendChild(element("p", "bo-empty-soft", "Ainda não efetuaste pedidos de comunicação."));
+    records.slice(0, 6).forEach((request) => list.appendChild(createCommunicationRequestCard(request)));
+  }
+
+  function showCommunicationMenuOverview() {
+    const form = $("[data-communication-request-form]");
+    const intro = $("[data-communication-menu-intro]");
+    const list = $("[data-my-communication-requests]");
+    if (form) form.hidden = true;
+    if (intro) intro.hidden = false;
+    if (list) list.hidden = false;
+  }
+
+  function setCommunicationMenuOpen(open) {
+    const menu = $("[data-communication-request-menu]");
+    const toggle = $("[data-communication-request-toggle]");
+    if (!menu || !toggle) return;
+    menu.hidden = !open;
+    toggle.setAttribute("aria-expanded", String(open));
+    document.documentElement.classList.toggle("bo-modal-open", open);
+    if (!open) showCommunicationMenuOverview();
+  }
+
+  function renderCommunicationRequests() {
+    const list = $("[data-communication-request-queue]");
+    if (!list) return;
+    list.replaceChildren();
+    const priority = { pending: 0, scheduled: 1, rejected: 2, completed: 3 };
+    const records = [...workspace.communicationRequests].sort((left, right) => (priority[effectiveCommunicationRequestStatus(left)] - priority[effectiveCommunicationRequestStatus(right)]) || String(right.created_at).localeCompare(String(left.created_at)));
+    const pending = records.filter((request) => effectiveCommunicationRequestStatus(request) === "pending").length;
+    const count = $("[data-pending-communication-count]");
+    if (count) count.textContent = `${pending} por decidir`;
+    if (!records.length) list.appendChild(element("p", "bo-empty-soft", "Não existem pedidos de comunicação."));
+    records.forEach((request) => list.appendChild(createCommunicationRequestCard(request, canManageCommunication())));
+  }
+
+  async function notifyCommunicationRequest(requestId, event) {
+    if (workspace.preview || !core().session?.access_token) return;
+    const response = await fetch("/api/communication/notifications", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${core().session.access_token}` },
+      body: JSON.stringify({ requestId, event })
+    });
+    if (!response.ok) {
+      const body = await response.json().catch(() => ({}));
+      throw new Error(body.error || "O pedido foi guardado, mas o email não foi enviado.");
+    }
+  }
+
+  async function saveCommunicationRequest(event) {
+    event.preventDefault();
+    const form = event.currentTarget;
+    const channels = Array.from(form.querySelectorAll('input[name="channels"]:checked'), (input) => input.value);
+    if (!channels.length) {
+      setWorkspaceStatus("[data-communication-request-status]", "Seleciona pelo menos uma rede social.", "error");
+      return;
+    }
+    const payload = { requester_id: currentUserId(), title: form.elements.title.value.trim(), description: form.elements.description.value.trim(), channels, desired_publish_at: form.elements.desired_publish_at.value ? new Date(form.elements.desired_publish_at.value).toISOString() : null, asset_url: form.elements.asset_url.value.trim() || null, status: "pending" };
+    try {
+      let saved;
+      if (workspace.preview) saved = { id: crypto.randomUUID(), ...payload, scheduled_for: null, rejection_reason: null, created_at: new Date().toISOString() };
+      else {
+        const { data, error } = await client().from("communication_requests").insert(payload).select().single();
+        if (error) throw error;
+        saved = data;
+      }
+      workspace.communicationRequests.unshift(saved);
+      form.reset();
+      showCommunicationMenuOverview();
+      renderMyCommunicationRequests();
+      renderCommunicationRequests();
+      try {
+        await notifyCommunicationRequest(saved.id, "requested");
+        setWorkspaceStatus("[data-communication-request-status]", "Pedido enviado. A equipa de Comunicação foi notificada por email.", "success");
+      } catch (notificationError) {
+        setWorkspaceStatus("[data-communication-request-status]", notificationError?.message || "Pedido guardado, mas não foi possível enviar o email.", "error");
+      }
+    } catch (error) {
+      setWorkspaceStatus("[data-communication-request-status]", error?.message || "Não foi possível enviar o pedido.", "error");
+    }
+  }
+
+  function openCommunicationDecision(request, decision) {
+    const form = $("[data-communication-decision-form]");
+    if (!form || !canManageCommunication()) return;
+    form.reset();
+    form.elements.id.value = request.id;
+    form.elements.decision.value = decision;
+    const approving = decision === "approve";
+    $("[data-schedule-decision-field]").hidden = !approving;
+    $("[data-rejection-decision-field]").hidden = approving;
+    form.elements.scheduled_for.required = approving;
+    form.elements.rejection_reason.required = !approving;
+    $("[data-communication-decision-title]").textContent = approving ? `Agendar “${request.title}”` : `Não aprovar “${request.title}”`;
+    $("[data-communication-decision-submit]").textContent = approving ? "Aprovar e agendar" : "Confirmar não aprovação";
+    form.hidden = false;
+    (approving ? form.elements.scheduled_for : form.elements.rejection_reason).focus();
+    form.scrollIntoView({ behavior: "smooth", block: "center" });
+  }
+
+  async function saveCommunicationDecision(event) {
+    event.preventDefault();
+    const form = event.currentTarget;
+    const request = workspace.communicationRequests.find((item) => item.id === form.elements.id.value);
+    if (!request || !canManageCommunication()) return;
+    const approving = form.elements.decision.value === "approve";
+    const rejectionReason = form.elements.rejection_reason.value.trim();
+    if (!approving && !rejectionReason) {
+      setWorkspaceStatus("[data-communication-decision-status]", "Escreve o motivo da não aprovação.", "error");
+      return;
+    }
+    const changes = { status: approving ? "scheduled" : "rejected", scheduled_for: approving ? new Date(form.elements.scheduled_for.value).toISOString() : null, rejection_reason: approving ? null : rejectionReason, decided_by: currentUserId(), decided_at: new Date().toISOString() };
+    try {
+      let saved;
+      if (workspace.preview) saved = { ...request, ...changes };
+      else {
+        const { data, error } = await client().from("communication_requests").update(changes).eq("id", request.id).select().single();
+        if (error) throw error;
+        saved = data;
+      }
+      Object.assign(request, saved);
+      form.hidden = true;
+      renderCommunicationRequests();
+      renderMyCommunicationRequests();
+      try {
+        await notifyCommunicationRequest(request.id, "decided");
+        setWorkspaceStatus("[data-communication-decision-status]", "Decisão guardada e autor notificado por email.", "success");
+      } catch (notificationError) {
+        setWorkspaceStatus("[data-communication-decision-status]", notificationError?.message || "Decisão guardada, mas o email não foi enviado.", "error");
+      }
+    } catch (error) {
+      setWorkspaceStatus("[data-communication-decision-status]", error?.message || "Não foi possível guardar a decisão.", "error");
+    }
+  }
 
   function communicationStatusLabel(status) {
     return ({ idea: "Ideia", draft: "Em produção", in_review: "Em revisão", scheduled: "Agendada", published: "Publicada" })[status] || "Rascunho";
@@ -1887,6 +2065,29 @@
       form.elements.status.value = button.dataset.reviewPublication === "approve" ? "scheduled" : "draft";
       form.requestSubmit();
     }));
+    $all("[data-new-communication-request]").forEach((button) => button.addEventListener("click", () => {
+      const form = $("[data-communication-request-form]");
+      if (!form) return;
+      setCommunicationMenuOpen(true);
+      const intro = $("[data-communication-menu-intro]");
+      const list = $("[data-my-communication-requests]");
+      if (intro) intro.hidden = true;
+      if (list) list.hidden = true;
+      form.hidden = false;
+      form.elements.title.focus();
+    }));
+    $("[data-communication-request-toggle]")?.addEventListener("click", () => {
+      const menu = $("[data-communication-request-menu]");
+      setCommunicationMenuOpen(Boolean(menu?.hidden));
+    });
+    $all("[data-close-communication-menu]").forEach((button) => button.addEventListener("click", () => setCommunicationMenuOpen(false)));
+    $("[data-communication-request-menu]")?.addEventListener("pointerdown", (event) => {
+      if (event.target === event.currentTarget) setCommunicationMenuOpen(false);
+    });
+    $all("[data-close-communication-request]").forEach((button) => button.addEventListener("click", showCommunicationMenuOverview));
+    $("[data-communication-request-form]")?.addEventListener("submit", saveCommunicationRequest);
+    $("[data-close-communication-decision]")?.addEventListener("click", () => { $("[data-communication-decision-form]").hidden = true; });
+    $("[data-communication-decision-form]")?.addEventListener("submit", saveCommunicationDecision);
     $all("[data-new-opportunity]").forEach((button) => button.addEventListener("click", () => openOpportunityForm()));
     $("[data-close-opportunity-form]")?.addEventListener("click", () => { $("[data-opportunity-form]").hidden = true; });
     $("[data-opportunity-form]")?.addEventListener("submit", saveOpportunity);
@@ -1922,6 +2123,10 @@
     $("[data-global-search]")?.addEventListener("keydown", handleGlobalSearchKeydown);
     document.addEventListener("pointerdown", (event) => {
       if (!event.target.closest(".bo-global-search")) closeGlobalSearch();
+      if (!event.target.closest(".bo-request-menu")) setCommunicationMenuOpen(false);
+    });
+    document.addEventListener("keydown", (event) => {
+      if (event.key === "Escape") setCommunicationMenuOpen(false);
     });
   }
 

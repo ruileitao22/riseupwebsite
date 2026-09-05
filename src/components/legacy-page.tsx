@@ -73,6 +73,7 @@ export function LegacyPage({ body, bodyPage, kind = "public", withData = false }
           await loadScript("/legacy/backoffice.js");
           if (!cancelled) await loadScript("/legacy/backoffice-workspace.js");
           if (!cancelled) await loadScript("/legacy/backoffice-selects.js");
+          if (!cancelled) await loadScript("/legacy/backoffice-open-day.js");
         } else {
           await loadScript("/legacy/script.js");
           if (withData && !cancelled) await loadScript("/legacy/riseup-data.js");
