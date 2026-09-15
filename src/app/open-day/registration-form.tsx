@@ -1,6 +1,7 @@
 "use client";
 import { useState, type FormEvent } from "react";
 import Link from "next/link";
+import { createOpenDayPayload } from "./form-payload";
 export function OpenDayForm({ initiallyClosed }: { initiallyClosed: boolean }) {
   const [participantType, setParticipantType] = useState("");
   const [lunch, setLunch] = useState("");
@@ -13,7 +14,7 @@ export function OpenDayForm({ initiallyClosed }: { initiallyClosed: boolean }) {
     const form = new FormData(event.currentTarget);
     setBusy(true); setError("");
     try {
-      const response = await fetch("/api/open-day", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ name: form.get("name"), participant_type: participantType, organization: form.get("organization") || "", student_number: form.get("student_number"), course: form.get("course"), email: String(form.get("email")).trim(), phone: form.get("phone"), lunch: lunch === "yes", dietary_requirements: form.get("dietary_requirements") || "" }) });
+      const response = await fetch("/api/open-day", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(createOpenDayPayload(form, participantType, lunch)) });
       const result = await response.json();
       if (response.status === 410) setClosed(true);
       if (!response.ok) throw new Error(result.error);
