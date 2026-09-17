@@ -1,4 +1,4 @@
--- Open Day 18 September 2026. Public submissions close at midnight in Lisbon after 16 September.
+-- Open Day 18 September 2026. Public submissions close at 15:00 in Lisbon on 17 September.
 create table if not exists public.open_day_registrations (
  id uuid primary key default gen_random_uuid(),
  created_at timestamptz not null default now(),
@@ -19,7 +19,7 @@ grant select, delete on public.open_day_registrations to authenticated;
 grant update (name, student_number, course, email, phone, lunch, dietary_requirements) on public.open_day_registrations to authenticated;
 drop policy if exists open_day_submit on public.open_day_registrations;
 create policy open_day_submit on public.open_day_registrations for insert to anon
- with check (now() < timestamptz '2026-09-16 23:00:00+00');
+ with check (now() < timestamptz '2026-09-17 14:00:00+00');
 drop policy if exists open_day_select on public.open_day_registrations;
 create policy open_day_select on public.open_day_registrations for select to authenticated
  using ((select public.current_user_role()) in ('coordinator', 'vice_coordinator', 'team_leader', 'team_leader_communication', 'team_leader_projects_innovation', 'team_leader_commercial', 'team_leader_hr'));
