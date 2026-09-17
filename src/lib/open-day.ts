@@ -1,7 +1,7 @@
 import { z } from "zod";
 
-// Midnight after 16 September in Europe/Lisbon (WEST).
-export const OPEN_DAY_DEADLINE = "2026-09-16T23:00:00.000Z";
+// 17 September, 15:00 in Europe/Lisbon (WEST, UTC+1).
+export const OPEN_DAY_DEADLINE = "2026-09-17T14:00:00.000Z";
 export const openDayClosed = (now = new Date()) => now.getTime() >= Date.parse(OPEN_DAY_DEADLINE);
 export const openDayRoles = ["coordinator", "vice_coordinator", "team_leader", "team_leader_communication", "team_leader_projects_innovation", "team_leader_commercial", "team_leader_hr"];
 export const canManageOpenDay = (role: string) => openDayRoles.includes(role);

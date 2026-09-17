@@ -4,7 +4,7 @@ import { openDayClosed, openDaySchema } from "@/lib/open-day";
 
 const attempts = new Map<string, number[]>();
 export async function POST(request: NextRequest) {
-  if (openDayClosed()) return NextResponse.json({ error: "As inscrições encerraram a 16 de setembro." }, { status: 410 });
+  if (openDayClosed()) return NextResponse.json({ error: "As inscrições encerraram a 17 de setembro, às 15h00." }, { status: 410 });
   const now = Date.now();
   for (const [key, values] of attempts) if (!values.some(t => now - t < 600000)) attempts.delete(key);
   const ip = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "unknown";
