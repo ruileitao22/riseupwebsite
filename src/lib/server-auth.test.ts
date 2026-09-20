@@ -4,6 +4,8 @@ import { canDeleteDrive, canReadDrive, canWriteDrive } from "./server-auth";
 describe("Google Drive role permissions", () => {
   it.each([
     "admin",
+    "coordinator",
+    "vice_coordinator",
     "team_leader",
     "team_leader_communication",
     "team_leader_projects_innovation",
@@ -19,8 +21,11 @@ describe("Google Drive role permissions", () => {
     expect(canReadDrive(role)).toBe(false);
   });
 
-  it("only allows administrators to delete", () => {
-    expect(canDeleteDrive("admin")).toBe(true);
+  it.each(["admin", "coordinator", "vice_coordinator"])("allows administrative role %s to delete", (role) => {
+    expect(canDeleteDrive(role)).toBe(true);
+  });
+
+  it("does not allow Team Leaders to delete", () => {
     expect(canDeleteDrive("team_leader_hr")).toBe(false);
   });
 });

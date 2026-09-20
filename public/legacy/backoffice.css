@@ -980,6 +980,7 @@ form.bo-project-edit-page {
 .bo-team-member-details { display: grid; min-width: 0; gap: 0.16rem; }
 .bo-team-member-details strong { display: inline-flex; align-items: center; width: fit-content; gap: 0.45rem; font-size: 0.94rem; }
 .bo-team-member-details span { overflow: hidden; color: #718096; font-size: 0.8rem; text-overflow: ellipsis; white-space: nowrap; }
+.bo-team-member-details .bo-team-member-last-access { color: #4d88ca; font-size: 0.72rem; font-weight: 700; }
 .bo-team-member-role { display: flex; align-items: center; justify-content: flex-end; gap: 0.55rem; min-width: 0; color: #5e6b78; font-size: 0.84rem; text-align: right; }
 .bo-team-member-role > span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .bo-team-member-inactive { padding: 0.2rem 0.4rem; border-radius: 999px; background: #f1f3f5; color: #7b8794; font-size: 0.64rem; font-weight: 800; }
@@ -1183,7 +1184,7 @@ body {
 .bo-progress-metric div { height: 6px; margin-top: 0.7rem; overflow: hidden; border-radius: 999px; background: #e8edf3; }
 .bo-progress-metric i { width: 0; height: 100%; display: block; border-radius: inherit; background: linear-gradient(90deg, #69a8ff, #4ad0c5); transition: width 0.4s ease; }
 
-.bo-dashboard-primary { display: grid; grid-template-columns: minmax(0, 2fr) minmax(260px, 0.85fr); gap: 1.25rem; }
+.bo-dashboard-primary { display: grid; grid-template-columns: minmax(0, 1fr); gap: 1.25rem; }
 .bo-dashboard-triple { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1.25rem; }
 .bo-performance-card { min-height: 310px; }
 .bo-line-chart { width: 100%; height: 190px; margin-top: 0.5rem; overflow: visible; }
@@ -1193,11 +1194,42 @@ body {
 .bo-chart-labels { display: flex; justify-content: space-between; padding: 0 0.5rem; color: #9aa4ae; font-size: 0.72rem; }
 .bo-soft-badge { align-self: flex-start; padding: 0.34rem 0.55rem; border-radius: 999px; background: #eef5ff; color: #3979c7; font-size: 0.68rem; font-weight: 800; }
 
+.bo-workspace-calendar-head { align-items: center; }
+.bo-workspace-calendar-actions { display: flex; align-items: center; justify-content: flex-end; flex-wrap: wrap; gap: 0.5rem; }
+.bo-workspace-calendar-actions strong { min-width: 140px; color: var(--bo-text); font-size: 0.82rem; text-align: center; text-transform: capitalize; }
+.bo-workspace-calendar-legend { display: flex; flex-wrap: wrap; gap: 0.45rem; margin: 1rem 0 0.65rem; }
+.bo-workspace-calendar-legend span { padding: 0.28rem 0.52rem; border-radius: 999px; font-size: 0.68rem; font-weight: 800; }
+.bo-workspace-calendar-legend .is-deadline { background: #fff4dc; color: #9b6200; }
+.bo-workspace-calendar-legend .is-event { background: #eaf9f4; color: #157457; }
+.bo-workspace-calendar-legend .is-meeting { background: #f4ecff; color: #7850ad; }
+.bo-workspace-calendar { overflow-x: auto; }
+.bo-workspace-calendar-weekdays, .bo-workspace-calendar-grid { min-width: 680px; display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 0.4rem; }
+.bo-workspace-calendar-weekdays { margin-bottom: 0.4rem; color: var(--bo-muted); font-size: 0.68rem; font-weight: 800; text-align: center; text-transform: uppercase; }
+.bo-workspace-calendar-cell { min-height: 118px; display: flex; flex-direction: column; gap: 0.3rem; padding: 0.45rem; border: 1px solid #e4eaf0; border-radius: 9px; background: #fff; }
+.bo-workspace-calendar-cell.is-empty { border-color: transparent; background: transparent; }
+.bo-workspace-calendar-cell.is-today { border-color: #78aef0; box-shadow: inset 0 0 0 1px rgba(76, 142, 222, 0.12); }
+.bo-workspace-calendar-day { color: var(--bo-muted); font-size: 0.72rem; font-weight: 800; }
+.bo-workspace-calendar-cell.is-today .bo-workspace-calendar-day { color: #236fca; }
+.bo-workspace-calendar-entry { overflow: hidden; display: block; width: 100%; padding: 0.28rem 0.36rem; border: 0; border-radius: 5px; color: inherit; font: inherit; font-size: 0.65rem; font-weight: 750; line-height: 1.25; text-align: left; cursor: pointer; }
+.bo-workspace-calendar-entry-title, .bo-workspace-calendar-entry-assignees { overflow: hidden; display: block; text-overflow: ellipsis; white-space: nowrap; }
+.bo-workspace-calendar-entry-assignees { margin-top: 0.12rem; font-size: 0.59rem; font-weight: 650; opacity: 0.84; }
+.bo-workspace-calendar-entry.is-deadline { background: #fff4dc; color: #9b6200; }
+.bo-workspace-calendar-entry.is-event { background: #eaf9f4; color: #157457; }
+.bo-workspace-calendar-entry.is-meeting { background: #f4ecff; color: #7850ad; }
+.bo-workspace-calendar-entry:hover, .bo-workspace-calendar-entry:focus-visible { filter: brightness(.96); outline: 2px solid rgba(57, 127, 207, .28); outline-offset: 1px; }
+
 .bo-compact-list { display: grid; gap: 0.65rem; margin-top: 1rem; }
 .bo-compact-item { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 0.72rem; align-items: center; padding: 0.68rem; border-radius: 9px; background: var(--bo-panel-soft); }
 .bo-compact-date { width: 42px; min-height: 42px; display: grid; place-items: center; border-radius: 8px; background: #e8f2ff; color: #3279ce; font-size: 0.7rem; font-weight: 800; text-align: center; }
 .bo-compact-item h4 { margin: 0; font-size: 0.8rem; }
 .bo-compact-item p { margin: 0.15rem 0 0; font-size: 0.7rem; }
+.bo-compact-item.has-actions { grid-template-columns: auto minmax(0, 1fr) auto; }
+.bo-compact-actions { display: flex; align-items: center; gap: 0.3rem; }
+.bo-mini-action { padding: 0.3rem 0.42rem; border: 0; border-radius: 6px; background: #fff; color: #3979c7; font-size: 0.64rem; font-weight: 800; cursor: pointer; }
+.bo-mini-action:hover, .bo-mini-action:focus-visible { background: #e5f0ff; outline: none; }
+.bo-mini-action.is-danger { color: #b42318; }
+.bo-card-add { width: 34px; height: 34px; flex: 0 0 auto; display: grid; place-items: center; border: 1px solid #cfe1f5; border-radius: 50%; background: #eef6ff; color: #2563b9; font-size: 1.35rem; line-height: 1; cursor: pointer; transition: transform .15s ease, background .15s ease; }
+.bo-card-add:hover, .bo-card-add:focus-visible { background: #dfeeff; outline: 2px solid rgba(37, 99, 185, .2); transform: translateY(-1px); }
 .bo-empty-soft { margin: 0; padding: 1rem; border: 1px dashed #dce3ea; border-radius: 9px; color: var(--bo-muted); font-size: 0.78rem; text-align: center; }
 
 .bo-filter-tabs { display: flex; gap: 0.35rem; margin-bottom: 1rem; padding: 0.3rem; overflow-x: auto; border-radius: 10px; background: #e9eef4; }
@@ -3902,6 +3934,13 @@ body.is-member [data-admin-only] {
 .bo-hr-record-copy p { margin-top: 0.25rem; color: #687789; font-size: 0.8rem; }
 .bo-hr-record-copy small { margin-top: 0.3rem; display: block; color: #8a96a5; font-size: 0.76rem; }
 .bo-button-danger-text { color: #b42318; }
+.bo-private-notice { display: flex; align-items: center; gap: .6rem; margin-bottom: 1rem; padding: .75rem .9rem; border: 1px solid #f3d4b4; border-radius: 10px; background: #fff8ef; color: #81501f; font-size: .78rem; }
+.bo-private-notice span { color: #946b43; }
+.bo-warning-marker { border-color: #f0c99f; background: #fff8ef; color: #a45f19; font-size: 1.1rem; font-weight: 900; }
+.bo-workspace-dialog { width: min(680px, calc(100vw - 2rem)); max-height: calc(100dvh - 2rem); padding: 0; overflow: auto; border: 0; border-radius: 18px; box-shadow: 0 28px 80px rgba(10, 24, 38, .3); }
+.bo-workspace-dialog::backdrop { background: rgba(9, 19, 25, .55); backdrop-filter: blur(3px); }
+.bo-workspace-dialog-panel { margin: 0; padding: 1.35rem; }
+.bo-workspace-dialog-panel h2 { margin: .12rem 0 0; font-size: 1.25rem; }
 .bo-hr-event-picker { max-width: 520px; margin-bottom: 1rem; display: grid; gap: 0.4rem; }
 .bo-attendance-row {
   padding: 0.75rem 0;
@@ -3994,6 +4033,9 @@ body.is-member [data-admin-only] {
 @media (max-width: 480px) {
   .bo-attendance-row { grid-template-columns: 1fr; gap: 0.55rem; }
   .bo-attendance-row select { width: 100%; }
+  .bo-compact-item.has-actions { grid-template-columns: auto minmax(0, 1fr); }
+  .bo-compact-actions { grid-column: 2; justify-content: flex-start; }
+  .bo-private-notice { align-items: flex-start; flex-direction: column; }
 }
 
 @media (max-width: 1180px) {

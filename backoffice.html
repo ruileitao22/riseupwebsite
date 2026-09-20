@@ -6,10 +6,13 @@
     <meta name="robots" content="noindex, nofollow" />
     <title>BackOffice | Rise Up</title>
     <link rel="icon" href="favicon.ico" sizes="any" />
-    <link rel="stylesheet" href="backoffice.css" />
+    <link rel="stylesheet" href="backoffice.css?v=20260905-3" />
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="supabase-config.js" defer></script>
-    <script src="backoffice.js" defer></script>
+    <script src="supabase-config.js?v=20260905-3" defer></script>
+    <script src="backoffice.js?v=20260905-3" defer></script>
+    <script src="backoffice-workspace.js?v=20260905-3" defer></script>
+    <script src="backoffice-selects.js?v=20260905-3" defer></script>
+    <script src="backoffice-open-day.js?v=20260905-3" defer></script>
   </head>
   <body>
     <section class="bo-auth-boot" data-auth-boot aria-live="polite" aria-label="A iniciar sessão">
@@ -115,7 +118,7 @@
         <section class="bo-section" data-section="open-day" hidden>
           <div class="bo-panel"><div class="bo-form-head"><div><p class="bo-kicker">18 setembro 2026 · 09h30–18h00</p><h2>Inscrições Open Day</h2><p>Almoço: 3 € por pessoa, pagos no local.</p></div><div class="bo-actions"><button class="bo-button bo-button-ghost" type="button" data-od-refresh>Atualizar</button><button class="bo-button bo-button-primary" type="button" data-od-export>Exportar Excel</button></div></div>
           <p data-od-totals></p><label>Pesquisar inscrições<input type="search" data-od-search placeholder="Nome, email, curso ou número de aluno" /></label><p class="bo-status" role="status" data-od-status></p><div class="bo-od-table-wrap"><table class="bo-od-table"><thead><tr><th>Nome / contacto</th><th>Perfil / organização</th><th>Curso / n.º aluno</th><th>Almoço</th><th>Restrições alimentares</th><th>Inscrição</th><th>Ações</th></tr></thead><tbody data-od-rows></tbody></table></div></div>
-          <dialog class="bo-od-dialog" data-od-dialog aria-labelledby="od-edit-title"><form class="bo-form" data-od-edit><div class="bo-form-head bo-field-full"><h2 id="od-edit-title">Editar inscrição</h2><button class="bo-button bo-button-ghost" type="button" data-od-cancel>Fechar</button></div><input type="hidden" name="id" /><label>Nome completo<input name="name" required minlength="2" maxlength="160" /></label><label>Perfil<select name="participant_type"><option value="student">Estudante</option><option value="legend">Rise Up Legend</option><option value="external">Participante externo/a</option></select></label><label>Organização / empresa<input name="organization" maxlength="160" /></label><label>Número de aluno<input name="student_number" maxlength="40" /></label><label>Curso<input name="course" maxlength="160" /></label><label>Email<input name="email" type="email" required maxlength="254" /></label><label>Telemóvel<input name="phone" type="tel" required maxlength="26" /></label><label>Almoço<select name="lunch"><option value="yes">Sim</option><option value="no">Não</option></select></label><label class="bo-field-full">Restrições alimentares<textarea name="dietary_requirements" maxlength="500" rows="3"></textarea></label><p class="bo-status bo-field-full" role="status" data-od-edit-status></p><button class="bo-button bo-button-primary" type="submit">Guardar alterações</button></form></dialog>
+          <dialog class="bo-od-dialog" data-od-dialog aria-labelledby="od-edit-title"><form class="bo-form" data-od-edit><div class="bo-form-head bo-field-full"><h2 id="od-edit-title">Editar inscrição</h2><button class="bo-button bo-button-ghost" type="button" data-od-cancel>Fechar</button></div><input type="hidden" name="id" /><label>Nome completo<input name="name" required minlength="2" maxlength="160" /></label><label>Perfil<select name="participant_type"><option value="student">Estudante</option><option value="professor">Professor/a</option><option value="legend">Rise Up Legend</option><option value="external">Participante externo/a</option></select></label><label>Organização / instituição<input name="organization" maxlength="160" /></label><label>Número de aluno<input name="student_number" maxlength="40" /></label><label>Curso<input name="course" maxlength="160" /></label><label>Email<input name="email" type="email" required maxlength="254" /></label><label>Telemóvel<input name="phone" type="tel" required maxlength="26" /></label><label>Almoço<select name="lunch"><option value="yes">Sim</option><option value="no">Não</option></select></label><label class="bo-field-full">Restrições alimentares<textarea name="dietary_requirements" maxlength="500" rows="3"></textarea></label><p class="bo-status bo-field-full" role="status" data-od-edit-status></p><button class="bo-button bo-button-primary" type="submit">Guardar alterações</button></form></dialog>
         </section>
         <section class="bo-section is-active" data-section="dashboard">
           <div class="bo-dashboard-grid">
@@ -155,12 +158,19 @@
                 <svg class="bo-line-chart" viewBox="0 0 720 190" role="img" aria-label="Gráfico da atividade semanal"><defs><linearGradient id="activity-fill" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#69a8ff" stop-opacity=".28"/><stop offset="1" stop-color="#69a8ff" stop-opacity="0"/></linearGradient></defs><path class="bo-chart-area" d="M10 155 C95 145 120 72 205 110 S330 155 405 92 S525 44 590 70 S660 48 710 26 L710 185 L10 185 Z"/><path class="bo-chart-line" d="M10 155 C95 145 120 72 205 110 S330 155 405 92 S525 44 590 70 S660 48 710 26"/><g class="bo-chart-grid"><path d="M10 35H710"/><path d="M10 85H710"/><path d="M10 135H710"/><path d="M10 185H710"/></g></svg>
                 <div class="bo-chart-labels"><span>Seg</span><span>Ter</span><span>Qua</span><span>Qui</span><span>Sex</span><span>Sáb</span><span>Dom</span></div>
               </article>
-              <article class="bo-panel bo-announcement-card"><div class="bo-list-head"><div><p class="bo-kicker">Coordenação</p><h3>Avisos</h3></div></div><div class="bo-compact-list" data-dashboard-notices></div></article>
             </div>
             <div class="bo-dashboard-triple">
-              <article class="bo-panel"><div class="bo-list-head"><div><p class="bo-kicker">Agenda</p><h3>Próximos eventos</h3></div></div><div class="bo-compact-list" data-dashboard-events></div></article>
-              <article class="bo-panel"><div class="bo-list-head"><div><p class="bo-kicker">Equipa</p><h3>Próximas reuniões</h3></div></div><div class="bo-compact-list" data-dashboard-meetings></div></article>
+              <article class="bo-panel"><div class="bo-list-head"><div><p class="bo-kicker">Agenda</p><h3>Próximos eventos</h3></div><button class="bo-card-add" type="button" data-new-dashboard-event="event" data-event-manager aria-label="Adicionar evento">+</button></div><div class="bo-compact-list" data-dashboard-events></div></article>
+              <article class="bo-panel"><div class="bo-list-head"><div><p class="bo-kicker">Equipa</p><h3>Próximas reuniões</h3></div><button class="bo-card-add" type="button" data-new-dashboard-event="meeting" data-event-manager aria-label="Adicionar reunião">+</button></div><div class="bo-compact-list" data-dashboard-meetings></div></article>
             </div>
+            <article class="bo-panel bo-dashboard-calendar">
+              <div class="bo-list-head bo-workspace-calendar-head">
+                <div><p class="bo-kicker">Planeamento</p><h3>Calendário geral</h3><p>Eventos e reuniões por dia; os prazos das tuas tarefas são assinalados à parte.</p></div>
+                <div class="bo-workspace-calendar-actions"><button class="bo-icon-button" type="button" data-workspace-calendar-previous aria-label="Mês anterior">←</button><strong data-workspace-calendar-month></strong><button class="bo-icon-button" type="button" data-workspace-calendar-next aria-label="Mês seguinte">→</button></div>
+              </div>
+              <div class="bo-workspace-calendar-legend" aria-label="Legenda do calendário"><span class="is-deadline">Prazo de tarefa</span><span class="is-event">Evento</span><span class="is-meeting">Reunião</span></div>
+              <div class="bo-workspace-calendar" data-workspace-calendar></div>
+            </article>
             <div class="bo-metrics">
               <article>
                 <small>Equipa</small>
@@ -201,18 +211,6 @@
               </p>
             </article>
 
-            <article class="bo-panel bo-permissions-panel" data-admin-only>
-              <div class="bo-list-head">
-                <div>
-                  <p class="bo-kicker">Permissões</p>
-                  <h3>Gerir acessos do BackOffice</h3>
-                  <p>Define quem fica apenas com Perfil, quem gere Projetos, quem acompanha Recursos Humanos e quem tem acesso total.</p>
-                </div>
-              </div>
-
-              <div class="bo-list" data-permission-list></div>
-              <p class="bo-status" data-permission-status></p>
-            </article>
           </div>
         </section>
 
@@ -306,6 +304,17 @@
               <p class="bo-settings-note">O cargo real não é alterado e esta escolha não é guardada.</p>
             </aside>
           </div>
+          <article class="bo-panel bo-permissions-panel" data-admin-only>
+            <div class="bo-list-head">
+              <div>
+                <p class="bo-kicker">Permissões</p>
+                <h3>Gerir acessos do BackOffice</h3>
+                <p>Define quem fica apenas com Perfil, quem gere Projetos, quem acompanha Recursos Humanos e quem tem acesso total.</p>
+              </div>
+            </div>
+            <div class="bo-list" data-permission-list></div>
+            <p class="bo-status" data-permission-status></p>
+          </article>
           <article class="bo-panel bo-settings-audit-panel" data-admin-only>
             <div class="bo-list-head">
               <div>
@@ -483,7 +492,7 @@
                 <div>
                   <p class="bo-kicker">Pessoas</p>
                   <h3>A nossa equipa</h3>
-                  <p>Organizada por área para encontrares rapidamente cada pessoa.</p>
+                  <p>Organizada por área, com a atividade de acesso ao BackOffice visível para Administração e RH.</p>
                 </div>
                 <button class="bo-button bo-button-primary" type="button" data-new-team-member data-admin-only>Novo membro</button>
               </div>
@@ -835,11 +844,6 @@
               <span><strong>Cronograma anual</strong><small>Marcos, mandatos e atividades planeadas.</small></span>
               <span class="bo-hr-module-arrow" aria-hidden="true">→</span>
             </button>
-            <button class="bo-hr-module-card" type="button" role="tab" aria-selected="false" data-hr-module-button="calendar">
-              <span class="bo-hr-module-icon bo-hr-module-icon-calendar" aria-hidden="true"></span>
-              <span><strong>Calendário de eventos</strong><small>Formações, reuniões e momentos de equipa.</small></span>
-              <span class="bo-hr-module-arrow" aria-hidden="true">→</span>
-            </button>
             <button class="bo-hr-module-card" type="button" role="tab" aria-selected="false" data-hr-module-button="attendance">
               <span class="bo-hr-module-icon bo-hr-module-icon-check" aria-hidden="true"></span>
               <span><strong>Presenças</strong><small>Registo e acompanhamento de participação.</small></span>
@@ -858,6 +862,11 @@
             <button class="bo-hr-module-card" type="button" role="tab" aria-selected="false" data-hr-module-button="organization">
               <span class="bo-hr-module-icon bo-hr-module-icon-organization" aria-hidden="true"></span>
               <span><strong>Organigrama</strong><small>Estrutura, cargos e linhas de responsabilidade.</small></span>
+              <span class="bo-hr-module-arrow" aria-hidden="true">→</span>
+            </button>
+            <button class="bo-hr-module-card" type="button" role="tab" aria-selected="false" data-hr-module-button="warnings">
+              <span class="bo-hr-module-icon bo-hr-module-icon-warning" aria-hidden="true">!</span>
+              <span><strong>Advertências privadas</strong><small>Registos reservados à Coordenação e Recursos Humanos.</small></span>
               <span class="bo-hr-module-arrow" aria-hidden="true">→</span>
             </button>
           </div>
@@ -879,25 +888,6 @@
                 <p class="bo-status bo-field-full" data-hr-milestone-status></p>
               </form>
               <div class="bo-hr-record-list" data-hr-schedule-list></div>
-            </section>
-
-            <section class="bo-hr-module-view" role="tabpanel" data-hr-module-view="calendar">
-              <div class="bo-list-head">
-                <div><p class="bo-kicker">Agenda</p><h3>Calendário de eventos</h3><p>Formações, reuniões e atividades da equipa.</p></div>
-                <button class="bo-button bo-button-primary" type="button" data-new-hr-event>Novo evento</button>
-              </div>
-              <form class="bo-form bo-hr-inline-form" data-hr-event-form hidden>
-                <div class="bo-form-head"><h3>Novo evento</h3><button class="bo-icon-button" type="button" data-close-hr-event-form aria-label="Fechar">×</button></div>
-                <label>Título<input name="title" type="text" maxlength="180" required /></label>
-                <label>Tipo<select name="event_type"><option value="event">Evento</option><option value="meeting">Reunião</option></select></label>
-                <label>Data e hora<input name="starts_at" type="datetime-local" required /></label>
-                <label>Termina em<input name="ends_at" type="datetime-local" /></label>
-                <label>Local<input name="location" type="text" maxlength="180" /></label>
-                <label class="bo-field-full">Descrição<textarea name="description" rows="3" maxlength="1000"></textarea></label>
-                <div class="bo-actions bo-field-full"><button class="bo-button bo-button-primary" type="submit">Guardar evento</button></div>
-                <p class="bo-status bo-field-full" data-hr-event-status></p>
-              </form>
-              <div class="bo-hr-record-list" data-hr-calendar-list></div>
             </section>
 
             <section class="bo-hr-module-view" role="tabpanel" data-hr-module-view="attendance">
@@ -972,6 +962,25 @@
               </div>
               <div class="bo-org-chart-canvas" data-org-chart></div>
               <p class="bo-status" data-org-chart-status></p>
+            </section>
+
+            <section class="bo-hr-module-view" role="tabpanel" data-hr-module-view="warnings">
+              <div class="bo-list-head">
+                <div><p class="bo-kicker">Registo reservado</p><h3>Advertências privadas</h3><p>Visíveis apenas para a Coordenação e a equipa de Recursos Humanos.</p></div>
+                <button class="bo-card-add" type="button" data-new-warning data-hr-private-manager aria-label="Adicionar advertência">+</button>
+              </div>
+              <div class="bo-private-notice" role="note"><strong>Conteúdo confidencial</strong><span>Não é apresentado no dashboard geral nem a outros membros.</span></div>
+              <form class="bo-form bo-hr-inline-form" data-warning-form hidden>
+                <div class="bo-form-head bo-field-full"><h3 data-warning-form-title>Nova advertência</h3><button class="bo-icon-button" type="button" data-close-warning-form aria-label="Fechar">×</button></div>
+                <input type="hidden" name="id" />
+                <label class="bo-field-full">Título<input name="title" type="text" maxlength="180" required /></label>
+                <label class="bo-field-full">Descrição<textarea name="body" rows="4" maxlength="2000" required></textarea></label>
+                <label>Data do registo<input name="published_at" type="datetime-local" required /></label>
+                <label>Visível até <input name="expires_at" type="datetime-local" /></label>
+                <div class="bo-actions bo-field-full"><button class="bo-button bo-button-primary" type="submit">Guardar advertência</button></div>
+                <p class="bo-status bo-field-full" data-warning-status></p>
+              </form>
+              <div class="bo-hr-record-list" data-warning-list></div>
             </section>
           </div>
 
@@ -1435,6 +1444,19 @@
         <div class="bo-account-delete-dialog-actions"><button class="bo-button bo-button-ghost" type="button" data-cancel-account-deletion>Cancelar</button><button class="bo-button bo-button-danger" type="button" data-confirm-account-deletion>Sim, apagar conta</button></div>
         <p class="bo-status" data-account-delete-status></p>
       </div>
+    </dialog>
+    <dialog class="bo-workspace-dialog" data-dashboard-event-dialog aria-labelledby="dashboard-event-dialog-title">
+      <form class="bo-form bo-workspace-dialog-panel" data-dashboard-event-form>
+        <div class="bo-form-head bo-field-full"><div><p class="bo-kicker">Agenda</p><h2 id="dashboard-event-dialog-title" data-dashboard-event-form-title>Novo evento</h2></div><button class="bo-icon-button" type="button" data-close-dashboard-event-form aria-label="Fechar">×</button></div>
+        <input type="hidden" name="id" /><input type="hidden" name="event_type" />
+        <label class="bo-field-full">Título<input name="title" type="text" maxlength="180" required /></label>
+        <label>Data e hora<input name="starts_at" type="datetime-local" required /></label>
+        <label>Termina em<input name="ends_at" type="datetime-local" /></label>
+        <label class="bo-field-full">Local<input name="location" type="text" maxlength="180" /></label>
+        <label class="bo-field-full">Descrição<textarea name="description" rows="3" maxlength="1000"></textarea></label>
+        <div class="bo-actions bo-field-full"><button class="bo-button bo-button-danger" type="button" data-delete-dashboard-event hidden>Eliminar</button><button class="bo-button bo-button-ghost" type="button" data-cancel-dashboard-event>Cancelar</button><button class="bo-button bo-button-primary" type="submit">Guardar</button></div>
+        <p class="bo-status bo-field-full" data-dashboard-event-status></p>
+      </form>
     </dialog>
   </body>
 </html>

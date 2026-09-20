@@ -2,6 +2,7 @@
   const defaultTables = {
     userProfiles: "user_profiles",
     teamMembers: "team_members",
+    backofficeAccessActivity: "backoffice_access_activity",
     projects: "projects",
     projectMembers: "project_members",
     interviewEvaluations: "interview_evaluations",
@@ -23,6 +24,8 @@
     presenceChannel: null,
     onlineUserIds: new Set(),
     onlineEmails: new Set(),
+    teamAccessActivity: new Map(),
+    teamAccessActivityLoaded: false,
     userProfiles: [],
     team: [],
     projects: [],
@@ -1291,6 +1294,31 @@
     state.team = data || [];
   }
 
+  async function loadTeamAccessActivity() {
+    state.teamAccessActivity = new Map();
+    state.teamAccessActivityLoaded = false;
+    if (!state.user?.id) return;
+
+    try {
+      const { error: recordError } = await state.client
+        .from(table("backofficeAccessActivity"))
+        .upsert({ user_id: state.user.id, last_access_at: new Date().toISOString() }, { onConflict: "user_id" });
+      if (recordError) throw recordError;
+      if (!canManageTeam()) return;
+
+      const { data, error } = await state.client
+        .from(table("backofficeAccessActivity"))
+        .select("user_id,last_access_at");
+      if (error) throw error;
+      state.teamAccessActivity = new Map(
+        (data || []).map((entry) => [entry.user_id, entry.last_access_at || null])
+      );
+      state.teamAccessActivityLoaded = true;
+    } catch (error) {
+      console.warn("Team access activity unavailable", error);
+    }
+  }
+
   async function loadProjects() {
     if (!canManageProjects()) {
       state.projects = [];
@@ -1435,6 +1463,7 @@
     await Promise.all([
       loadUserProfiles(),
       loadTeam(),
+      loadTeamAccessActivity(),
       loadProjects(),
       loadInterviewEvaluations(),
       loadJoinApplications(),
@@ -2007,6 +2036,12 @@
     }
     details.appendChild(name);
     if (member.email) details.appendChild(createElement("span", null, member.email));
+    if (canManageTeam()) {
+      const lastAccess = createElement("small", "bo-team-member-last-access", formatLastBackofficeAccess(member));
+      const lastSignInAt = member.user_id ? state.teamAccessActivity.get(member.user_id) : null;
+      if (lastSignInAt) lastAccess.title = `Último acesso em ${formatDateTime(lastSignInAt)}`;
+      details.appendChild(lastAccess);
+    }
 
     identity.append(avatar, details);
     const role = createElement("div", "bo-team-member-role");
@@ -2021,6 +2056,25 @@
 
     row.append(identity, role, actions);
     return row;
+  }
+
+  function formatLastBackofficeAccess(member) {
+    if (!state.teamAccessActivityLoaded) return "Último acesso indisponível — atualiza a página";
+    if (!member?.user_id || !state.teamAccessActivity.has(member.user_id)) return "Nunca acedeu ao BackOffice";
+
+    const value = state.teamAccessActivity.get(member.user_id);
+    const date = value ? new Date(value) : null;
+    if (!date || Number.isNaN(date.getTime())) return "Nunca acedeu ao BackOffice";
+
+    const elapsedMs = Math.max(0, Date.now() - date.getTime());
+    const minutes = Math.floor(elapsedMs / 60000);
+    const hours = Math.floor(elapsedMs / 3600000);
+    const days = Math.floor(elapsedMs / 86400000);
+
+    if (minutes < 1) return "Último acesso agora";
+    if (minutes < 60) return `Último acesso há ${minutes} ${minutes === 1 ? "minuto" : "minutos"}`;
+    if (hours < 24) return `Último acesso há ${hours} ${hours === 1 ? "hora" : "horas"}`;
+    return `Último acesso há ${days} ${days === 1 ? "dia" : "dias"}`;
   }
 
   function getInitials(name) {
@@ -4134,6 +4188,8 @@
       state.profile = null;
       state.onlineUserIds = new Set();
       state.onlineEmails = new Set();
+      state.teamAccessActivity = new Map();
+      state.teamAccessActivityLoaded = false;
       state.userProfiles = [];
       state.team = [];
       state.projects = [];
@@ -4360,6 +4416,13 @@
         { id: "member-3", user_id: "00000000-0000-4000-8000-000000000003", name: "Marta Costa", role: "Comunicação", email: "marta@riseupmaia.pt", is_active: true },
         { id: "member-4", user_id: "00000000-0000-4000-8000-000000000004", name: "Tiago Ferreira", role: "Comunicação", email: "tiago@riseupmaia.pt", is_active: true }
       ];
+      state.teamAccessActivity = new Map([
+        [userId, new Date().toISOString()],
+        ["00000000-0000-4000-8000-000000000002", new Date(Date.now() - 2 * 86400000).toISOString()],
+        ["00000000-0000-4000-8000-000000000003", new Date(Date.now() - 5 * 3600000).toISOString()],
+        ["00000000-0000-4000-8000-000000000004", null]
+      ]);
+      state.teamAccessActivityLoaded = true;
       state.projects = [
         { id: "project-1", title: "ChallANJE 2026", status: "in_review", client_name: "ANJE", deadline: "2026-09-30", sort_order: 1 },
         { id: "project-2", title: "Literacia Financeira", status: "published", client_name: "Universidade da Maia", deadline: "2026-10-18", sort_order: 2 }

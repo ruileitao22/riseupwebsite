@@ -31,7 +31,7 @@
     if (!filtered.length) { const tr = document.createElement('tr'); const td = cell(tr, [loading ? 'A carregar…' : query ? 'Nenhuma inscrição corresponde à pesquisa.' : 'Ainda não há inscrições.']); td.colSpan = 7; body.append(tr); }
     filtered.forEach(record => {
       const tr = document.createElement('tr');
-      cell(tr, [record.name, record.email, record.phone]); const profileLabels = { student: 'Estudante', legend: 'Rise Up Legend', external: 'Participante externo/a' }; cell(tr, [profileLabels[record.participant_type] || record.participant_type, record.organization || '—']); cell(tr, [record.course || '—', record.student_number || '—']);
+      cell(tr, [record.name, record.email, record.phone]); const profileLabels = { student: 'Estudante', professor: 'Professor/a', legend: 'Rise Up Legend', external: 'Participante externo/a' }; cell(tr, [profileLabels[record.participant_type] || record.participant_type, record.organization || '—']); cell(tr, [record.course || '—', record.student_number || '—']);
       cell(tr, [record.lunch ? 'Sim · 3 €' : 'Não']); cell(tr, [record.dietary_requirements || '—']);
       cell(tr, [new Intl.DateTimeFormat('pt-PT', { dateStyle: 'short', timeStyle: 'short', timeZone: 'Europe/Lisbon' }).format(new Date(record.created_at))]);
       const actions = cell(tr, []);

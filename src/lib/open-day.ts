@@ -7,7 +7,7 @@ export const openDayRoles = ["coordinator", "vice_coordinator", "team_leader", "
 export const canManageOpenDay = (role: string) => openDayRoles.includes(role);
 export const openDaySchema = z.object({
   name: z.string().trim().min(2).max(160),
-  participant_type: z.enum(["student", "legend", "external"]),
+  participant_type: z.enum(["student", "professor", "legend", "external"]),
   organization: z.string().trim().max(160),
   student_number: z.string().trim().max(40),
   course: z.string().trim().max(160),
@@ -23,6 +23,6 @@ export const openDaySchema = z.object({
   ...value,
   student_number: value.participant_type === "student" ? value.student_number : "",
   course: value.participant_type === "student" ? value.course : "",
-  organization: value.participant_type === "external" ? value.organization : "",
+  organization: ["external", "professor"].includes(value.participant_type) ? value.organization : "",
   dietary_requirements: value.lunch ? value.dietary_requirements : ""
 }));

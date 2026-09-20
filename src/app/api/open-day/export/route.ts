@@ -22,7 +22,7 @@ export async function GET(request: NextRequest) {
       { header: "A pagar no local (€)", key: "amount", width: 23 },
       { header: "Inscrição (Portugal)", key: "created_at", width: 25 }
     ];
-    const profileLabels: Record<string, string> = { student: "Estudante", legend: "Rise Up Legend", external: "Participante externo/a" };
+    const profileLabels: Record<string, string> = { student: "Estudante", professor: "Professor/a", legend: "Rise Up Legend", external: "Participante externo/a" };
     for (const row of rows) sheet.addRow({ ...row, participant_type: profileLabels[row.participant_type] || row.participant_type, lunch: row.lunch ? "Sim" : "Não", amount: row.lunch ? 3 : 0, created_at: new Intl.DateTimeFormat("pt-PT", { dateStyle: "short", timeStyle: "short", timeZone: "Europe/Lisbon" }).format(new Date(row.created_at)) });
     sheet.getRow(1).font = { bold: true, color: { argb: "FFFFFFFF" } };
     sheet.getRow(1).fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FF102D37" } };

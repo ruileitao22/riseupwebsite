@@ -13,6 +13,7 @@
     organizationChart: [],
     organizationSavedIds: new Set(),
     activeHrModule: "schedule",
+    calendarMonth: new Date(new Date().getFullYear(), new Date().getMonth(), 1),
     searchResults: [],
     searchActiveIndex: -1,
     drive: { files: [], folderId: "18mdhHygC7zUMlU7U0r_2lR5SXkvg2s8T", rootFolderId: "18mdhHygC7zUMlU7U0r_2lR5SXkvg2s8T", history: [], permissions: { write: true, delete: true }, loading: false, search: "" },
@@ -52,6 +53,14 @@
     return new Intl.DateTimeFormat("pt-PT", withTime
       ? { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" }
       : { day: "2-digit", month: "short", year: "numeric" }).format(date);
+  }
+
+  function datetimeLocalValue(value) {
+    if (!value) return "";
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return "";
+    const offset = date.getTimezoneOffset() * 60 * 1000;
+    return new Date(date.getTime() - offset).toISOString().slice(0, 16);
   }
 
   function seedPreview() {
@@ -169,12 +178,23 @@
       return;
     }
     records.slice(0, 4).forEach((record) => {
-      const item = element("article", "bo-compact-item");
+      const item = element("article", `bo-compact-item${kind === "event" && canAssign() ? " has-actions" : ""}`);
       const date = element("span", "bo-compact-date", kind === "notice" ? "i" : safeDate(record.starts_at || record.scheduled_for).replace(" de ", " ").slice(0, 6));
       const copy = element("div");
       copy.appendChild(element("h4", null, record.title));
       copy.appendChild(element("p", null, record.body || [safeDate(record.starts_at, true), record.location].filter(Boolean).join(" · ")));
       item.append(date, copy);
+      if (kind === "event" && canAssign()) {
+        const actions = element("div", "bo-compact-actions");
+        const edit = element("button", "bo-mini-action", "Editar");
+        edit.type = "button";
+        edit.addEventListener("click", () => openDashboardEventForm(record.event_type, record));
+        const remove = element("button", "bo-mini-action is-danger", "Remover");
+        remove.type = "button";
+        remove.addEventListener("click", () => void deleteHrEvent(record));
+        actions.append(edit, remove);
+        item.appendChild(actions);
+      }
       list.appendChild(item);
     });
   }
@@ -190,10 +210,14 @@
     if ($("[data-metric-my-tasks]")) $("[data-metric-my-tasks]").textContent = String(open);
     if ($("[data-metric-progress]")) $("[data-metric-progress]").textContent = `${progress}%`;
     if ($("[data-progress-bar]")) $("[data-progress-bar]").style.width = `${progress}%`;
-    renderCompactList("[data-dashboard-notices]", workspace.notices, "notice");
-    renderCompactList("[data-dashboard-events]", workspace.events.filter((item) => item.event_type !== "meeting"), "event");
-    renderCompactList("[data-dashboard-meetings]", workspace.events.filter((item) => item.event_type === "meeting"), "event");
+    const upcoming = workspace.events
+      .filter((item) => !item.starts_at || new Date(item.starts_at).getTime() >= Date.now())
+      .sort((a, b) => String(a.starts_at).localeCompare(String(b.starts_at)));
+    renderCompactList("[data-dashboard-events]", upcoming.filter((item) => item.event_type === "event"), "event");
+    renderCompactList("[data-dashboard-meetings]", upcoming.filter((item) => item.event_type === "meeting"), "event");
+    $all("[data-event-manager]").forEach((control) => { control.hidden = !canAssign(); });
     renderDashboardTasks();
+    renderWorkspaceCalendar();
     renderMyCommunicationRequests();
   }
 
@@ -1265,8 +1289,166 @@
     status.className = `bo-status${type ? ` is-${type}` : ""}`;
   }
 
+  function openDashboardEventForm(type = "event", record = null) {
+    if (!canAssign()) return;
+    const dialog = $("[data-dashboard-event-dialog]");
+    const form = $("[data-dashboard-event-form]");
+    if (!dialog || !form) return;
+    form.reset();
+    form.elements.id.value = record?.id || "";
+    form.elements.event_type.value = record?.event_type || type;
+    form.elements.title.value = record?.title || "";
+    form.elements.starts_at.value = datetimeLocalValue(record?.starts_at);
+    form.elements.ends_at.value = datetimeLocalValue(record?.ends_at);
+    form.elements.location.value = record?.location || "";
+    form.elements.description.value = record?.description || "";
+    const label = (record?.event_type || type) === "meeting" ? "reunião" : "evento";
+    $("[data-dashboard-event-form-title]").textContent = `${record ? "Editar" : "Novo"} ${label}`;
+    $("[data-delete-dashboard-event]").hidden = !record;
+    setWorkspaceStatus("[data-dashboard-event-status]", "");
+    if (typeof dialog.showModal === "function") dialog.showModal();
+    else dialog.setAttribute("open", "");
+    form.elements.title.focus();
+  }
+
+  function closeDashboardEventForm() {
+    const dialog = $("[data-dashboard-event-dialog]");
+    if (!dialog) return;
+    if (typeof dialog.close === "function") dialog.close();
+    else dialog.removeAttribute("open");
+  }
+
+  async function saveDashboardEvent(event) {
+    event.preventDefault();
+    if (!canAssign()) return;
+    const form = event.currentTarget;
+    const id = form.elements.id.value;
+    const payload = {
+      title: form.elements.title.value.trim(),
+      description: form.elements.description.value.trim() || null,
+      event_type: form.elements.event_type.value,
+      starts_at: new Date(form.elements.starts_at.value).toISOString(),
+      ends_at: form.elements.ends_at.value ? new Date(form.elements.ends_at.value).toISOString() : null,
+      location: form.elements.location.value.trim() || null
+    };
+    try {
+      let saved;
+      if (workspace.preview) saved = { id: id || crypto.randomUUID(), ...payload, created_by: currentUserId(), created_at: new Date().toISOString() };
+      else if (id) {
+        const { data, error } = await client().from("workspace_events").update(payload).eq("id", id).select().single();
+        if (error) throw error;
+        saved = data;
+      } else {
+        const { data, error } = await client().from("workspace_events").insert({ ...payload, created_by: currentUserId() }).select().single();
+        if (error) throw error;
+        saved = data;
+      }
+      workspace.events = id ? workspace.events.map((item) => item.id === id ? saved : item) : [...workspace.events, saved];
+      renderDashboard();
+      renderHrEvents();
+      renderAttendance();
+      closeDashboardEventForm();
+    } catch (error) {
+      setWorkspaceStatus("[data-dashboard-event-status]", error?.message || "Não foi possível guardar.", "error");
+    }
+  }
+
+  function openWarningForm(record = null) {
+    if (!canManageHr()) return;
+    const form = $("[data-warning-form]");
+    if (!form) return;
+    form.reset();
+    form.elements.id.value = record?.id || "";
+    form.elements.title.value = record?.title || "";
+    form.elements.body.value = record?.body || "";
+    form.elements.published_at.value = datetimeLocalValue(record?.published_at || new Date().toISOString());
+    form.elements.expires_at.value = datetimeLocalValue(record?.expires_at);
+    $("[data-warning-form-title]").textContent = record ? "Editar advertência" : "Nova advertência";
+    setWorkspaceStatus("[data-warning-status]", "");
+    form.hidden = false;
+    form.elements.title.focus();
+  }
+
+  async function saveWarning(event) {
+    event.preventDefault();
+    if (!canManageHr()) return;
+    const form = event.currentTarget;
+    const id = form.elements.id.value;
+    const payload = {
+      title: form.elements.title.value.trim(),
+      body: form.elements.body.value.trim(),
+      published_at: new Date(form.elements.published_at.value).toISOString(),
+      expires_at: form.elements.expires_at.value ? new Date(form.elements.expires_at.value).toISOString() : null,
+      audience: "hr"
+    };
+    try {
+      let saved;
+      if (workspace.preview) saved = { id: id || crypto.randomUUID(), ...payload, created_by: currentUserId(), created_at: new Date().toISOString() };
+      else if (id) {
+        const { data, error } = await client().from("workspace_notices").update(payload).eq("id", id).select().single();
+        if (error) throw error;
+        saved = data;
+      } else {
+        const { data, error } = await client().from("workspace_notices").insert({ ...payload, created_by: currentUserId() }).select().single();
+        if (error) throw error;
+        saved = data;
+      }
+      workspace.notices = id ? workspace.notices.map((item) => item.id === id ? saved : item) : [saved, ...workspace.notices];
+      form.reset();
+      form.hidden = true;
+      renderWarnings();
+    } catch (error) {
+      setWorkspaceStatus("[data-warning-status]", error?.message || "Não foi possível guardar a advertência.", "error");
+    }
+  }
+
+  async function deleteWarning(record) {
+    if (!canManageHr() || !window.confirm(`Eliminar a advertência “${record.title}”?`)) return;
+    try {
+      if (!workspace.preview) {
+        const { error } = await client().from("workspace_notices").delete().eq("id", record.id);
+        if (error) throw error;
+      }
+      workspace.notices = workspace.notices.filter((item) => item.id !== record.id);
+      renderWarnings();
+    } catch (error) {
+      window.alert(error?.message || "Não foi possível eliminar a advertência.");
+    }
+  }
+
+  function renderWarnings() {
+    const list = $("[data-warning-list]");
+    if (!list) return;
+    list.replaceChildren();
+    $all("[data-hr-private-manager]").forEach((control) => { control.hidden = !canManageHr(); });
+    if (!canManageHr()) return;
+    const records = [...workspace.notices].sort((a, b) => String(b.published_at).localeCompare(String(a.published_at)));
+    if (!records.length) {
+      list.appendChild(element("p", "bo-empty-soft", "Ainda não existem advertências registadas."));
+      return;
+    }
+    records.forEach((record) => {
+      const row = element("article", "bo-hr-record-row bo-warning-row");
+      const marker = element("div", "bo-hr-record-date bo-warning-marker", "!");
+      const body = element("div", "bo-hr-record-copy");
+      body.append(element("h4", null, record.title), element("p", null, record.body || "Sem descrição"));
+      body.appendChild(element("small", null, `Registada em ${safeDate(record.published_at, true)}${record.expires_at ? ` · até ${safeDate(record.expires_at, true)}` : ""}`));
+      const privacy = element("span", "bo-soft-badge", "Privada");
+      const actions = element("div", "bo-row-actions");
+      const edit = element("button", "bo-button bo-button-ghost", "Editar");
+      edit.type = "button";
+      edit.addEventListener("click", () => openWarningForm(record));
+      const remove = element("button", "bo-button bo-button-ghost bo-button-danger-text", "Eliminar");
+      remove.type = "button";
+      remove.addEventListener("click", () => void deleteWarning(record));
+      actions.append(edit, remove);
+      row.append(marker, body, privacy, actions);
+      list.appendChild(row);
+    });
+  }
+
   function showHrModule(module) {
-    workspace.activeHrModule = ["schedule", "calendar", "attendance", "roles", "applications", "organization"].includes(module) ? module : "schedule";
+    workspace.activeHrModule = ["schedule", "attendance", "roles", "applications", "organization", "warnings"].includes(module) ? module : "schedule";
     $all("[data-hr-module-button]").forEach((button) => {
       const active = button.dataset.hrModuleButton === workspace.activeHrModule;
       button.classList.toggle("is-active", active);
@@ -1299,7 +1481,14 @@
     if (record.description) body.appendChild(element("small", null, record.description));
     const meta = element("span", "bo-soft-badge", eventTypeLabel(record.event_type));
     const actions = element("div", "bo-row-actions");
-    if (canManageHr()) {
+    const canManageRecord = record.event_type === "hr" ? canManageHr() : canAssign();
+    if (canManageRecord) {
+      if (record.event_type !== "hr") {
+        const edit = element("button", "bo-button bo-button-ghost", "Editar");
+        edit.type = "button";
+        edit.addEventListener("click", () => openDashboardEventForm(record.event_type, record));
+        actions.appendChild(edit);
+      }
       const remove = element("button", "bo-button bo-button-ghost bo-button-danger-text", "Eliminar");
       remove.type = "button";
       remove.addEventListener("click", () => void deleteHrEvent(record));
@@ -1311,7 +1500,6 @@
 
   function renderHrEvents() {
     const schedule = $("[data-hr-schedule-list]");
-    const calendar = $("[data-hr-calendar-list]");
     const ordered = [...workspace.events].sort((a, b) => String(a.starts_at).localeCompare(String(b.starts_at)));
     const render = (container, records, empty) => {
       if (!container) return;
@@ -1320,10 +1508,77 @@
       records.forEach((record) => container.appendChild(createHrEventRow(record)));
     };
     render(schedule, ordered.filter((record) => record.event_type === "hr"), "Ainda não existem marcos no cronograma.");
-    render(calendar, ordered.filter((record) => record.event_type !== "hr"), "Ainda não existem eventos ou reuniões.");
+  }
+
+  function renderWorkspaceCalendar() {
+    const calendar = $("[data-workspace-calendar]");
+    if (!calendar) return;
+    const month = workspace.calendarMonth;
+    const year = month.getFullYear();
+    const monthIndex = month.getMonth();
+    const monthLabel = new Intl.DateTimeFormat("pt-PT", { month: "long", year: "numeric" }).format(month);
+    const monthTitle = $("[data-workspace-calendar-month]");
+    if (monthTitle) monthTitle.textContent = monthLabel.charAt(0).toUpperCase() + monthLabel.slice(1);
+
+    const entriesByDay = new Map();
+    const addEntry = (dateValue, entry) => {
+      if (!dateValue) return;
+      const date = new Date(dateValue.length === 10 ? `${dateValue}T12:00:00` : dateValue);
+      if (Number.isNaN(date.getTime()) || date.getFullYear() !== year || date.getMonth() !== monthIndex) return;
+      const day = date.getDate();
+      if (!entriesByDay.has(day)) entriesByDay.set(day, []);
+      entriesByDay.get(day).push({ ...entry, time: dateValue.length === 10 ? "" : new Intl.DateTimeFormat("pt-PT", { hour: "2-digit", minute: "2-digit" }).format(date) });
+    };
+
+    workspace.tasks
+      .filter((task) => task.status !== "done" && (isAdmin() || taskHasAssignee(task, currentUserId())))
+      .forEach((task) => {
+        const assignees = taskAssigneeIds(task).map(getMemberName);
+        addEntry(task.due_date, {
+          type: "deadline",
+          title: task.title,
+          assignees: isAdmin() ? (assignees.length ? assignees.join(", ") : "Por atribuir") : "",
+          task
+        });
+      });
+    workspace.events
+      .filter((event) => ["event", "meeting"].includes(event.event_type))
+      .forEach((event) => addEntry(event.starts_at, { type: event.event_type, title: event.title, event }));
+
+    calendar.replaceChildren();
+    const weekdays = element("div", "bo-workspace-calendar-weekdays");
+    ["Seg", "Ter", "Qua", "Qui", "Sex", "Sáb", "Dom"].forEach((day) => weekdays.appendChild(element("span", null, day)));
+    const grid = element("div", "bo-workspace-calendar-grid");
+    const firstWeekday = (new Date(year, monthIndex, 1).getDay() + 6) % 7;
+    const daysInMonth = new Date(year, monthIndex + 1, 0).getDate();
+    const today = new Date();
+    for (let slot = 0; slot < firstWeekday + daysInMonth; slot += 1) {
+      if (slot < firstWeekday) {
+        grid.appendChild(element("div", "bo-workspace-calendar-cell is-empty"));
+        continue;
+      }
+      const day = slot - firstWeekday + 1;
+      const isToday = today.getFullYear() === year && today.getMonth() === monthIndex && today.getDate() === day;
+      const cell = element("section", `bo-workspace-calendar-cell${isToday ? " is-today" : ""}`);
+      cell.appendChild(element("time", "bo-workspace-calendar-day", String(day)));
+      (entriesByDay.get(day) || []).sort((a, b) => a.time.localeCompare(b.time) || a.title.localeCompare(b.title)).forEach((entry) => {
+        const prefix = entry.type === "deadline" ? "Prazo · " : entry.time ? `${entry.time} · ` : "";
+        const item = element("button", `bo-workspace-calendar-entry is-${entry.type}`);
+        item.type = "button";
+        item.title = `${prefix}${entry.title}${entry.assignees ? ` · Responsáveis: ${entry.assignees}` : ""}`;
+        item.appendChild(element("span", "bo-workspace-calendar-entry-title", `${prefix}${entry.title}`));
+        if (entry.assignees) item.appendChild(element("small", "bo-workspace-calendar-entry-assignees", entry.assignees));
+        if (entry.task) item.addEventListener("click", () => openTaskForm(entry.task));
+        if (entry.event && canAssign()) item.addEventListener("click", () => openDashboardEventForm(entry.event.event_type, entry.event));
+        cell.appendChild(item);
+      });
+      grid.appendChild(cell);
+    }
+    calendar.append(weekdays, grid);
   }
 
   async function saveHrEvent(form, forcedType, statusSelector) {
+    if (forcedType ? !canManageHr() : !canAssign()) return;
     const payload = {
       title: form.elements.title.value.trim(),
       description: form.elements.description.value.trim() || null,
@@ -1354,7 +1609,9 @@
   }
 
   async function deleteHrEvent(record) {
-    if (!window.confirm(`Eliminar “${record.title}”?`)) return;
+    const allowed = record.event_type === "hr" ? canManageHr() : canAssign();
+    if (!allowed) return false;
+    if (!window.confirm(`Eliminar “${record.title}”?`)) return false;
     try {
       if (!workspace.preview) {
         const { error } = await client().from("workspace_events").delete().eq("id", record.id);
@@ -1365,8 +1622,10 @@
       renderHrEvents();
       renderAttendance();
       renderDashboard();
+      return true;
     } catch (error) {
       window.alert(error?.message || "Não foi possível eliminar o registo.");
+      return false;
     }
   }
 
@@ -1382,7 +1641,7 @@
     if (records.some((record) => record.id === selected)) eventSelect.value = selected;
     const eventId = eventSelect.value;
     list.replaceChildren();
-    const members = (core().team || []).filter((member) => member.id);
+    const members = (core().team || []).filter((member) => member.id && !member.is_legend);
     if (!eventId || !members.length) {
       list.appendChild(element("p", "bo-empty-soft", !eventId ? "Cria primeiro um evento para registar presenças." : "Não existem membros na equipa."));
       return;
@@ -1407,7 +1666,7 @@
     event.preventDefault();
     const eventId = $("[data-attendance-event]")?.value;
     if (!eventId) return setWorkspaceStatus("[data-attendance-status]", "Seleciona um evento.", "error");
-    const members = (core().team || []).filter((member) => member.id);
+    const members = (core().team || []).filter((member) => member.id && !member.is_legend);
     const records = members.map((member) => ({
       event_id: eventId,
       member_id: member.id,
@@ -1856,7 +2115,10 @@
   }
 
   function renderHrModules() {
+    if ($("[data-new-hr-milestone]")) $("[data-new-hr-milestone]").hidden = !canManageHr();
+    if ($("[data-new-hr-event]")) $("[data-new-hr-event]").hidden = !canAssign();
     renderHrEvents();
+    renderWarnings();
     renderAttendance();
     renderRoleHistory();
     renderOrganizationChart();
@@ -1882,11 +2144,11 @@
       if (canSearchView(entry.view)) entries.push(entry);
     };
     const sections = [
-      ["dashboard", "Dashboard", "Painel, avisos, eventos e reuniões"],
+      ["dashboard", "Dashboard", "Painel, eventos e reuniões"],
       ["todo", "To-Do", "Tarefas e prioridades"],
       ["projects", "Projetos", "Projetos, clientes e equipas"],
       ["team", "Equipa", "Membros e contactos"],
-      ["hr", "Recursos Humanos", "Cronograma, eventos, presenças, cargos, candidaturas e organigrama"],
+      ["hr", "Recursos Humanos", "Cronograma, eventos, advertências privadas, presenças, cargos, candidaturas e organigrama"],
       ["communication", "Comunicação", "Calendário editorial e publicações"],
       ["documents", "Documentos", "Biblioteca e Google Drive"],
       ["contacts", "Contactos", "Mensagens recebidas"],
@@ -1898,7 +2160,8 @@
     workspace.tasks.forEach((task) => add({ type: "Tarefa", title: task.title, meta: `${priorityLabels[task.priority] || "Média"} · ${task.status === "done" ? "Concluída" : task.due_date ? `Prazo ${safeDate(task.due_date)}` : "Sem prazo"}`, view: "todo", searchable: `${task.title} ${task.description || ""} ${taskAssigneeIds(task).map(getMemberName).join(" ")}`, action: () => openTaskForm(task) }));
     (core().projects || []).forEach((project) => add({ type: "Projeto", title: project.title || "Projeto sem título", meta: [project.client_name, project.category, project.status].filter(Boolean).join(" · ") || "Projeto", view: "projects", searchable: `${project.title || ""} ${project.client_name || ""} ${project.category || ""} ${project.tags || ""}`, action: () => api()?.openProject?.(project.id) }));
     (core().team || []).forEach((member) => add({ type: "Membro", title: member.name || member.email || "Membro", meta: [member.role, member.email].filter(Boolean).join(" · ") || "Equipa", view: "team", searchable: `${member.name || ""} ${member.email || ""} ${member.role || ""} ${member.position || ""}`, filter: "[data-team-search]" }));
-    workspace.events.forEach((event) => add({ type: eventTypeLabel(event.event_type), title: event.title, meta: [safeDate(event.starts_at, true), event.location].filter(Boolean).join(" · "), view: "hr", searchable: `${event.title} ${event.location || ""} ${eventTypeLabel(event.event_type)}`, action: () => showHrModule(event.event_type === "hr" ? "schedule" : "calendar") }));
+    workspace.events.forEach((event) => add({ type: eventTypeLabel(event.event_type), title: event.title, meta: [safeDate(event.starts_at, true), event.location].filter(Boolean).join(" · "), view: event.event_type === "hr" ? "hr" : "dashboard", searchable: `${event.title} ${event.location || ""} ${eventTypeLabel(event.event_type)}`, action: event.event_type === "hr" ? () => showHrModule("schedule") : undefined }));
+    if (canManageHr()) workspace.notices.forEach((notice) => add({ type: "Advertência privada", title: notice.title, meta: safeDate(notice.published_at, true), view: "hr", searchable: `${notice.title} ${notice.body || ""}`, action: () => showHrModule("warnings") }));
     workspace.posts.forEach((post) => add({ type: "Publicação", title: post.title, meta: [post.channel, safeDate(post.scheduled_for, true)].filter(Boolean).join(" · "), view: "communication", searchable: `${post.title} ${post.channel || ""} ${post.status || ""}` }));
     workspace.documents.forEach((documentRecord) => add({ type: "Documento", title: documentRecord.title, meta: categoryLabels[documentRecord.category] || "Documento", view: "documents", searchable: `${documentRecord.title} ${categoryLabels[documentRecord.category] || ""}`, filter: "[data-document-search]" }));
     (core().contactSubmissions || []).forEach((contact) => add({ type: "Contacto", title: contact.name || contact.email || "Contacto", meta: contact.email || contact.subject || "Mensagem recebida", view: "contacts", searchable: `${contact.name || ""} ${contact.email || ""} ${contact.subject || ""} ${contact.message || ""}`, filter: "[data-contact-search]" }));
@@ -2021,6 +2284,27 @@
 
   function bindEvents() {
     $all("[data-hr-module-button]").forEach((button) => button.addEventListener("click", () => showHrModule(button.dataset.hrModuleButton)));
+    $("[data-workspace-calendar-previous]")?.addEventListener("click", () => {
+      workspace.calendarMonth = new Date(workspace.calendarMonth.getFullYear(), workspace.calendarMonth.getMonth() - 1, 1);
+      renderWorkspaceCalendar();
+    });
+    $("[data-workspace-calendar-next]")?.addEventListener("click", () => {
+      workspace.calendarMonth = new Date(workspace.calendarMonth.getFullYear(), workspace.calendarMonth.getMonth() + 1, 1);
+      renderWorkspaceCalendar();
+    });
+    $all("[data-new-dashboard-event]").forEach((button) => button.addEventListener("click", () => openDashboardEventForm(button.dataset.newDashboardEvent)));
+    $("[data-dashboard-event-form]")?.addEventListener("submit", saveDashboardEvent);
+    $("[data-close-dashboard-event-form]")?.addEventListener("click", closeDashboardEventForm);
+    $("[data-cancel-dashboard-event]")?.addEventListener("click", closeDashboardEventForm);
+    $("[data-delete-dashboard-event]")?.addEventListener("click", () => {
+      const id = $("[data-dashboard-event-form]")?.elements.id.value;
+      const record = workspace.events.find((item) => item.id === id);
+      if (!record) return;
+      void deleteHrEvent(record).then((deleted) => { if (deleted) closeDashboardEventForm(); });
+    });
+    $("[data-new-warning]")?.addEventListener("click", () => openWarningForm());
+    $("[data-close-warning-form]")?.addEventListener("click", () => { $("[data-warning-form]").hidden = true; });
+    $("[data-warning-form]")?.addEventListener("submit", saveWarning);
     $("[data-add-org-node]")?.addEventListener("click", () => addOrganizationNode());
     $("[data-save-org-chart]")?.addEventListener("click", saveOrganizationChart);
     $("[data-export-org-pdf]")?.addEventListener("click", exportOrganizationPdf);

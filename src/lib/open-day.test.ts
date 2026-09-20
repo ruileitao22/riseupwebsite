@@ -19,4 +19,11 @@ describe("Open Day registrations", () => {
     expect(result.dietary_requirements).toBe("");
     expect(result.organization).toBe("Empresa Exemplo");
   });
+  it("accepts professors and keeps their educational institution", () => {
+    const result = openDaySchema.parse({ name: "Professora Exemplo", participant_type: "professor", organization: "Universidade da Maia", student_number: "12345", course: "Gestão", email: "professora@email.pt", phone: "+351 910 000 001", lunch: false, dietary_requirements: "" });
+    expect(result.participant_type).toBe("professor");
+    expect(result.organization).toBe("Universidade da Maia");
+    expect(result.student_number).toBe("");
+    expect(result.course).toBe("");
+  });
 });

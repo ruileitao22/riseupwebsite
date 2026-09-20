@@ -16,7 +16,7 @@ create policy "HR can read join applications"
       select 1
       from public.user_profiles profile
       where profile.id = auth.uid()
-        and profile.role in ('admin', 'coordinator', 'vice_coordinator', 'hr_team')
+        and profile.role in ('admin', 'coordinator', 'vice_coordinator', 'hr_team', 'team_leader_hr')
     )
   );
 
@@ -30,7 +30,7 @@ create policy "HR can delete join applications"
       select 1
       from public.user_profiles profile
       where profile.id = auth.uid()
-        and profile.role in ('admin', 'coordinator', 'vice_coordinator', 'hr_team')
+        and profile.role in ('admin', 'coordinator', 'vice_coordinator', 'hr_team', 'team_leader_hr')
     )
   );
 

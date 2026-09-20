@@ -34,7 +34,7 @@ export async function requireBackofficeUser(request: NextRequest): Promise<Backo
 }
 
 export function canWriteDrive(role: string) {
-  return role === "admin" || role.startsWith("team_leader");
+  return ["admin", "coordinator", "vice_coordinator"].includes(role) || role.startsWith("team_leader");
 }
 
 export function canReadDrive(role: string) {
@@ -42,5 +42,5 @@ export function canReadDrive(role: string) {
 }
 
 export function canDeleteDrive(role: string) {
-  return role === "admin";
+  return ["admin", "coordinator", "vice_coordinator"].includes(role);
 }
