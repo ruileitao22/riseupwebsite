@@ -65,6 +65,7 @@
     get client() { return state.client; },
     get state() { return state; },
     showSection: (view) => showSection(view),
+    exportExcel: (resource, button) => exportBackofficeExcel(resource, button),
     openProject: (projectId) => {
       const project = state.projects.find((entry) => entry.id === projectId);
       if (project && canManageProjects() && confirmProjectNavigation()) openProjectForm(project);
@@ -76,6 +77,45 @@
   const maxImageUploadBytes = 8 * 1024 * 1024;
   const minPasswordLength = 10;
   const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+
+  async function exportBackofficeExcel(resource, button) {
+    const { data, error: sessionError } = await state.client.auth.getSession();
+    const accessToken = data?.session?.access_token;
+    if (sessionError || !accessToken) {
+      setGlobalStatus("Inicia sessão novamente para exportar o Excel.", "error");
+      return;
+    }
+
+    const label = button.textContent;
+    button.disabled = true;
+    button.textContent = "A preparar Excel…";
+
+    try {
+      const response = await fetch(`/api/backoffice/export/${encodeURIComponent(resource)}`, {
+        headers: { Authorization: `Bearer ${accessToken}` }
+      });
+      if (!response.ok) {
+        const body = await response.json().catch(() => null);
+        throw new Error(body?.error || "Não foi possível preparar o Excel.");
+      }
+
+      const blob = await response.blob();
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = resource === "applications" ? "candidaturas-rise-up.xlsx" : "pedidos-de-contacto-rise-up.xlsx";
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.setTimeout(() => URL.revokeObjectURL(url), 1_000);
+      setGlobalStatus("Excel exportado com sucesso.", "success");
+    } catch (error) {
+      setGlobalStatus(error instanceof Error ? error.message : "Não foi possível preparar o Excel.", "error");
+    } finally {
+      button.disabled = false;
+      button.textContent = label;
+    }
+  }
 
   const projectTextReplacements = [
     ["HOJE - National Exhibition of Young Entrepreneurs 2025", "HOJE - Mostra Nacional de Jovens Empreendedores 2025"],
@@ -4374,6 +4414,9 @@
     $(selectors.contactSubmissionStatusFilter)?.addEventListener("change", (event) => {
       state.contactStatusFilter = event.currentTarget.value;
       renderContactSubmissionList();
+    });
+    $all("[data-export-excel]").forEach((button) => {
+      button.addEventListener("click", () => void exportBackofficeExcel(button.dataset.exportExcel, button));
     });
   }
 
