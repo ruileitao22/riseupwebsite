@@ -1332,14 +1332,55 @@ function getFormSubmissionPayload(form) {
   };
 }
 
+async function submitFormDirectly(table, payload, config = getSupabaseConfig()) {
+  if (!isSupabaseConfigured(config)) {
+    throw createPublicError(uiMessages[currentLanguage].supabaseConfigError);
+  }
+
+  const response = await fetch(`${config.url}/rest/v1/${encodeURIComponent(table)}`, {
+    method: "POST",
+    credentials: "omit",
+    referrerPolicy: "strict-origin-when-cross-origin",
+    headers: {
+      apikey: config.publicKey,
+      Authorization: `Bearer ${config.publicKey}`,
+      "Content-Type": "application/json",
+      Prefer: "return=minimal"
+    },
+    body: JSON.stringify(payload)
+  });
+
+  if (!response.ok) {
+    const detail = await readSupabaseError(response);
+    const error = new Error(detail);
+    error.publicMessage = uiMessages[currentLanguage].submissionError;
+    throw error;
+  }
+}
+
 async function submitFormToSupabase(table, payload) {
-  const response = await fetch("/api/submissions", {
+  let response;
+
+  try {
+    response = await fetch("/api/submissions", {
     method: "POST",
     credentials: "omit",
     referrerPolicy: "strict-origin-when-cross-origin",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ type: getSubmissionType(document.querySelector(`form[data-supabase-table="${table}"]`)), payload })
-  });
+    });
+  } catch {
+    // Some in-app browsers and content blockers reject the generic API path.
+    // Public inserts are constrained by the Supabase RLS policy, so keep the
+    // application form available when the same-origin proxy cannot be reached.
+    return submitFormDirectly(table, payload);
+  }
+
+  if (response.status === 503) {
+    // The proxy is deployed but its server-side Supabase variables are absent.
+    // Fall back to the public, insert-only endpoint already configured for this form.
+    return submitFormDirectly(table, payload);
+  }
 
   if (!response.ok) {
     const detail = await readSupabaseError(response);
