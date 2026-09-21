@@ -356,7 +356,11 @@
       headers: { "Content-Type": "application/json", Authorization: `Bearer ${core().session.access_token}` },
       body: JSON.stringify({ taskId, recipientIds })
     });
-    if (!response.ok) throw new Error("A tarefa foi guardada, mas o email não foi enviado.");
+    const result = await response.json().catch(() => null);
+    if (!response.ok) throw new Error(result?.error || "A tarefa foi guardada, mas o email não foi enviado.");
+    if (result?.sent !== recipientIds.length) {
+      throw new Error("A tarefa foi guardada, mas não foi possível encontrar o email de todas as pessoas atribuídas.");
+    }
   }
 
   async function saveTask(event) {
