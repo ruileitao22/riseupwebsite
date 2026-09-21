@@ -6,6 +6,12 @@ const canAssignTasks = (role: string) => ["admin", "coordinator", "vice_coordina
 
 function notificationErrorResponse(error: unknown) {
   const message = error instanceof Error ? error.message : "";
+  if (message === "UNAUTHORIZED") {
+    return NextResponse.json({
+      error: "A sessão expirou antes do envio do email. Volta a iniciar sessão e tenta novamente.",
+      code: "SESSION_EXPIRED"
+    }, { status: 401 });
+  }
   if (message.startsWith("Missing SUPABASE_SERVICE_ROLE_KEY") || message.startsWith("Missing RESEND_API_KEY")) {
     return NextResponse.json({
       error: "O envio de emails ainda não está configurado no servidor. Contacta a administração para concluir a configuração.",

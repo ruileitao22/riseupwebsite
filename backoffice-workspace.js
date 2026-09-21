@@ -350,10 +350,14 @@
   }
 
   async function notifyNewTaskAssignees(taskId, recipientIds) {
-    if (workspace.preview || !recipientIds.length || !core().session?.access_token) return;
+    if (workspace.preview || !recipientIds.length) return;
+    const { data, error } = await client().auth.getSession();
+    if (error || !data.session?.access_token) {
+      throw new Error("A tarefa foi guardada, mas a sessão expirou antes do envio do email. Volta a iniciar sessão.");
+    }
     const response = await fetch("/api/tasks/notify-assignment", {
       method: "POST",
-      headers: { "Content-Type": "application/json", Authorization: `Bearer ${core().session.access_token}` },
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${data.session.access_token}` },
       body: JSON.stringify({ taskId, recipientIds })
     });
     const result = await response.json().catch(() => null);
