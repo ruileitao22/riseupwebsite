@@ -13,6 +13,17 @@ type TaskRecord = {
 
 type Recipient = { id: string; email: string; name: string | null };
 
+type MeetingRecord = {
+  id: string;
+  title: string;
+  description: string | null;
+  starts_at: string;
+  ends_at: string | null;
+  location: string | null;
+  attendee_ids: string[] | null;
+  created_by: string | null;
+};
+
 function required(name: string) {
   const value = process.env[name];
   if (!value) throw new Error(`Missing ${name}`);
@@ -85,6 +96,36 @@ export function renderAssignmentEmail(task: TaskRecord, recipient: Recipient) {
     intro: `${greeting} Foi-te atribuída uma nova tarefa na Rise Up.`,
     ctaLabel: "Abrir tarefa no BackOffice",
     content: `<table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="width:100%;background:#f4f8fc;border:1px solid #dce8f2;border-radius:12px;"><tr><td width="50%" style="padding:16px 18px;border-right:1px solid #dce8f2;"><div style="margin-bottom:6px;color:#7a8794;font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;">Prioridade</div><div style="color:#101820;font-size:15px;font-weight:700;">${escapeHtml(priorityLabel(task.priority))}</div></td><td width="50%" style="padding:16px 18px;"><div style="margin-bottom:6px;color:#7a8794;font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;">Prazo</div><div style="color:#101820;font-size:15px;font-weight:700;">${escapeHtml(due)}</div></td></tr></table>${description}`
+  });
+}
+
+function formatMeetingDateTime(value: string) {
+  return new Intl.DateTimeFormat("pt-PT", { dateStyle: "long", timeStyle: "short", timeZone: "Europe/Lisbon" }).format(new Date(value));
+}
+
+function meetingSchedule(meeting: MeetingRecord) {
+  const startsAt = formatMeetingDateTime(meeting.starts_at);
+  if (!meeting.ends_at) return startsAt;
+  const end = new Date(meeting.ends_at);
+  const start = new Date(meeting.starts_at);
+  if (start.toDateString() !== end.toDateString()) return `${startsAt} — ${formatMeetingDateTime(meeting.ends_at)}`;
+  const endTime = new Intl.DateTimeFormat("pt-PT", { hour: "2-digit", minute: "2-digit", timeZone: "Europe/Lisbon" }).format(end);
+  return `${startsAt} — ${endTime}`;
+}
+
+export function renderMeetingInvitationEmail(meeting: MeetingRecord, recipient: Recipient) {
+  const greeting = recipient.name ? `Olá, ${recipient.name}.` : "Olá.";
+  const description = meeting.description
+    ? `<div style="margin-top:16px;padding:16px 18px;background:#f8fafc;border:1px solid #e7edf3;border-radius:10px;color:#44515e;font-size:14px;line-height:1.65;">${escapeHtml(meeting.description)}</div>`
+    : "";
+  const location = meeting.location || "A definir";
+  return emailLayout({
+    preheader: `Tens uma reunião marcada: ${meeting.title}.`,
+    eyebrow: "Reunião marcada",
+    title: meeting.title,
+    intro: `${greeting} Foi marcada uma reunião que requer a tua presença.`,
+    ctaLabel: "Abrir calendário no BackOffice",
+    content: `<table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="width:100%;background:#f4f8fc;border:1px solid #dce8f2;border-radius:12px;"><tr><td style="padding:16px 18px;border-bottom:1px solid #dce8f2;"><div style="margin-bottom:6px;color:#7a8794;font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;">Data e hora</div><div style="color:#101820;font-size:15px;font-weight:700;line-height:1.5;">${escapeHtml(meetingSchedule(meeting))}</div></td></tr><tr><td style="padding:16px 18px;"><div style="margin-bottom:6px;color:#7a8794;font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;">Local</div><div style="color:#101820;font-size:15px;font-weight:700;line-height:1.5;">${escapeHtml(location)}</div></td></tr></table>${description}`
   });
 }
 
@@ -164,6 +205,46 @@ export async function sendAssignmentEmails(taskId: string, recipientIds: string[
     });
   }));
   return { sent: targets.length, requested: targetIds.size };
+}
+
+async function getMeetingRecipients(meetingId: string): Promise<{ meeting: MeetingRecord; recipients: Recipient[] }> {
+  const admin = adminClient();
+  const { data: meeting, error: meetingError } = await admin
+    .from("workspace_events")
+    .select("id,title,description,starts_at,ends_at,location,attendee_ids,created_by,event_type")
+    .eq("id", meetingId)
+    .eq("event_type", "meeting")
+    .maybeSingle();
+  if (meetingError) throw meetingError;
+  if (!meeting) throw new Error("Meeting not found");
+
+  const selectedIds = [...new Set((meeting.attendee_ids || []).filter(Boolean))];
+  const { data: members, error: memberError } = await admin.from("team_members").select("user_id,name");
+  if (memberError) throw memberError;
+  const teamMembers = (members || []).filter((member) => member.user_id);
+  const ids = selectedIds.length ? selectedIds : [...new Set(teamMembers.map((member) => member.user_id))];
+  if (!ids.length) return { meeting: meeting as MeetingRecord, recipients: [] };
+
+  const { data: profiles, error: profileError } = await admin.from("user_profiles").select("id,email").in("id", ids);
+  if (profileError) throw profileError;
+  const names = new Map(teamMembers.map((member) => [member.user_id, member.name]));
+  return {
+    meeting: meeting as MeetingRecord,
+    recipients: (profiles || []).filter((profile) => profile.email).map((profile) => ({ id: profile.id, email: profile.email, name: names.get(profile.id) || null }))
+  };
+}
+
+export async function sendMeetingInvitationEmails(meetingId: string, creatorId: string) {
+  const { meeting, recipients } = await getMeetingRecipients(meetingId);
+  if (meeting.created_by !== creatorId) throw new Error("Meeting was not created by the current user");
+  await Promise.all(recipients.map((recipient) => sendEmail({
+    to: recipient.email,
+    subject: `Reunião marcada: ${meeting.title}`,
+    idempotencyKey: `meeting-created-${meeting.id}-${recipient.id}`,
+    text: `Olá${recipient.name ? `, ${recipient.name}` : ""}. Foi marcada a reunião “${meeting.title}”. Data e hora: ${meetingSchedule(meeting)}. Local: ${meeting.location || "A definir"}. Abre o BackOffice: ${taskUrl()}`,
+    html: renderMeetingInvitationEmail(meeting, recipient)
+  })));
+  return { sent: recipients.length, requested: recipients.length };
 }
 
 function portugalDate(offsetDays = 0) {

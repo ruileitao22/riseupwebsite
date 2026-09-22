@@ -214,7 +214,7 @@
       .filter((item) => !item.starts_at || new Date(item.starts_at).getTime() >= Date.now())
       .sort((a, b) => String(a.starts_at).localeCompare(String(b.starts_at)));
     renderCompactList("[data-dashboard-events]", upcoming.filter((item) => item.event_type === "event"), "event");
-    renderCompactList("[data-dashboard-meetings]", upcoming.filter((item) => item.event_type === "meeting"), "event");
+    renderCompactList("[data-dashboard-meetings]", upcoming.filter((item) => item.event_type === "meeting" && meetingVisibleToCurrentUser(item)), "event");
     $all("[data-event-manager]").forEach((control) => { control.hidden = !canAssign(); });
     renderDashboardTasks();
     renderWorkspaceCalendar();
@@ -231,6 +231,15 @@
 
   function taskHasAssignee(task, userId) {
     return taskAssigneeIds(task).includes(userId);
+  }
+
+  function meetingAttendeeIds(meeting) {
+    return [...new Set(Array.isArray(meeting?.attendee_ids) ? meeting.attendee_ids.filter(Boolean) : [])];
+  }
+
+  function meetingVisibleToCurrentUser(meeting) {
+    const attendees = meetingAttendeeIds(meeting);
+    return !attendees.length || attendees.includes(currentUserId()) || canAssign();
   }
 
   function taskAssigneeLabel(task) {
@@ -1310,7 +1319,19 @@
     form.elements.ends_at.value = datetimeLocalValue(record?.ends_at);
     form.elements.location.value = record?.location || "";
     form.elements.description.value = record?.description || "";
-    const label = (record?.event_type || type) === "meeting" ? "reunião" : "evento";
+    const eventType = record?.event_type || type;
+    const meetingAttendees = $("[data-meeting-attendees]");
+    const meetingAttendeesField = $("[data-meeting-attendees-field]");
+    if (meetingAttendees) {
+      meetingAttendees.replaceChildren();
+      (core().team || []).filter((member) => member.user_id).forEach((member) => {
+        const option = new Option(member.name || member.email || "Membro", member.user_id);
+        option.selected = meetingAttendeeIds(record).includes(member.user_id);
+        meetingAttendees.add(option);
+      });
+    }
+    if (meetingAttendeesField) meetingAttendeesField.hidden = eventType !== "meeting";
+    const label = eventType === "meeting" ? "reunião" : "evento";
     $("[data-dashboard-event-form-title]").textContent = `${record ? "Editar" : "Novo"} ${label}`;
     $("[data-delete-dashboard-event]").hidden = !record;
     setWorkspaceStatus("[data-dashboard-event-status]", "");
@@ -1331,13 +1352,18 @@
     if (!canAssign()) return;
     const form = event.currentTarget;
     const id = form.elements.id.value;
+    const eventType = form.elements.event_type.value;
+    const attendeeIds = eventType === "meeting"
+      ? [...new Set(Array.from(form.elements.attendee_ids?.selectedOptions || [], (option) => option.value).filter(Boolean))]
+      : [];
     const payload = {
       title: form.elements.title.value.trim(),
       description: form.elements.description.value.trim() || null,
-      event_type: form.elements.event_type.value,
+      event_type: eventType,
       starts_at: new Date(form.elements.starts_at.value).toISOString(),
       ends_at: form.elements.ends_at.value ? new Date(form.elements.ends_at.value).toISOString() : null,
-      location: form.elements.location.value.trim() || null
+      location: form.elements.location.value.trim() || null,
+      attendee_ids: attendeeIds
     };
     try {
       let saved;
@@ -1352,6 +1378,14 @@
         saved = data;
       }
       workspace.events = id ? workspace.events.map((item) => item.id === id ? saved : item) : [...workspace.events, saved];
+      if (!id && eventType === "meeting" && !workspace.preview) {
+        try {
+          await notifyMeetingAttendees(saved.id);
+          setWorkspaceStatus("[data-global-status]", "Reunião guardada e participantes notificados por email.", "success");
+        } catch (notificationError) {
+          setWorkspaceStatus("[data-global-status]", notificationError?.message || "A reunião foi guardada, mas não foi possível enviar os emails.", "error");
+        }
+      }
       renderDashboard();
       renderHrEvents();
       renderAttendance();
@@ -1359,6 +1393,19 @@
     } catch (error) {
       setWorkspaceStatus("[data-dashboard-event-status]", error?.message || "Não foi possível guardar.", "error");
     }
+  }
+
+  async function notifyMeetingAttendees(meetingId) {
+    const { data, error } = await client().auth.getSession();
+    if (error || !data.session?.access_token) throw new Error("A reunião foi guardada, mas a sessão expirou antes do envio dos emails. Volta a iniciar sessão.");
+    const response = await fetch("/api/meetings/notify", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${data.session.access_token}` },
+      body: JSON.stringify({ meetingId })
+    });
+    const result = await response.json().catch(() => null);
+    if (!response.ok) throw new Error(result?.error || "A reunião foi guardada, mas não foi possível enviar os emails.");
+    return result;
   }
 
   function openWarningForm(record = null) {
@@ -1550,7 +1597,7 @@
         });
       });
     workspace.events
-      .filter((event) => ["event", "meeting"].includes(event.event_type))
+      .filter((event) => ["event", "meeting"].includes(event.event_type) && (event.event_type !== "meeting" || meetingVisibleToCurrentUser(event)))
       .forEach((event) => addEntry(event.starts_at, { type: event.event_type, title: event.title, event }));
 
     calendar.replaceChildren();

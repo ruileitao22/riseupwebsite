@@ -126,11 +126,15 @@ create table if not exists public.workspace_events (
   starts_at timestamptz not null,
   ends_at timestamptz,
   location text,
+  attendee_ids uuid[] not null default '{}',
   created_by uuid references auth.users (id) on delete set null,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
   constraint workspace_events_type_check check (event_type in ('event', 'meeting', 'hr', 'editorial'))
 );
+
+alter table public.workspace_events
+  add column if not exists attendee_ids uuid[] not null default '{}';
 
 create table if not exists public.communication_posts (
   id uuid primary key default gen_random_uuid(),
@@ -372,6 +376,7 @@ drop policy if exists "Task creators and leaders remove assignees" on public.wor
 drop policy if exists "Members read notices" on public.workspace_notices;
 drop policy if exists "Coordination manages notices" on public.workspace_notices;
 drop policy if exists "Members read events" on public.workspace_events;
+drop policy if exists "Members read relevant events" on public.workspace_events;
 drop policy if exists "Coordination and HR manage events" on public.workspace_events;
 drop policy if exists "Members read communication posts" on public.communication_posts;
 drop policy if exists "Communication manages posts" on public.communication_posts;
@@ -430,7 +435,13 @@ create policy "Members read notices" on public.workspace_notices for select to a
 create policy "Coordination manages notices" on public.workspace_notices for all to authenticated
   using (public.is_admin()) with check (public.is_admin());
 
-create policy "Members read events" on public.workspace_events for select to authenticated using (true);
+create policy "Members read relevant events" on public.workspace_events for select to authenticated
+  using (
+    event_type <> 'meeting'
+    or cardinality(attendee_ids) = 0
+    or (select auth.uid()) = any(attendee_ids)
+    or (select public.can_lead_tasks())
+  );
 create policy "Coordination and HR manage events" on public.workspace_events for all to authenticated
   using (public.is_admin() or public.can_manage_hr()) with check (public.is_admin() or public.can_manage_hr());
 
