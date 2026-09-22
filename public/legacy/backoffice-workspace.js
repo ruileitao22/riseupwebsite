@@ -239,7 +239,7 @@
 
   function meetingVisibleToCurrentUser(meeting) {
     const attendees = meetingAttendeeIds(meeting);
-    return !attendees.length || attendees.includes(currentUserId()) || canAssign();
+    return !attendees.length || attendees.includes(currentUserId()) || isAdmin();
   }
 
   function taskAssigneeLabel(task) {

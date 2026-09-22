@@ -440,7 +440,7 @@ create policy "Members read relevant events" on public.workspace_events for sele
     event_type <> 'meeting'
     or cardinality(attendee_ids) = 0
     or (select auth.uid()) = any(attendee_ids)
-    or (select public.can_lead_tasks())
+    or (select public.is_admin())
   );
 create policy "Coordination and HR manage events" on public.workspace_events for all to authenticated
   using (public.is_admin() or public.can_manage_hr()) with check (public.is_admin() or public.can_manage_hr());
