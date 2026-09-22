@@ -305,7 +305,7 @@
     const project = $("[data-task-project]");
     if (assignee) {
       assignee.replaceChildren();
-      (core().team || []).filter((member) => member.user_id).forEach((member) => {
+      (core().team || []).filter((member) => member.user_id && !member.is_legend).forEach((member) => {
         const option = element("option", null, member.name);
         option.value = member.user_id;
         assignee.appendChild(option);
