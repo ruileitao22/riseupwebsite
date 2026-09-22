@@ -1306,6 +1306,16 @@
     status.className = `bo-status${type ? ` is-${type}` : ""}`;
   }
 
+  function setDashboardEventSaving(form, saving) {
+    if (!form) return;
+    const submit = form.querySelector("[data-save-dashboard-event]");
+    form.dataset.submitting = saving ? "true" : "";
+    form.setAttribute("aria-busy", String(saving));
+    form.querySelectorAll("button").forEach((button) => { button.disabled = saving; });
+    if (!submit) return;
+    submit.textContent = saving ? "A guardar…" : "Guardar";
+  }
+
   function openDashboardEventForm(type = "event", record = null) {
     if (!canAssign()) return;
     const dialog = $("[data-dashboard-event-dialog]");
@@ -1334,6 +1344,7 @@
     const label = eventType === "meeting" ? "reunião" : "evento";
     $("[data-dashboard-event-form-title]").textContent = `${record ? "Editar" : "Novo"} ${label}`;
     $("[data-delete-dashboard-event]").hidden = !record;
+    setDashboardEventSaving(form, false);
     setWorkspaceStatus("[data-dashboard-event-status]", "");
     if (typeof dialog.showModal === "function") dialog.showModal();
     else dialog.setAttribute("open", "");
@@ -1351,6 +1362,7 @@
     event.preventDefault();
     if (!canAssign()) return;
     const form = event.currentTarget;
+    if (form.dataset.submitting === "true") return;
     const id = form.elements.id.value;
     const eventType = form.elements.event_type.value;
     const attendeeIds = eventType === "meeting"
@@ -1365,6 +1377,8 @@
       location: form.elements.location.value.trim() || null,
       attendee_ids: attendeeIds
     };
+    setDashboardEventSaving(form, true);
+    setWorkspaceStatus("[data-dashboard-event-status]", "A guardar...");
     try {
       let saved;
       if (workspace.preview) saved = { id: id || crypto.randomUUID(), ...payload, created_by: currentUserId(), created_at: new Date().toISOString() };
@@ -1378,19 +1392,21 @@
         saved = data;
       }
       workspace.events = id ? workspace.events.map((item) => item.id === id ? saved : item) : [...workspace.events, saved];
-      if (!id && eventType === "meeting" && !workspace.preview) {
-        try {
-          await notifyMeetingAttendees(saved.id);
-          setWorkspaceStatus("[data-global-status]", "Reunião guardada e participantes notificados por email.", "success");
-        } catch (notificationError) {
-          setWorkspaceStatus("[data-global-status]", notificationError?.message || "A reunião foi guardada, mas não foi possível enviar os emails.", "error");
-        }
-      }
       renderDashboard();
       renderHrEvents();
       renderAttendance();
       closeDashboardEventForm();
+      setDashboardEventSaving(form, false);
+      if (!id && eventType === "meeting" && !workspace.preview) {
+        setWorkspaceStatus("[data-global-status]", "Reunião guardada. A enviar emails aos participantes…", "success");
+        void notifyMeetingAttendees(saved.id).then(() => {
+          setWorkspaceStatus("[data-global-status]", "Reunião guardada e participantes notificados por email.", "success");
+        }).catch((notificationError) => {
+          setWorkspaceStatus("[data-global-status]", notificationError?.message || "A reunião foi guardada, mas não foi possível enviar os emails.", "error");
+        });
+      }
     } catch (error) {
+      setDashboardEventSaving(form, false);
       setWorkspaceStatus("[data-dashboard-event-status]", error?.message || "Não foi possível guardar.", "error");
     }
   }
