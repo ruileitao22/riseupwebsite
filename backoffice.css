@@ -564,8 +564,6 @@ img {
   gap: 1rem;
 }
 
-.bo-innovation-bank { min-width: 0; }
-.bo-innovation-form { margin-top: 1rem; }
 .bo-innovation-list { margin-top: 1rem; }
 .bo-innovation-request { grid-template-columns: minmax(0, 1fr) auto; }
 .bo-innovation-status-select { grid-column: 1 / -1; width: 100%; margin-top: 0.15rem; }
@@ -1261,6 +1259,7 @@ body {
 .bo-request-menu-toggle { position: relative; min-height: 40px; display: inline-flex; align-items: center; gap: .48rem; padding: .55rem .72rem; border: 1px solid #dde6ee; border-radius: 10px; background: #fff; color: var(--bo-text); font: inherit; font-size: .76rem; font-weight: 800; cursor: pointer; box-shadow: 0 5px 18px rgba(40, 63, 86, .05); }
 .bo-request-menu-toggle:hover, .bo-request-menu-toggle[aria-expanded="true"] { border-color: #b9d3ee; background: #f3f8fd; color: #1767ae; }
 .bo-request-menu-toggle svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.bo-innovation-menu-toggle:hover, .bo-innovation-menu-toggle[aria-expanded="true"] { border-color: #d8c7a1; background: #fffaf0; color: #9a6b12; }
 .bo-request-menu-toggle i { position: absolute; top: -5px; right: -5px; min-width: 18px; height: 18px; display: grid; place-items: center; padding: 0 4px; border: 2px solid #f4f6f8; border-radius: 999px; background: #e5a23a; color: #fff; font-size: 9px; font-style: normal; line-height: 1; }
 .bo-request-menu-panel { position: fixed; inset: 0; z-index: 200; display: grid; place-items: center; width: auto; max-height: none; overflow: hidden; padding: clamp(.75rem, 3vw, 2rem); background: rgba(15, 28, 40, .52); backdrop-filter: blur(5px); }
 .bo-request-menu-panel[hidden] { display: none; }
@@ -1288,6 +1287,19 @@ html.bo-modal-open { overflow: hidden; }
 .bo-request-menu-panel .bo-communication-request-form .bo-actions .bo-button { width: 100%; min-height: 46px; gap: .6rem; border-radius: 10px; font-size: .82rem; }
 .bo-request-menu-panel .bo-communication-request-form .bo-actions .bo-button span { font-size: 1.05rem; transition: transform 160ms ease; }
 .bo-request-menu-panel .bo-communication-request-form .bo-actions .bo-button:hover span { transform: translateX(3px); }
+.bo-request-menu-panel .bo-form.bo-innovation-request-form { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; margin: 1rem 0 0; padding: 0; border: 0; background: transparent; }
+.bo-request-menu-panel .bo-innovation-request-form .bo-form-head { align-items: flex-start; padding: .9rem; border: 1px solid #eee3c8; border-radius: 12px; background: linear-gradient(135deg, #fffaf0, #fffdfa); }
+.bo-request-menu-panel .bo-innovation-request-form .bo-form-head h3 { margin: .12rem 0 0; font-size: 1.08rem; }
+.bo-request-menu-panel .bo-innovation-request-form .bo-request-field { gap: .38rem; font-size: .78rem; }
+.bo-request-menu-panel .bo-innovation-request-form .bo-request-field > span { color: #172330; font-weight: 800; }
+.bo-request-menu-panel .bo-innovation-request-form input, .bo-request-menu-panel .bo-innovation-request-form select, .bo-request-menu-panel .bo-innovation-request-form textarea { min-width: 0; min-height: 46px; padding: .72rem .8rem; border-color: #e5ddca; border-radius: 10px; background: #fff; font-size: .86rem; }
+.bo-request-menu-panel .bo-innovation-request-form textarea { min-height: 105px; line-height: 1.5; resize: vertical; }
+.bo-request-menu-panel .bo-innovation-request-form input::placeholder, .bo-request-menu-panel .bo-innovation-request-form textarea::placeholder { color: #9aa6b1; font-weight: 500; }
+.bo-request-menu-panel .bo-innovation-request-form .bo-actions { padding-top: .15rem; }
+.bo-request-menu-panel .bo-innovation-request-form .bo-actions .bo-button { width: 100%; min-height: 46px; gap: .6rem; border-radius: 10px; font-size: .82rem; }
+.bo-request-menu-panel .bo-innovation-request-form .bo-actions .bo-button span { font-size: 1.05rem; transition: transform 160ms ease; }
+.bo-request-menu-panel .bo-innovation-request-form .bo-actions .bo-button:hover span { transform: translateX(3px); }
+@media (max-width: 520px) { .bo-request-menu-panel .bo-form.bo-innovation-request-form { grid-template-columns: 1fr; } }
 .bo-request-menu-panel .bo-request-list { max-height: 330px; overflow-y: auto; padding-right: .15rem; }
 .bo-request-menu-panel .bo-request-card { grid-template-columns: minmax(0, 1fr) auto; padding: .72rem; gap: .45rem .65rem; }
 .bo-request-menu-panel .bo-request-card h4 { font-size: .82rem; }

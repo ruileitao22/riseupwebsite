@@ -232,6 +232,25 @@
   const innovationTypeLabel = (type) => type === "problem" ? "Problema" : "Ideia";
   const innovationStatusLabel = (status) => ({ new: "Novo", reviewing: "Em análise", planned: "Planeado", resolved: "Resolvido", archived: "Arquivado" })[status] || "Novo";
 
+  function showInnovationMenuOverview() {
+    const form = $("[data-innovation-request-form]");
+    const intro = $("[data-innovation-menu-intro]");
+    const list = $("[data-innovation-requests]");
+    if (form) form.hidden = true;
+    if (intro) intro.hidden = false;
+    if (list) list.hidden = false;
+  }
+
+  function setInnovationMenuOpen(open) {
+    const menu = $("[data-innovation-request-menu]");
+    const toggle = $("[data-innovation-request-toggle]");
+    if (!menu || !toggle) return;
+    menu.hidden = !open;
+    toggle.setAttribute("aria-expanded", String(open));
+    document.documentElement.classList.toggle("bo-modal-open", open);
+    if (!open) showInnovationMenuOverview();
+  }
+
   function renderInnovationRequests() {
     const list = $("[data-innovation-requests]");
     if (!list) return;
@@ -293,6 +312,7 @@
       }
       workspace.innovationRequests.unshift(record);
       form.reset();
+      showInnovationMenuOverview();
       renderInnovationRequests();
       try {
         await notifyInnovationRequest(record.id);
@@ -2468,7 +2488,6 @@
     });
     $all("[data-new-dashboard-event]").forEach((button) => button.addEventListener("click", () => openDashboardEventForm(button.dataset.newDashboardEvent)));
     $("[data-dashboard-event-form]")?.addEventListener("submit", saveDashboardEvent);
-    $("[data-innovation-request-form]")?.addEventListener("submit", saveInnovationRequest);
     $("[data-close-dashboard-event-form]")?.addEventListener("click", closeDashboardEventForm);
     $("[data-cancel-dashboard-event]")?.addEventListener("click", closeDashboardEventForm);
     $("[data-delete-dashboard-event]")?.addEventListener("click", () => {
@@ -2545,6 +2564,27 @@
     });
     $all("[data-close-communication-request]").forEach((button) => button.addEventListener("click", showCommunicationMenuOverview));
     $("[data-communication-request-form]")?.addEventListener("submit", saveCommunicationRequest);
+    $all("[data-new-innovation-request]").forEach((button) => button.addEventListener("click", () => {
+      const form = $("[data-innovation-request-form]");
+      if (!form) return;
+      setInnovationMenuOpen(true);
+      const intro = $("[data-innovation-menu-intro]");
+      const list = $("[data-innovation-requests]");
+      if (intro) intro.hidden = true;
+      if (list) list.hidden = true;
+      form.hidden = false;
+      form.elements.title.focus();
+    }));
+    $("[data-innovation-request-toggle]")?.addEventListener("click", () => {
+      const menu = $("[data-innovation-request-menu]");
+      setInnovationMenuOpen(Boolean(menu?.hidden));
+    });
+    $all("[data-close-innovation-menu]").forEach((button) => button.addEventListener("click", () => setInnovationMenuOpen(false)));
+    $("[data-innovation-request-menu]")?.addEventListener("pointerdown", (event) => {
+      if (event.target === event.currentTarget) setInnovationMenuOpen(false);
+    });
+    $all("[data-close-innovation-request]").forEach((button) => button.addEventListener("click", showInnovationMenuOverview));
+    $("[data-innovation-request-form]")?.addEventListener("submit", saveInnovationRequest);
     $("[data-close-communication-decision]")?.addEventListener("click", () => { $("[data-communication-decision-form]").hidden = true; });
     $("[data-communication-decision-form]")?.addEventListener("submit", saveCommunicationDecision);
     $all("[data-new-opportunity]").forEach((button) => button.addEventListener("click", () => openOpportunityForm()));
