@@ -4,6 +4,12 @@ import { submissionSchema } from "./submissions";
 const base = { source_page: "contact", page_url: "https://riseupmaia.pt/contactos", language: "pt", user_agent: "test" };
 
 describe("submissionSchema", () => {
+  it("accepts an empty page URL and rejects a malformed URL without throwing", () => {
+    const payload = { ...base, name: "Ana", email: "ana@example.com", message: "Olá" };
+    expect(submissionSchema.safeParse({ type: "contact", payload: { ...payload, page_url: "" } }).success).toBe(true);
+    expect(submissionSchema.safeParse({ type: "contact", payload: { ...payload, page_url: "invalid" } }).success).toBe(false);
+  });
+
   it("accepts a valid contact request", () => {
     expect(submissionSchema.safeParse({ type: "contact", payload: { ...base, name: "Ana", email: "ANA@example.com", message: "Olá" } }).success).toBe(true);
   });

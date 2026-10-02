@@ -2,7 +2,7 @@ import { z } from "zod";
 
 const base = z.object({
   source_page: z.string().trim().max(80),
-  page_url: z.url().max(500).refine((value) => ["http:", "https:"].includes(new URL(value).protocol)).or(z.literal("")),
+  page_url: z.url().max(500).refine((value) => URL.canParse(value) && ["http:", "https:"].includes(new URL(value).protocol)).or(z.literal("")),
   language: z.enum(["pt", "en"]),
   user_agent: z.string().trim().max(300)
 }).strict();
@@ -22,6 +22,7 @@ const applicationPayload = base.extend({
   motivation: z.string().trim().min(1).max(3000),
   linkedin: z.url().max(300).nullable().refine((value) => {
     if (!value) return true;
+    if (!URL.canParse(value)) return false;
     const url = new URL(value);
     const host = url.hostname.toLowerCase().replace(/^www\./, "");
     return url.protocol === "https:" && (host === "linkedin.com" || host.endsWith(".linkedin.com"));

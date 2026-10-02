@@ -564,6 +564,12 @@ img {
   gap: 1rem;
 }
 
+.bo-innovation-bank { min-width: 0; }
+.bo-innovation-form { margin-top: 1rem; }
+.bo-innovation-list { margin-top: 1rem; }
+.bo-innovation-request { grid-template-columns: minmax(0, 1fr) auto; }
+.bo-innovation-status-select { grid-column: 1 / -1; width: 100%; margin-top: 0.15rem; }
+
 .bo-section-head {
   display: flex;
   align-items: center;

@@ -6,6 +6,7 @@
     events: [],
     posts: [],
     communicationRequests: [],
+    innovationRequests: [],
     opportunities: [],
     documents: [],
     attendance: [],
@@ -35,6 +36,7 @@
   const canManageHr = () => isAdmin() || ["hr_team", "team_leader_hr"].includes(currentRole());
   const canManageCommercial = () => isAdmin() || ["commercial_team", "team_leader_commercial"].includes(currentRole());
   const canManageCommunication = () => isAdmin() || ["communication_team", "team_leader_communication"].includes(currentRole());
+  const canManageInnovation = () => isAdmin() || ["projects_innovation_team", "team_leader_projects_innovation"].includes(currentRole());
 
   const priorityLabels = { low: "Baixa", medium: "Média", high: "Alta", urgent: "Urgente" };
   const categoryLabels = { statutes: "Estatutos", regulations: "Regulamentos", templates: "Templates", minutes: "Atas", guides: "Guias internos", brand: "Identidade visual", project: "Projetos" };
@@ -93,6 +95,10 @@
       { id: "request-1", requester_id: currentUserId(), title: "Divulgar inscrições para o workshop", description: "Publicar o cartaz e o link de inscrição nas redes sociais.", channels: ["Instagram", "LinkedIn"], desired_publish_at: plus(3, 11), status: "pending", scheduled_for: null, rejection_reason: null, created_at: plus(-1) },
       { id: "request-2", requester_id: currentUserId(), title: "Resumo do evento", description: "Partilhar fotografias e principais conclusões.", channels: ["Instagram"], status: "scheduled", scheduled_for: plus(2, 18), rejection_reason: null, created_at: plus(-3) }
     ];
+    workspace.innovationRequests = [
+      { id: "innovation-1", request_type: "idea", title: "Biblioteca de propostas reutilizáveis", description: "Centralizar modelos de proposta para acelerar novos projetos.", status: "new", submitted_by: currentUserId(), created_at: plus(-2) },
+      { id: "innovation-2", request_type: "problem", title: "Pedidos chegam sem contexto suficiente", description: "Criar um formulário inicial com objetivos e prazos claros.", status: "reviewing", submitted_by: currentUserId(), created_at: plus(-1) }
+    ];
     workspace.opportunities = [
       { id: "opportunity-1", company_name: "Associação Maia Ativa", contact_name: "Inês Costa", contact_email: "ines@maiaativa.pt", service_interest: "Workshop de empreendedorismo", stage: "qualified", owner_id: currentUserId(), next_action: "Preparar proposta", next_action_at: plus(2, 11), estimated_value: 850, origin: "website" },
       { id: "opportunity-2", company_name: "TechNorth", contact_name: "Miguel Sousa", service_interest: "Parceria para evento", stage: "meeting", owner_id: currentUserId(), next_action: "Reunião de descoberta", next_action_at: plus(1, 15), estimated_value: 1400, origin: "referral" }
@@ -144,6 +150,7 @@
       ["events", "workspace_events", "starts_at"],
       ["posts", "communication_posts", "scheduled_for"],
       ["communicationRequests", "communication_requests", "created_at"],
+      ["innovationRequests", "innovation_requests", "created_at"],
       ["opportunities", "commercial_opportunities", "created_at"],
       ["documents", "workspace_documents", "created_at"],
       ["attendance", "attendance_records", "created_at"],
@@ -219,6 +226,102 @@
     renderDashboardTasks();
     renderWorkspaceCalendar();
     renderMyCommunicationRequests();
+    renderInnovationRequests();
+  }
+
+  const innovationTypeLabel = (type) => type === "problem" ? "Problema" : "Ideia";
+  const innovationStatusLabel = (status) => ({ new: "Novo", reviewing: "Em análise", planned: "Planeado", resolved: "Resolvido", archived: "Arquivado" })[status] || "Novo";
+
+  function renderInnovationRequests() {
+    const list = $("[data-innovation-requests]");
+    if (!list) return;
+    list.replaceChildren();
+    const manageable = canManageInnovation();
+    const records = workspace.innovationRequests.filter((request) => manageable || request.submitted_by === currentUserId())
+      .sort((left, right) => String(right.created_at).localeCompare(String(left.created_at)));
+    if (!records.length) {
+      list.appendChild(element("p", "bo-empty-soft", manageable ? "Ainda não há ideias ou problemas para analisar." : "Os teus pedidos vão aparecer aqui."));
+      return;
+    }
+    records.slice(0, manageable ? 8 : 4).forEach((request) => {
+      const card = element("article", `bo-request-card bo-innovation-request is-${request.status}`);
+      const body = element("div");
+      body.append(element("h4", null, request.title), element("p", null, request.description));
+      const submittedBy = manageable ? `Pedido por ${getMemberName(request.submitted_by)}` : "Enviado por ti";
+      body.appendChild(element("small", null, `${innovationTypeLabel(request.request_type)} · ${submittedBy} · ${safeDate(request.created_at, true)}`));
+      const status = element("span", "bo-request-status", innovationStatusLabel(request.status));
+      card.append(body, status);
+      if (manageable) {
+        const select = document.createElement("select");
+        select.className = "bo-innovation-status-select";
+        [["new", "Novo"], ["reviewing", "Em análise"], ["planned", "Planeado"], ["resolved", "Resolvido"], ["archived", "Arquivado"]].forEach(([value, label]) => select.add(new Option(label, value)));
+        select.value = request.status;
+        select.setAttribute("aria-label", `Estado de ${request.title}`);
+        select.addEventListener("change", () => void updateInnovationRequestStatus(request, select));
+        card.appendChild(select);
+      }
+      list.appendChild(card);
+    });
+  }
+
+  async function notifyInnovationRequest(requestId) {
+    if (workspace.preview || !core().session?.access_token) return;
+    const response = await fetch("/api/innovation/notifications", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${core().session.access_token}` },
+      body: JSON.stringify({ requestId })
+    });
+    if (!response.ok) {
+      const body = await response.json().catch(() => ({}));
+      throw new Error(body.error || "O pedido foi guardado, mas o email não foi enviado.");
+    }
+  }
+
+  async function saveInnovationRequest(event) {
+    event.preventDefault();
+    const form = event.currentTarget;
+    const status = "[data-innovation-request-status]";
+    const payload = { request_type: form.elements.request_type.value, title: form.elements.title.value.trim(), description: form.elements.description.value.trim(), submitted_by: currentUserId(), status: "new" };
+    try {
+      setWorkspaceStatus(status, "A enviar...");
+      let record;
+      if (workspace.preview) record = { id: crypto.randomUUID(), ...payload, created_at: new Date().toISOString() };
+      else {
+        const { data, error } = await client().from("innovation_requests").insert(payload).select().single();
+        if (error) throw error;
+        record = data;
+      }
+      workspace.innovationRequests.unshift(record);
+      form.reset();
+      renderInnovationRequests();
+      try {
+        await notifyInnovationRequest(record.id);
+        setWorkspaceStatus(status, "Pedido enviado para a equipa de Inovação e Projetos.", "success");
+      } catch (error) {
+        setWorkspaceStatus(status, error?.message || "Pedido guardado, mas não foi possível enviar o email.", "error");
+      }
+    } catch (error) {
+      setWorkspaceStatus(status, error?.message || "Não foi possível enviar o pedido.", "error");
+    }
+  }
+
+  async function updateInnovationRequestStatus(request, select) {
+    const status = select.value;
+    select.disabled = true;
+    try {
+      if (workspace.preview) request.status = status;
+      else {
+        const { data, error } = await client().from("innovation_requests").update({ status, updated_at: new Date().toISOString() }).eq("id", request.id).select().single();
+        if (error) throw error;
+        Object.assign(request, data);
+      }
+      renderInnovationRequests();
+    } catch (error) {
+      select.value = request.status;
+      window.alert(error?.message || "Não foi possível atualizar o estado.");
+    } finally {
+      select.disabled = false;
+    }
   }
 
   function getMemberName(userId) {
@@ -2365,6 +2468,7 @@
     });
     $all("[data-new-dashboard-event]").forEach((button) => button.addEventListener("click", () => openDashboardEventForm(button.dataset.newDashboardEvent)));
     $("[data-dashboard-event-form]")?.addEventListener("submit", saveDashboardEvent);
+    $("[data-innovation-request-form]")?.addEventListener("submit", saveInnovationRequest);
     $("[data-close-dashboard-event-form]")?.addEventListener("click", closeDashboardEventForm);
     $("[data-cancel-dashboard-event]")?.addEventListener("click", closeDashboardEventForm);
     $("[data-delete-dashboard-event]")?.addEventListener("click", () => {

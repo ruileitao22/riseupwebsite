@@ -1,5 +1,6 @@
-import { NextResponse, type NextRequest } from "next/server";
+import { after, NextResponse, type NextRequest } from "next/server";
 import { submissionSchema, submissionTables } from "@/lib/submissions";
+import { sendSubmissionNotification } from "@/lib/submission-notifications";
 
 const attempts = new Map<string, number[]>();
 const WINDOW_MS = 10 * 60 * 1000;
@@ -60,6 +61,15 @@ export async function POST(request: NextRequest) {
     console.error("Supabase submission failed:", response.status, await response.text());
     return NextResponse.json({ error: "Não foi possível enviar. Tenta novamente." }, { status: 502 });
   }
+
+  after(async () => {
+    try {
+      await sendSubmissionNotification(parsed.data);
+    } catch (error) {
+      console.error("Submission notification failed:", parsed.data.type,
+        error instanceof Error ? error.message : "Unknown error");
+    }
+  });
 
   return new NextResponse(null, { status: 204 });
 }

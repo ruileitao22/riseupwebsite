@@ -14,7 +14,18 @@ O ficheiro `.env.local` existente é ignorado pelo Git. Na Vercel, configurar:
 - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
 - opcionalmente, os aliases server-only `SUPABASE_URL` e `SUPABASE_ANON_KEY`
 
-Não deve ser usada nem exposta uma `service_role` key.
+A `SUPABASE_SERVICE_ROLE_KEY` é usada exclusivamente no servidor para operações internas. Nunca expor esta chave no browser ou numa variável `NEXT_PUBLIC_`.
+
+## Emails de candidaturas e contactos
+
+Após guardar um formulário, `/api/submissions` envia uma notificação através do Resend:
+
+- Contactos: `riseup@umaia.pt`.
+- Candidaturas: `riseup@umaia.pt` e os emails de `user_profiles` com cargo `hr_team` ou `team_leader_hr`, sem duplicados.
+
+Os emails incluem os dados do formulário, ligação ao backoffice e Reply-To do remetente. Os restantes destinatários seguem em BCC. Configurar `RESEND_API_KEY`, `SUPABASE_SERVICE_ROLE_KEY` e `NEXT_PUBLIC_APP_URL` na Vercel; o domínio de envio `updates.riseupmaia.pt` deve estar validado no Resend.
+
+O envio decorre após a resposta HTTP, através de `after` do Next.js. Falhas transitórias têm até três tentativas com a mesma chave de idempotência. Uma falha de email nunca invalida o formulário já guardado: fica registada nos logs da aplicação, sem reenvio persistente automático. Se a consulta dos RH falhar, o endereço institucional continua a ser notificado.
 
 ## Verificação
 
@@ -48,6 +59,12 @@ Para ativar o fluxo numa instalação existente, executar no editor SQL do Supab
 2. `supabase-communication-requests-cron.sql` — instala e verifica a conclusão automática.
 
 Confirmar também `SUPABASE_SERVICE_ROLE_KEY`, `RESEND_API_KEY` e `NEXT_PUBLIC_APP_URL` no ambiente da Vercel para as notificações por email.
+
+## Banco de Ideias e Problemas
+
+O Dashboard permite que qualquer membro envie uma ideia ou problema. Cada membro vê os seus pedidos; Inovação e Projetos, respetivo Team Líder e coordenação veem todos e atualizam o estado. Um novo pedido envia email para os utilizadores com os cargos `projects_innovation_team` e `team_leader_projects_innovation`.
+
+A tabela e as políticas estão em `supabase-innovation-requests.sql`. Confirmar também `SUPABASE_SERVICE_ROLE_KEY`, `RESEND_API_KEY` e `NEXT_PUBLIC_APP_URL` na Vercel.
 
 ## Google Drive no backoffice
 

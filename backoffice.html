@@ -201,6 +201,18 @@
                 <div class="bo-list" data-dashboard-tasks></div>
               </article>
 
+              <article class="bo-panel bo-innovation-bank">
+                <div class="bo-list-head"><div><p class="bo-kicker">Inovação e Projetos</p><h3>Banco de Ideias e Problemas</h3><p>Regista uma oportunidade ou obstáculo para a equipa analisar.</p></div></div>
+                <form class="bo-form bo-innovation-form" data-innovation-request-form>
+                  <label>Tipo<select name="request_type"><option value="idea">Ideia</option><option value="problem">Problema</option></select></label>
+                  <label>Título<input name="title" maxlength="180" required placeholder="Ex.: Melhorar o processo de…" /></label>
+                  <label class="bo-field-full">Descrição<textarea name="description" rows="3" maxlength="4000" required placeholder="Explica o contexto, impacto ou proposta."></textarea></label>
+                  <div class="bo-actions bo-field-full"><button class="bo-button bo-button-primary" type="submit">Enviar para análise <span aria-hidden="true">→</span></button></div>
+                  <p class="bo-status bo-field-full" data-innovation-request-status></p>
+                </form>
+                <div class="bo-request-list bo-innovation-list" data-innovation-requests></div>
+              </article>
+
             </div>
 
             <article class="bo-panel bo-access-panel">
