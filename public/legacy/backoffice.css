@@ -564,8 +564,6 @@ img {
   gap: 1rem;
 }
 
-.bo-innovation-bank { min-width: 0; }
-.bo-innovation-form { margin-top: 1rem; }
 .bo-innovation-list { margin-top: 1rem; }
 .bo-innovation-request { grid-template-columns: minmax(0, 1fr) auto; }
 .bo-innovation-status-select { grid-column: 1 / -1; width: 100%; margin-top: 0.15rem; }
@@ -1301,6 +1299,7 @@ html.bo-modal-open { overflow: hidden; }
 .bo-request-menu-panel .bo-innovation-request-form .bo-actions .bo-button { width: 100%; min-height: 46px; gap: .6rem; border-radius: 10px; font-size: .82rem; }
 .bo-request-menu-panel .bo-innovation-request-form .bo-actions .bo-button span { font-size: 1.05rem; transition: transform 160ms ease; }
 .bo-request-menu-panel .bo-innovation-request-form .bo-actions .bo-button:hover span { transform: translateX(3px); }
+@media (max-width: 520px) { .bo-request-menu-panel .bo-form.bo-innovation-request-form { grid-template-columns: 1fr; } }
 .bo-request-menu-panel .bo-request-list { max-height: 330px; overflow-y: auto; padding-right: .15rem; }
 .bo-request-menu-panel .bo-request-card { grid-template-columns: minmax(0, 1fr) auto; padding: .72rem; gap: .45rem .65rem; }
 .bo-request-menu-panel .bo-request-card h4 { font-size: .82rem; }
