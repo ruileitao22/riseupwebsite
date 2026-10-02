@@ -1454,6 +1454,94 @@ html.bo-modal-open { overflow: hidden; }
   gap: 0.42rem;
 }
 
+/* Contactos: etiquetas e ações compactas, com a mesma hierarquia visual do BackOffice. */
+.bo-submission-row .bo-row-actions {
+  align-items: center;
+  gap: 0.46rem;
+}
+
+.bo-submission-row .bo-pill {
+  min-height: 34px;
+  padding: 0.35rem 0.62rem;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  font-size: 0.68rem;
+  letter-spacing: 0.045em;
+}
+
+.bo-submission-row .bo-submission-status {
+  background: #eef5ff;
+  border-color: #dceaff;
+  color: #3979c7;
+}
+
+.bo-submission-row .bo-submission-status.is-read {
+  background: #eefaf3;
+  border-color: #d4efdf;
+  color: #18734b;
+}
+
+.bo-submission-row .bo-submission-status.is-archived {
+  background: #f4f6f8;
+  border-color: #e5e9ed;
+  color: #728091;
+}
+
+.bo-submission-row .bo-submission-language {
+  min-width: 36px;
+  justify-content: center;
+  background: #f7faff;
+  border-color: #e5edf8;
+  color: #5d83b7;
+}
+
+.bo-submission-row .bo-button {
+  min-height: 36px;
+  padding: 0.52rem 0.72rem;
+  border-radius: 9px;
+  font-size: 0.78rem;
+}
+
+.bo-submission-row .bo-submission-convert {
+  padding-inline: 0.92rem;
+  background: linear-gradient(135deg, #13283a, #0b1720);
+  box-shadow: 0 7px 16px rgba(14, 34, 50, 0.16);
+}
+
+.bo-submission-row .bo-submission-convert::after {
+  content: "→";
+  margin-left: 0.42rem;
+  font-size: 0.95rem;
+  line-height: 0;
+  transition: transform 160ms ease;
+}
+
+.bo-submission-row .bo-submission-convert:hover {
+  background: linear-gradient(135deg, #1d425c, #12334b);
+  box-shadow: 0 9px 20px rgba(14, 34, 50, 0.2);
+}
+
+.bo-submission-row .bo-submission-convert:hover::after {
+  transform: translateX(2px);
+}
+
+.bo-submission-row .bo-submission-archive {
+  border-color: #dde5ec;
+  background: #fbfcfd;
+  color: #526373;
+}
+
+.bo-submission-row .bo-submission-archive:hover {
+  border-color: #bacbd9;
+  background: #f1f6fa;
+  color: #243849;
+}
+
+.bo-submission-row .bo-submission-delete {
+  background: #fff4f4;
+  color: #b13b3b;
+}
+
 .bo-permission-row {
   align-items: stretch;
 }

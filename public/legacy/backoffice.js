@@ -2343,8 +2343,8 @@
       }
 
       const actions = createElement("div", "bo-row-actions");
-      actions.appendChild(createElement("span", "bo-pill", formatSubmissionStatus(record.status)));
-      actions.appendChild(createElement("span", "bo-pill", (record.language || "PT").toUpperCase()));
+      actions.appendChild(createElement("span", `bo-pill bo-submission-status is-${record.status || "new"}`, formatSubmissionStatus(record.status)));
+      actions.appendChild(createElement("span", "bo-pill bo-submission-language", (record.language || "PT").toUpperCase()));
 
       if (canManageHr()) {
         const remove = createElement("button", "bo-button bo-button-danger", "Apagar");
@@ -2420,22 +2420,22 @@
       }
 
       const actions = createElement("div", "bo-row-actions");
-      actions.appendChild(createElement("span", "bo-pill", formatSubmissionStatus(record.status)));
-      actions.appendChild(createElement("span", "bo-pill", (record.language || "PT").toUpperCase()));
+      actions.appendChild(createElement("span", `bo-pill bo-submission-status is-${record.status || "new"}`, formatSubmissionStatus(record.status)));
+      actions.appendChild(createElement("span", "bo-pill bo-submission-language", (record.language || "PT").toUpperCase()));
 
       if (canManageContacts()) {
         if (canManageCommercial()) {
-          const convert = createElement("button", "bo-button bo-button-primary", "Criar oportunidade");
+          const convert = createElement("button", "bo-button bo-button-primary bo-submission-convert", "Criar oportunidade");
           convert.type = "button";
           convert.addEventListener("click", () => window.RISEUP_WORKSPACE?.createOpportunityFromContact?.(record));
           actions.appendChild(convert);
         }
         const archived = record.status === "archived";
-        const archive = createElement("button", "bo-button bo-button-ghost", archived ? "Restaurar" : "Arquivar");
+        const archive = createElement("button", "bo-button bo-button-ghost bo-submission-archive", archived ? "Restaurar" : "Arquivar");
         archive.type = "button";
         archive.addEventListener("click", () => updateContactSubmissionStatus(record, archived ? "read" : "archived"));
 
-        const remove = createElement("button", "bo-button bo-button-danger", "Apagar");
+        const remove = createElement("button", "bo-button bo-button-danger bo-submission-delete", "Apagar");
         remove.type = "button";
         remove.addEventListener("click", () => deleteContactSubmission(record));
         actions.append(archive, remove);
