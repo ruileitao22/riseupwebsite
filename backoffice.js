@@ -943,6 +943,13 @@
     return labels[value] || value || "Sem estado";
   }
 
+  function shouldShowNewSubmissionBadge(record) {
+    if (record?.status !== "new") return false;
+    const submittedAt = new Date(record.submitted_at || "");
+    const age = Date.now() - submittedAt.getTime();
+    return Number.isFinite(age) && age >= 0 && age < 14 * 24 * 60 * 60 * 1000;
+  }
+
   function formatDecisionLabel(value) {
     if (value === "advance") {
       return "Avan\u00e7ar";
@@ -2343,7 +2350,9 @@
       }
 
       const actions = createElement("div", "bo-row-actions");
-      actions.appendChild(createElement("span", `bo-pill bo-submission-status is-${record.status || "new"}`, formatSubmissionStatus(record.status)));
+      if (record.status !== "new" || shouldShowNewSubmissionBadge(record)) {
+        actions.appendChild(createElement("span", `bo-pill bo-submission-status is-${record.status || "new"}`, formatSubmissionStatus(record.status)));
+      }
       actions.appendChild(createElement("span", "bo-pill bo-submission-language", (record.language || "PT").toUpperCase()));
 
       if (canManageHr()) {
@@ -2420,7 +2429,9 @@
       }
 
       const actions = createElement("div", "bo-row-actions");
-      actions.appendChild(createElement("span", `bo-pill bo-submission-status is-${record.status || "new"}`, formatSubmissionStatus(record.status)));
+      if (record.status !== "new" || shouldShowNewSubmissionBadge(record)) {
+        actions.appendChild(createElement("span", `bo-pill bo-submission-status is-${record.status || "new"}`, formatSubmissionStatus(record.status)));
+      }
       actions.appendChild(createElement("span", "bo-pill bo-submission-language", (record.language || "PT").toUpperCase()));
 
       if (canManageContacts()) {
