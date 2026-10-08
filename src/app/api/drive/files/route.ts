@@ -1,6 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { createDriveFolder, listDriveFolder, RISEUP_DRIVE_ROOT, uploadDriveFile } from "@/lib/google-drive";
-import { canReadDrive, canWriteDrive, requireBackofficeUser } from "@/lib/server-auth";
+import { canDeleteDrive, canReadDrive, canWriteDrive, requireBackofficeUser } from "@/lib/server-auth";
 
 function failure(error: unknown) {
   const message = error instanceof Error ? error.message : "DRIVE_REQUEST_FAILED";
@@ -14,7 +14,7 @@ export async function GET(request: NextRequest) {
     if (!canReadDrive(identity.role)) return NextResponse.json({ error: "FORBIDDEN" }, { status: 403 });
     const folderId = request.nextUrl.searchParams.get("folderId") || RISEUP_DRIVE_ROOT;
     const result = await listDriveFolder(folderId);
-    return NextResponse.json({ ...result, rootFolderId: RISEUP_DRIVE_ROOT, permissions: { write: canWriteDrive(identity.role), delete: identity.role === "admin" } });
+    return NextResponse.json({ ...result, rootFolderId: RISEUP_DRIVE_ROOT, permissions: { write: canWriteDrive(identity.role), delete: canDeleteDrive(identity.role) } });
   } catch (error) {
     return failure(error);
   }
