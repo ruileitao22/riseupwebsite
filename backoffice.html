@@ -547,7 +547,7 @@
                 <div class="bo-team-profile-layout">
                   <div class="bo-team-fields-grid">
                     <label>Nome<input type="text" name="name" required /></label>
-                    <label class="bo-team-managed-role"><span class="bo-label-line">Cargo <span class="bo-managed-badge">Gerido pelo acesso</span></span><input type="text" name="role" required readonly aria-readonly="true" aria-describedby="team-role-hint" /><span class="bo-field-hint" id="team-role-hint">Atualiza automaticamente quando alteras o acesso ao BackOffice.</span></label>
+                    <label class="bo-team-managed-role"><span class="bo-label-line">Cargo <span class="bo-managed-badge">Gerido pelo acesso</span></span><input type="text" name="role" required readonly aria-readonly="true" aria-describedby="team-role-hint" /><span class="bo-field-hint" id="team-role-hint" data-team-role-hint>Atualiza automaticamente quando alteras o acesso ao BackOffice.</span></label>
                     <label class="bo-team-field-wide">Descri&ccedil;&atilde;o<textarea name="description" rows="4"></textarea></label>
                     <label class="bo-team-field-wide"><span class="bo-label-line">LinkedIn <span class="bo-label-note">(opcional)</span></span><input type="url" name="linkedin_url" placeholder="https://www.linkedin.com/in/..." /></label>
                   </div>
@@ -1474,7 +1474,7 @@
         <label>Termina em<input name="ends_at" type="datetime-local" /></label>
         <label class="bo-field-full">Local<input name="location" type="text" maxlength="180" /></label>
         <label class="bo-field-full">Descrição<textarea name="description" rows="3" maxlength="1000"></textarea></label>
-        <label class="bo-field-full" data-meeting-attendees-field hidden>Quem deve estar presente<select name="attendee_ids" multiple size="6" data-meeting-attendees aria-describedby="meeting-attendees-help"></select><small id="meeting-attendees-help" class="bo-field-hint">Sem seleção, a reunião aparece no calendário de toda a equipa e todos recebem o email.</small></label>
+        <label class="bo-field-full" data-event-attendees-field>Quem deve estar presente<select name="attendee_ids" multiple size="6" data-event-attendees aria-describedby="event-attendees-help"></select><small id="event-attendees-help" class="bo-field-hint" data-event-attendees-help>As pessoas selecionadas recebem um convite por email. Sem seleção, o evento continua visível para toda a equipa, mas não é enviado nenhum email.</small></label>
         <div class="bo-actions bo-field-full"><button class="bo-button bo-button-danger" type="button" data-delete-dashboard-event hidden>Eliminar</button><button class="bo-button bo-button-ghost" type="button" data-cancel-dashboard-event>Cancelar</button><button class="bo-button bo-button-primary" type="submit" data-save-dashboard-event>Guardar</button></div>
         <p class="bo-status bo-field-full" data-dashboard-event-status></p>
       </form>

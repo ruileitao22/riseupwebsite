@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { renderAssignmentEmail, renderDailyTaskEmail, renderMeetingInvitationEmail } from "./task-notifications";
+import { renderAssignmentEmail, renderDailyTaskEmail, renderEventInvitationEmail, renderMeetingInvitationEmail } from "./task-notifications";
 
 const recipient = { id: "user-1", email: "rui@example.com", name: "Rui" };
 const task = {
@@ -56,5 +56,24 @@ describe("task notification email design", () => {
     expect(html).toContain("Reunião &lt;semanal&gt;");
     expect(html).toContain("Microsoft Teams");
     expect(html).toContain("Alinhar prioridades &amp; próximos passos.");
+  });
+
+  it("renders a branded event invitation for an assigned member", () => {
+    const html = renderEventInvitationEmail({
+      id: "event-1",
+      title: "Welcome Day",
+      description: "Receção à nova equipa.",
+      starts_at: "2026-10-21T15:00:00Z",
+      ends_at: null,
+      location: "Sala Rise Up",
+      attendee_ids: [recipient.id],
+      created_by: "creator-1",
+      event_type: "event"
+    }, recipient);
+
+    expect(html).toContain("Evento marcado");
+    expect(html).toContain("Foste associado a um evento");
+    expect(html).toContain("Welcome Day");
+    expect(html).toContain("Sala Rise Up");
   });
 });

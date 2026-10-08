@@ -10,7 +10,7 @@ export async function POST(request: NextRequest) {
     if (!canManageMeetings(identity.role)) return NextResponse.json({ error: "Sem permissão para enviar notificações de reuniões." }, { status: 403 });
     const body = await request.json() as { meetingId?: string };
     if (!body.meetingId) return NextResponse.json({ error: "Pedido inválido." }, { status: 400 });
-    return NextResponse.json({ ok: true, ...(await sendMeetingInvitationEmails(body.meetingId, identity.id)) });
+    return NextResponse.json({ ok: true, ...(await sendMeetingInvitationEmails(body.meetingId)) });
   } catch (error) {
     console.error("Meeting notification failed", error);
     return NextResponse.json({ error: "A reunião foi guardada, mas não foi possível enviar os emails." }, { status: 502 });

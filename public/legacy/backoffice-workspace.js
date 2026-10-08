@@ -1453,17 +1453,19 @@
     form.elements.location.value = record?.location || "";
     form.elements.description.value = record?.description || "";
     const eventType = record?.event_type || type;
-    const meetingAttendees = $("[data-meeting-attendees]");
-    const meetingAttendeesField = $("[data-meeting-attendees-field]");
-    if (meetingAttendees) {
-      meetingAttendees.replaceChildren();
-      (core().team || []).filter((member) => member.user_id).forEach((member) => {
+    const eventAttendees = $("[data-event-attendees]");
+    if (eventAttendees) {
+      eventAttendees.replaceChildren();
+      (core().team || []).filter((member) => member.user_id && !member.is_legend).forEach((member) => {
         const option = new Option(member.name || member.email || "Membro", member.user_id);
         option.selected = meetingAttendeeIds(record).includes(member.user_id);
-        meetingAttendees.add(option);
+        eventAttendees.add(option);
       });
     }
-    if (meetingAttendeesField) meetingAttendeesField.hidden = eventType !== "meeting";
+    const attendeesHelp = $("[data-event-attendees-help]");
+    if (attendeesHelp) attendeesHelp.textContent = eventType === "meeting"
+      ? "As pessoas selecionadas recebem um convite por email. Sem seleção, a reunião aparece no calendário de toda a equipa e todos recebem o email."
+      : "As pessoas selecionadas recebem um convite por email. Sem seleção, o evento continua visível para toda a equipa, mas não é enviado nenhum email.";
     const label = eventType === "meeting" ? "reunião" : "evento";
     $("[data-dashboard-event-form-title]").textContent = `${record ? "Editar" : "Novo"} ${label}`;
     $("[data-delete-dashboard-event]").hidden = !record;
@@ -1488,9 +1490,7 @@
     if (form.dataset.submitting === "true") return;
     const id = form.elements.id.value;
     const eventType = form.elements.event_type.value;
-    const attendeeIds = eventType === "meeting"
-      ? [...new Set(Array.from(form.elements.attendee_ids?.selectedOptions || [], (option) => option.value).filter(Boolean))]
-      : [];
+    const attendeeIds = [...new Set(Array.from(form.elements.attendee_ids?.selectedOptions || [], (option) => option.value).filter(Boolean))];
     const payload = {
       title: form.elements.title.value.trim(),
       description: form.elements.description.value.trim() || null,
@@ -1520,12 +1520,13 @@
       renderAttendance();
       closeDashboardEventForm();
       setDashboardEventSaving(form, false);
-      if (!id && eventType === "meeting" && !workspace.preview) {
-        setWorkspaceStatus("[data-global-status]", "Reunião guardada. A enviar emails aos participantes…", "success");
-        void notifyMeetingAttendees(saved.id).then(() => {
-          setWorkspaceStatus("[data-global-status]", "Reunião guardada e participantes notificados por email.", "success");
+      if ((eventType === "meeting" || attendeeIds.length) && !workspace.preview) {
+        const savedLabel = eventType === "meeting" ? "Reunião guardada" : "Evento guardado";
+        setWorkspaceStatus("[data-global-status]", `${savedLabel}. A enviar emails aos participantes…`, "success");
+        void notifyEventAttendees(saved.id, eventType).then(() => {
+          setWorkspaceStatus("[data-global-status]", `${savedLabel} e participantes notificados por email.`, "success");
         }).catch((notificationError) => {
-          setWorkspaceStatus("[data-global-status]", notificationError?.message || "A reunião foi guardada, mas não foi possível enviar os emails.", "error");
+          setWorkspaceStatus("[data-global-status]", notificationError?.message || `${savedLabel}, mas não foi possível enviar os emails.`, "error");
         });
       }
     } catch (error) {
@@ -1534,16 +1535,18 @@
     }
   }
 
-  async function notifyMeetingAttendees(meetingId) {
+  async function notifyEventAttendees(eventId, eventType) {
+    const label = eventType === "meeting" ? "A reunião" : "O evento";
+    const saved = eventType === "meeting" ? "guardada" : "guardado";
     const { data, error } = await client().auth.getSession();
-    if (error || !data.session?.access_token) throw new Error("A reunião foi guardada, mas a sessão expirou antes do envio dos emails. Volta a iniciar sessão.");
-    const response = await fetch("/api/meetings/notify", {
+    if (error || !data.session?.access_token) throw new Error(`${label} foi ${saved}, mas a sessão expirou antes do envio dos emails. Volta a iniciar sessão.`);
+    const response = await fetch("/api/events/notify", {
       method: "POST",
       headers: { "Content-Type": "application/json", Authorization: `Bearer ${data.session.access_token}` },
-      body: JSON.stringify({ meetingId })
+      body: JSON.stringify({ eventId })
     });
     const result = await response.json().catch(() => null);
-    if (!response.ok) throw new Error(result?.error || "A reunião foi guardada, mas não foi possível enviar os emails.");
+    if (!response.ok) throw new Error(result?.error || `${label} foi ${saved}, mas não foi possível enviar os emails.`);
     return result;
   }
 

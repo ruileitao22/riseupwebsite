@@ -409,6 +409,23 @@
     setField(form, "role", getRoleLabel(accessRole));
   }
 
+  function canEditTeamMemberRole() {
+    return isActualAdmin() || getActualRole() === "team_leader_hr";
+  }
+
+  function updateTeamMemberRoleAccess(form) {
+    if (!form?.matches(selectors.teamForm) || !form.elements.role) return;
+
+    const canEdit = canEditTeamMemberRole();
+    const input = form.elements.role;
+    const hint = form.querySelector("[data-team-role-hint]");
+    input.readOnly = !canEdit;
+    input.setAttribute("aria-readonly", String(!canEdit));
+    if (hint) hint.textContent = canEdit
+      ? "Atualiza automaticamente quando alteras o acesso ao BackOffice. Podes personalizar o cargo, se necessário."
+      : "Atualiza automaticamente quando alteras o acesso ao BackOffice.";
+  }
+
   function canManageProjects(role = getCurrentRole()) {
     return adminRoles.has(role) || ["projects_innovation_team", "team_leader_projects_innovation"].includes(role);
   }
@@ -1890,7 +1907,9 @@
     setField(form, "joined_year", member?.joined_year || "");
     setField(form, "account_role", profile?.role || "member");
     if (options.allowAdminFields && form.matches(selectors.teamForm)) {
-      syncTeamMemberRoleFromAccess(form);
+      setField(form, "role", member?.role || getRoleLabel(profile?.role || "member"));
+      if (isNew) syncTeamMemberRoleFromAccess(form);
+      updateTeamMemberRoleAccess(form);
     } else {
       setField(form, "role", member?.role || "");
     }
@@ -2964,9 +2983,12 @@
       const managedRole = allowAdminFields && form.elements.account_role
         ? getRoleLabel(backofficeRoles[form.elements.account_role.value] ? form.elements.account_role.value : "member")
         : existing.role;
+      const memberRole = allowAdminFields && canEditTeamMemberRole()
+        ? cleanText(form.elements.role.value, 120) || managedRole
+        : existing.role || managedRole;
       payload = {
         name: cleanText(form.elements.name.value, 120),
-        role: managedRole,
+        role: memberRole,
         description: cleanText(form.elements.description.value, 1200) || null,
         photo_url: ensureValidUrl(form.elements.photo_url.value, {
           image: true,
