@@ -6,13 +6,21 @@ create table if not exists public.member_private_details (
   address text,
   citizen_card_number text,
   emergency_phone text,
+  emergency_contact_name text,
+  emergency_contact_relationship text,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
   constraint member_private_details_birth_date_check check (date_of_birth is null or date_of_birth <= current_date),
   constraint member_private_details_address_length_check check (address is null or char_length(address) <= 500),
   constraint member_private_details_citizen_card_length_check check (citizen_card_number is null or char_length(citizen_card_number) <= 50),
-  constraint member_private_details_emergency_phone_length_check check (emergency_phone is null or char_length(emergency_phone) <= 50)
+  constraint member_private_details_emergency_phone_length_check check (emergency_phone is null or char_length(emergency_phone) <= 50),
+  constraint member_private_details_emergency_contact_name_length_check check (emergency_contact_name is null or char_length(emergency_contact_name) <= 120),
+  constraint member_private_details_emergency_contact_relationship_length_check check (emergency_contact_relationship is null or char_length(emergency_contact_relationship) <= 80)
 );
+
+alter table public.member_private_details
+  add column if not exists emergency_contact_name text,
+  add column if not exists emergency_contact_relationship text;
 
 alter table public.member_private_details enable row level security;
 revoke all on public.member_private_details from anon, authenticated;

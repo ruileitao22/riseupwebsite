@@ -1369,7 +1369,7 @@
   async function loadMemberPrivateDetails() {
     const { data, error } = await state.client
       .from(table("memberPrivateDetails"))
-      .select("team_member_id,date_of_birth,address,citizen_card_number,emergency_phone");
+      .select("team_member_id,date_of_birth,address,citizen_card_number,emergency_phone,emergency_contact_name,emergency_contact_relationship");
 
     if (error) {
       throw error;
@@ -1943,6 +1943,8 @@
     setField(form, "address", privateDetails?.address || "");
     setField(form, "citizen_card_number", privateDetails?.citizen_card_number || "");
     setField(form, "emergency_phone", privateDetails?.emergency_phone || "");
+    setField(form, "emergency_contact_name", privateDetails?.emergency_contact_name || "");
+    setField(form, "emergency_contact_relationship", privateDetails?.emergency_contact_relationship || "");
     setField(form, "account_role", profile?.role || "member");
     if (options.allowAdminFields && form.matches(selectors.teamForm)) {
       setField(form, "role", member?.role || getRoleLabel(profile?.role || "member"));
@@ -3018,7 +3020,9 @@
         date_of_birth: dateOfBirth,
         address: cleanText(form.elements.address?.value, 500) || null,
         citizen_card_number: cleanText(form.elements.citizen_card_number?.value, 50) || null,
-        emergency_phone: cleanText(form.elements.emergency_phone?.value, 50) || null
+        emergency_phone: cleanText(form.elements.emergency_phone?.value, 50) || null,
+        emergency_contact_name: cleanText(form.elements.emergency_contact_name?.value, 120) || null,
+        emergency_contact_relationship: cleanText(form.elements.emergency_contact_relationship?.value, 80) || null
       }, { onConflict: "team_member_id" });
 
     if (error) {
