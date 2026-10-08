@@ -40,6 +40,14 @@
 
   const priorityLabels = { low: "Baixa", medium: "Média", high: "Alta", urgent: "Urgente" };
   const categoryLabels = { statutes: "Estatutos", regulations: "Regulamentos", templates: "Templates", minutes: "Atas", guides: "Guias internos", brand: "Identidade visual", project: "Projetos" };
+  const warningTypeLabels = {
+    informal: "Advertência informal",
+    first: "1.ª Advertência",
+    second: "2.ª Advertência",
+    third: "3.ª Advertência",
+    serious: "Incumprimento grave"
+  };
+  const warningTypeOrder = ["informal", "first", "second", "third"];
 
   function element(tag, className, text) {
     const node = document.createElement(tag);
@@ -63,6 +71,77 @@
     if (Number.isNaN(date.getTime())) return "";
     const offset = date.getTimezoneOffset() * 60 * 1000;
     return new Date(date.getTime() - offset).toISOString().slice(0, 16);
+  }
+
+  function warningExpiry(value) {
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return "";
+    date.setFullYear(date.getFullYear() + 1);
+    return date.toISOString();
+  }
+
+  function warningExpiryForRecord(record) {
+    return record?.expires_at || warningExpiry(record?.published_at);
+  }
+
+  function isWarningActive(record, reference = new Date()) {
+    const expiry = warningExpiryForRecord(record);
+    const expiryDate = new Date(expiry);
+    return Boolean(expiry) && !Number.isNaN(expiryDate.getTime()) && expiryDate > reference;
+  }
+
+  function getWarningMemberName(memberId) {
+    const member = (core().team || []).find((item) => item.id === memberId);
+    return member?.name || "Membro removido";
+  }
+
+  function populateWarningMembers(form, selectedId = "") {
+    const select = form?.elements.member_id;
+    if (!select) return;
+    select.replaceChildren(element("option", null, "Selecionar membro"));
+    select.options[0].value = "";
+    [...(core().team || [])]
+      .filter((member) => member.id)
+      .sort((left, right) => String(left.name || left.email || "").localeCompare(String(right.name || right.email || ""), "pt"))
+      .forEach((member) => {
+        const option = element("option", null, member.name || member.email || "Membro");
+        option.value = member.id;
+        select.appendChild(option);
+      });
+    select.value = selectedId || "";
+  }
+
+  function getSuggestedWarningType(memberId, publishedAt) {
+    const reference = new Date(publishedAt || Date.now());
+    const activeTypes = workspace.notices
+      .filter((record) => record.member_id === memberId && warningTypeOrder.includes(record.warning_type) && isWarningActive(record, reference))
+      .map((record) => warningTypeOrder.indexOf(record.warning_type));
+    const highest = activeTypes.length ? Math.max(...activeTypes) : -1;
+    return warningTypeOrder[Math.min(highest + 1, warningTypeOrder.length - 1)];
+  }
+
+  function updateWarningProgression(form, forceType = true) {
+    const memberId = form?.elements.member_id?.value || "";
+    const publishedAt = form?.elements.published_at?.value || new Date().toISOString();
+    const progression = $("[data-warning-progression]");
+    if (form?.elements.expires_at) form.elements.expires_at.value = datetimeLocalValue(warningExpiry(publishedAt));
+    if (!memberId) {
+      if (progression) progression.textContent = "Seleciona um membro para verificar advertências ainda válidas.";
+      return;
+    }
+
+    const validRecords = workspace.notices
+      .filter((record) => record.member_id === memberId && warningTypeOrder.includes(record.warning_type) && isWarningActive(record, new Date(publishedAt)));
+    const suggestedType = getSuggestedWarningType(memberId, publishedAt);
+    if (forceType && form.elements.warning_type) form.elements.warning_type.value = suggestedType;
+    if (!validRecords.length) {
+      if (progression) progression.textContent = "Sem advertências válidas nos últimos 12 meses. Será registada uma advertência informal.";
+      return;
+    }
+
+    const latest = [...validRecords].sort((left, right) => String(warningExpiryForRecord(right)).localeCompare(String(warningExpiryForRecord(left))))[0];
+    const nextLabel = warningTypeLabels[suggestedType];
+    if (progression) progression.textContent = `${warningTypeLabels[latest.warning_type]} válida até ${safeDate(warningExpiryForRecord(latest))}. O próximo nível sugerido é ${nextLabel}.`;
   }
 
   function seedPreview() {
@@ -1556,14 +1635,17 @@
     if (!form) return;
     form.reset();
     form.elements.id.value = record?.id || "";
+    populateWarningMembers(form, record?.member_id || "");
     form.elements.title.value = record?.title || "";
     form.elements.body.value = record?.body || "";
     form.elements.published_at.value = datetimeLocalValue(record?.published_at || new Date().toISOString());
-    form.elements.expires_at.value = datetimeLocalValue(record?.expires_at);
+    form.elements.warning_type.value = record?.warning_type || "informal";
+    form.elements.expires_at.value = datetimeLocalValue(warningExpiryForRecord(record || { published_at: form.elements.published_at.value }));
     $("[data-warning-form-title]").textContent = record ? "Editar advertência" : "Nova advertência";
     setWorkspaceStatus("[data-warning-status]", "");
     form.hidden = false;
-    form.elements.title.focus();
+    updateWarningProgression(form, !record);
+    form.elements.member_id.focus();
   }
 
   async function saveWarning(event) {
@@ -1571,11 +1653,24 @@
     if (!canManageHr()) return;
     const form = event.currentTarget;
     const id = form.elements.id.value;
+    const memberId = form.elements.member_id.value;
+    const warningType = form.elements.warning_type.value;
+    if (!memberId || !warningTypeLabels[warningType]) {
+      setWorkspaceStatus("[data-warning-status]", "Seleciona o membro e o tipo de advertência.", "error");
+      return;
+    }
+    const publishedAt = new Date(form.elements.published_at.value);
+    if (Number.isNaN(publishedAt.getTime())) {
+      setWorkspaceStatus("[data-warning-status]", "Confirma a data do registo.", "error");
+      return;
+    }
     const payload = {
       title: form.elements.title.value.trim(),
       body: form.elements.body.value.trim(),
-      published_at: new Date(form.elements.published_at.value).toISOString(),
-      expires_at: form.elements.expires_at.value ? new Date(form.elements.expires_at.value).toISOString() : null,
+      member_id: memberId,
+      warning_type: warningType,
+      published_at: publishedAt.toISOString(),
+      expires_at: warningExpiry(publishedAt.toISOString()),
       audience: "hr"
     };
     try {
@@ -1629,8 +1724,9 @@
       const marker = element("div", "bo-hr-record-date bo-warning-marker", "!");
       const body = element("div", "bo-hr-record-copy");
       body.append(element("h4", null, record.title), element("p", null, record.body || "Sem descrição"));
-      body.appendChild(element("small", null, `Registada em ${safeDate(record.published_at, true)}${record.expires_at ? ` · até ${safeDate(record.expires_at, true)}` : ""}`));
-      const privacy = element("span", "bo-soft-badge", "Privada");
+      const expiry = warningExpiryForRecord(record);
+      body.appendChild(element("small", null, `${getWarningMemberName(record.member_id)} · ${warningTypeLabels[record.warning_type] || "Advertência"} · Registada em ${safeDate(record.published_at, true)} · ${isWarningActive(record) ? `válida até ${safeDate(expiry)}` : `expirou em ${safeDate(expiry)}`}`));
+      const privacy = element("span", "bo-soft-badge", warningTypeLabels[record.warning_type] || "Privada");
       const actions = element("div", "bo-row-actions");
       const edit = element("button", "bo-button bo-button-ghost", "Editar");
       edit.type = "button";
@@ -2502,6 +2598,8 @@
     $("[data-new-warning]")?.addEventListener("click", () => openWarningForm());
     $("[data-close-warning-form]")?.addEventListener("click", () => { $("[data-warning-form]").hidden = true; });
     $("[data-warning-form]")?.addEventListener("submit", saveWarning);
+    $("[data-warning-member]")?.addEventListener("change", (event) => updateWarningProgression(event.currentTarget.form));
+    $("[data-warning-form]")?.elements.published_at?.addEventListener("change", (event) => updateWarningProgression(event.currentTarget.form));
     $("[data-add-org-node]")?.addEventListener("click", () => addOrganizationNode());
     $("[data-save-org-chart]")?.addEventListener("click", saveOrganizationChart);
     $("[data-export-org-pdf]")?.addEventListener("click", exportOrganizationPdf);

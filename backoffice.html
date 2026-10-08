@@ -1038,10 +1038,13 @@
               <form class="bo-form bo-hr-inline-form" data-warning-form hidden>
                 <div class="bo-form-head bo-field-full"><h3 data-warning-form-title>Nova advertência</h3><button class="bo-icon-button" type="button" data-close-warning-form aria-label="Fechar">×</button></div>
                 <input type="hidden" name="id" />
+                <label>Membro advertido<select name="member_id" data-warning-member required><option value="">Selecionar membro</option></select></label>
+                <label>Tipo de advertência<select name="warning_type" data-warning-type required><option value="informal">Advertência informal</option><option value="first">1.ª Advertência</option><option value="second">2.ª Advertência</option><option value="third">3.ª Advertência</option><option value="serious">Incumprimento grave</option></select></label>
+                <p class="bo-field-full bo-warning-progression" data-warning-progression>Seleciona um membro para verificar advertências ainda válidas.</p>
                 <label class="bo-field-full">Título<input name="title" type="text" maxlength="180" required /></label>
                 <label class="bo-field-full">Descrição<textarea name="body" rows="4" maxlength="2000" required></textarea></label>
                 <label>Data do registo<input name="published_at" type="datetime-local" required /></label>
-                <label>Visível até <input name="expires_at" type="datetime-local" /></label>
+                <label>Válida até <input name="expires_at" type="datetime-local" readonly aria-readonly="true" /><span class="bo-field-hint">Deixa de contar para progressão após 12 meses.</span></label>
                 <div class="bo-actions bo-field-full"><button class="bo-button bo-button-primary" type="submit">Guardar advertência</button></div>
                 <p class="bo-status bo-field-full" data-warning-status></p>
               </form>

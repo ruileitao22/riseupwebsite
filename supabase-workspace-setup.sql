@@ -111,11 +111,14 @@ create table if not exists public.workspace_notices (
   title text not null,
   body text not null,
   audience text not null default 'all',
+  member_id uuid references public.team_members (id) on delete set null,
+  warning_type text not null default 'informal',
   created_by uuid references auth.users (id) on delete set null,
   published_at timestamptz not null default now(),
   expires_at timestamptz,
   created_at timestamptz not null default now(),
-  updated_at timestamptz not null default now()
+  updated_at timestamptz not null default now(),
+  constraint workspace_notices_warning_type_check check (warning_type in ('informal', 'first', 'second', 'third', 'serious'))
 );
 
 create table if not exists public.workspace_events (
