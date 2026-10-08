@@ -76,6 +76,7 @@
   const allowedImageMimeTypes = new Set(["image/jpeg", "image/png", "image/webp", "image/gif"]);
   const maxImageUploadBytes = 8 * 1024 * 1024;
   const minPasswordLength = 10;
+  const exRiserAccessMessage = "Impossível entrar devido a já não seres Riser.";
   const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 
   async function exportBackofficeExcel(resource, button) {
@@ -232,6 +233,11 @@
     team_leader_hr: {
       label: "Team Líder — Recursos Humanos",
       summary: "Lidera a equipa e Recursos Humanos e acompanha tarefas e documentos."
+    },
+    ex_riser: {
+      label: "Ex-Riser",
+      summary: "Antigo membro sem acesso ao BackOffice.",
+      legacy: true
     },
     team_leader: {
       label: "Team Leader",
@@ -1524,6 +1530,13 @@
   async function loadData() {
     setGlobalStatus("A carregar dados...");
     await loadProfile();
+    if (state.profile?.role === "ex_riser") {
+      await state.client.auth.signOut();
+      state.session = null;
+      state.user = null;
+      state.profile = null;
+      throw new Error(exRiserAccessMessage);
+    }
     await Promise.all([
       loadUserProfiles(),
       loadTeam(),
@@ -2008,7 +2021,8 @@
       { id: "commercial", label: "Comercial" },
       { id: "hr", label: "Recursos Humanos" },
       { id: "general", label: "Equipa geral" },
-      { id: "legends", label: "Rise Up Legends" }
+      { id: "legends", label: "Rise Up Legends" },
+      { id: "ex_risers", label: "Ex-Risers" }
     ];
 
     const groupedTeam = new Map(areas.map((area) => [area.id, []]));
@@ -2071,6 +2085,7 @@
   function getTeamArea(member) {
     if (member.is_legend) return "legends";
     const accountRole = findProfileForMember(member)?.role || "";
+    if (accountRole === "ex_riser" || member.is_ex_riser) return "ex_risers";
     if (adminRoles.has(accountRole)) return "direction";
     if (accountRole.includes("communication")) return "communication";
     if (accountRole.includes("projects_innovation")) return "projects";
@@ -3017,6 +3032,7 @@
       payload.user_id = existing.user_id || null;
       payload.is_active = form.elements.is_active.checked;
       payload.is_legend = form.elements.is_legend?.checked || false;
+      payload.is_ex_riser = form.elements.account_role?.value === "ex_riser";
     }
 
     try {
@@ -4532,7 +4548,8 @@
       showSection(getDefaultView());
     } catch (loadError) {
       showAuthView();
-      setStatus(loginStatus, `${getErrorMessage(loadError)}. Confirma que executaste o SQL de setup.`, "error");
+      const message = getErrorMessage(loadError);
+      setStatus(loginStatus, message === exRiserAccessMessage ? message : `${message}. Confirma que executaste o SQL de setup.`, "error");
     }
   }
 

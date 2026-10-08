@@ -555,7 +555,7 @@
     try {
       const [members, projects, links] = await Promise.all([
         supabaseSelect("teamMembers", {
-          select: "id,name,role,description,photo_url,linkedin_url,email,joined_month,joined_year,is_active,is_legend",
+          select: "id,name,role,description,photo_url,linkedin_url,email,joined_month,joined_year,is_active,is_legend,is_ex_riser",
           is_active: "eq.true",
           order: "name.asc"
         }),
@@ -590,7 +590,8 @@
       }, new Map());
 
       list.replaceChildren();
-      const orderedMembers = [...members].sort((left, right) => Number(left.is_legend) - Number(right.is_legend) || (left.name || "").localeCompare(right.name || "", "pt"));
+      const visibleMembers = members.filter((member) => !member.is_ex_riser);
+      const orderedMembers = [...visibleMembers].sort((left, right) => Number(left.is_legend) - Number(right.is_legend) || (left.name || "").localeCompare(right.name || "", "pt"));
       orderedMembers.forEach((member, index) => {
         if (member.is_legend && (index === 0 || !orderedMembers[index - 1].is_legend)) {
           const heading = createElement("div", "public-team-group-heading");

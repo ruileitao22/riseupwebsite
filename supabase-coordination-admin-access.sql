@@ -8,7 +8,7 @@ alter table public.user_profiles
     'admin', 'coordinator', 'vice_coordinator', 'member',
     'communication_team', 'projects_innovation_team', 'commercial_team', 'hr_team',
     'team_leader', 'team_leader_communication', 'team_leader_projects_innovation',
-    'team_leader_commercial', 'team_leader_hr'
+    'team_leader_commercial', 'team_leader_hr', 'ex_riser'
   ));
 
 create or replace function public.is_admin()

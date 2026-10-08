@@ -266,7 +266,7 @@ create policy "Public can read active team members"
   for select
   to anon, authenticated
   using (
-    is_active = true
+    (is_active = true and is_ex_riser = false)
     or public.can_manage_team()
     or public.can_manage_projects()
     or user_id = auth.uid()

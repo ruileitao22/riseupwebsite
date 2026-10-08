@@ -6,7 +6,7 @@ create extension if not exists pgcrypto;
 alter table public.user_profiles drop constraint if exists user_profiles_role_check;
 alter table public.user_profiles
   add constraint user_profiles_role_check
-  check (role in ('admin', 'coordinator', 'vice_coordinator', 'member', 'communication_team', 'projects_innovation_team', 'commercial_team', 'hr_team', 'team_leader', 'team_leader_communication', 'team_leader_projects_innovation', 'team_leader_commercial', 'team_leader_hr'));
+  check (role in ('admin', 'coordinator', 'vice_coordinator', 'member', 'communication_team', 'projects_innovation_team', 'commercial_team', 'hr_team', 'team_leader', 'team_leader_communication', 'team_leader_projects_innovation', 'team_leader_commercial', 'team_leader_hr', 'ex_riser'));
 
 create or replace function public.can_manage_projects()
 returns boolean
