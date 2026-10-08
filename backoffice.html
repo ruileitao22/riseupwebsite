@@ -423,52 +423,63 @@
               <input type="email" name="email" />
             </label>
 
-            <div class="bo-field-full bo-private-data-notice"><strong>Informação privada</strong><span>Estes dados não aparecem no site público. Apenas tu e a gestão de equipa com autorização podem consultá-los no BackOffice.</span></div>
+            <section class="bo-field-full bo-private-data-section">
+              <div class="bo-private-data-notice"><strong>Informação privada</strong><span>Estes dados não aparecem no site público. Apenas tu e a gestão de equipa com autorização podem consultá-los no BackOffice.</span></div>
 
-            <label>
-              Data de nascimento
-              <input type="date" name="date_of_birth" autocomplete="bday" />
-            </label>
+              <div class="bo-private-data-group">
+                <h4>Identificação</h4>
+                <div class="bo-private-data-fields">
+                  <label>
+                    Data de nascimento
+                    <input type="date" name="date_of_birth" autocomplete="bday" />
+                  </label>
+                  <label>
+                    Número de Cartão de Cidadão
+                    <input type="text" name="citizen_card_number" maxlength="50" autocomplete="off" />
+                  </label>
+                </div>
+              </div>
 
-            <label>
-              Número de Cartão de Cidadão
-              <input type="text" name="citizen_card_number" maxlength="50" autocomplete="off" />
-            </label>
+              <div class="bo-private-data-group">
+                <h4>Morada</h4>
+                <div class="bo-private-data-fields">
+                  <label class="bo-private-field-wide">
+                    Rua
+                    <input type="text" name="address_street" maxlength="300" autocomplete="street-address" />
+                  </label>
+                  <label>
+                    Código-postal
+                    <input type="text" name="address_postal_code" maxlength="20" autocomplete="postal-code" placeholder="0000-000" />
+                  </label>
+                  <label>
+                    Cidade
+                    <input type="text" name="address_city" maxlength="120" autocomplete="address-level2" />
+                  </label>
+                  <label class="bo-private-field-wide">
+                    Freguesia
+                    <input type="text" name="address_parish" maxlength="120" autocomplete="address-level3" />
+                  </label>
+                </div>
+              </div>
 
-            <label class="bo-field-full">
-              Rua
-              <input type="text" name="address_street" maxlength="300" autocomplete="street-address" />
-            </label>
-
-            <label>
-              Código-postal
-              <input type="text" name="address_postal_code" maxlength="20" autocomplete="postal-code" placeholder="0000-000" />
-            </label>
-
-            <label>
-              Cidade
-              <input type="text" name="address_city" maxlength="120" autocomplete="address-level2" />
-            </label>
-
-            <label>
-              Freguesia
-              <input type="text" name="address_parish" maxlength="120" autocomplete="address-level3" />
-            </label>
-
-            <label>
-              Número de emergência
-              <input type="tel" name="emergency_phone" maxlength="50" autocomplete="tel" />
-            </label>
-
-            <label>
-              Nome do contacto de emergência
-              <input type="text" name="emergency_contact_name" maxlength="120" autocomplete="name" />
-            </label>
-
-            <label>
-              Relação / grau de parentesco
-              <input type="text" name="emergency_contact_relationship" maxlength="80" placeholder="Ex.: Mãe, amigo/a, namorado/a" />
-            </label>
+              <div class="bo-private-data-group">
+                <h4>Contacto de emergência</h4>
+                <div class="bo-private-data-fields">
+                  <label>
+                    Número de emergência
+                    <input type="tel" name="emergency_phone" maxlength="50" autocomplete="tel" />
+                  </label>
+                  <label>
+                    Nome do contacto de emergência
+                    <input type="text" name="emergency_contact_name" maxlength="120" autocomplete="name" />
+                  </label>
+                  <label class="bo-private-field-wide">
+                    Relação / grau de parentesco
+                    <input type="text" name="emergency_contact_relationship" maxlength="80" placeholder="Ex.: Mãe, amigo/a, namorado/a" />
+                  </label>
+                </div>
+              </div>
+            </section>
 
             <label class="bo-field-full">
               Descrição
@@ -631,62 +642,76 @@
                 <span class="bo-field-hint" data-account-email-hint hidden>Este email vai ser usado para criar a conta de acesso.</span>
               </label>
 
-              <div class="bo-field-full bo-private-data-notice"><strong>Informação privada interna</strong><span>Não é publicada no website. Só a pessoa e a gestão de equipa autorizada podem consultar estes dados no BackOffice.</span></div>
+              <section class="bo-field-full bo-private-data-section">
+                <div class="bo-private-data-notice"><strong>Informação privada interna</strong><span>Não é publicada no website. Só a pessoa e a gestão de equipa autorizada podem consultar estes dados no BackOffice.</span></div>
 
-              <label>
-                Data de nascimento
-                <input type="date" name="date_of_birth" autocomplete="bday" />
-              </label>
+                <div class="bo-private-data-group">
+                  <h4>Identificação</h4>
+                  <div class="bo-private-data-fields">
+                    <label>
+                      Data de nascimento
+                      <input type="date" name="date_of_birth" autocomplete="bday" />
+                    </label>
+                    <label>
+                      Número de Cartão de Cidadão
+                      <input type="text" name="citizen_card_number" maxlength="50" autocomplete="off" />
+                    </label>
+                  </div>
+                </div>
 
-              <label>
-                Número de Cartão de Cidadão
-                <input type="text" name="citizen_card_number" maxlength="50" autocomplete="off" />
-              </label>
+                <div class="bo-private-data-group">
+                  <h4>Morada</h4>
+                  <div class="bo-private-data-fields">
+                    <label class="bo-private-field-wide">
+                      Rua
+                      <input type="text" name="address_street" maxlength="300" autocomplete="street-address" />
+                    </label>
+                    <label>
+                      Código-postal
+                      <input type="text" name="address_postal_code" maxlength="20" autocomplete="postal-code" placeholder="0000-000" />
+                    </label>
+                    <label>
+                      Cidade
+                      <input type="text" name="address_city" maxlength="120" autocomplete="address-level2" />
+                    </label>
+                    <label class="bo-private-field-wide">
+                      Freguesia
+                      <input type="text" name="address_parish" maxlength="120" autocomplete="address-level3" />
+                    </label>
+                  </div>
+                </div>
 
-              <label class="bo-team-field-wide">
-                Rua
-                <input type="text" name="address_street" maxlength="300" autocomplete="street-address" />
-              </label>
+                <div class="bo-private-data-group">
+                  <h4>Contacto de emergência</h4>
+                  <div class="bo-private-data-fields">
+                    <label>
+                      Número de emergência
+                      <input type="tel" name="emergency_phone" maxlength="50" autocomplete="tel" />
+                    </label>
+                    <label>
+                      Nome do contacto de emergência
+                      <input type="text" name="emergency_contact_name" maxlength="120" autocomplete="name" />
+                    </label>
+                    <label class="bo-private-field-wide">
+                      Relação / grau de parentesco
+                      <input type="text" name="emergency_contact_relationship" maxlength="80" placeholder="Ex.: Mãe, amigo/a, namorado/a" />
+                    </label>
+                  </div>
+                </div>
+              </section>
 
-              <label>
-                Código-postal
-                <input type="text" name="address_postal_code" maxlength="20" autocomplete="postal-code" placeholder="0000-000" />
-              </label>
+              <section class="bo-field-full bo-internal-data-section">
+                <div class="bo-internal-data-heading"><h4>Acesso e entrada</h4><p>Define as permissões no BackOffice e o início do percurso na Rise Up.</p></div>
+                <div class="bo-private-data-fields">
+                  <label data-new-account-field hidden>
+                    Palavra-passe inicial
+                    <input type="password" name="account_password" autocomplete="new-password" minlength="10" />
+                    <span class="bo-field-hint">Usa pelo menos 10 caracteres. A pessoa pode alterá-la depois na aba Perfil.</span>
+                  </label>
 
-              <label>
-                Cidade
-                <input type="text" name="address_city" maxlength="120" autocomplete="address-level2" />
-              </label>
-
-              <label>
-                Freguesia
-                <input type="text" name="address_parish" maxlength="120" autocomplete="address-level3" />
-              </label>
-
-              <label>
-                Número de emergência
-                <input type="tel" name="emergency_phone" maxlength="50" autocomplete="tel" />
-              </label>
-
-              <label>
-                Nome do contacto de emergência
-                <input type="text" name="emergency_contact_name" maxlength="120" autocomplete="name" />
-              </label>
-
-              <label>
-                Relação / grau de parentesco
-                <input type="text" name="emergency_contact_relationship" maxlength="80" placeholder="Ex.: Mãe, amigo/a, namorado/a" />
-              </label>
-
-              <label data-new-account-field hidden>
-                Palavra-passe inicial
-                <input type="password" name="account_password" autocomplete="new-password" minlength="10" />
-                <span class="bo-field-hint">Usa pelo menos 10 caracteres. A pessoa pode alterá-la depois na aba Perfil.</span>
-              </label>
-
-              <label data-admin-only>
-                Acesso BackOffice
-                <select name="account_role">
+                  <label data-admin-only>
+                    Acesso BackOffice
+                    <select name="account_role">
                   <option value="member">Membro</option>
                   <option value="communication_team">Comunicação</option>
                   <option value="projects_innovation_team">Projetos e Inovação</option>
@@ -700,12 +725,12 @@
                   <option value="coordinator">Coordenador</option>
                   <option value="vice_coordinator">Vice-Coordenadora</option>
                   <option value="admin">Administrador</option>
-                </select>
-              </label>
+                    </select>
+                  </label>
 
-              <label>
-                M&ecirc;s de entrada
-                <select name="joined_month">
+                  <label>
+                    M&ecirc;s de entrada
+                    <select name="joined_month">
                   <option value="">Sem mês</option>
                   <option value="1">Janeiro</option>
                   <option value="2">Fevereiro</option>
@@ -719,13 +744,15 @@
                   <option value="10">Outubro</option>
                   <option value="11">Novembro</option>
                   <option value="12">Dezembro</option>
-                </select>
-              </label>
+                    </select>
+                  </label>
 
-              <label>
-                Ano de entrada
-                <input type="number" name="joined_year" min="2000" max="2100" />
-              </label>
+                  <label>
+                    Ano de entrada
+                    <input type="number" name="joined_year" min="2000" max="2100" />
+                  </label>
+                </div>
+              </section>
                 </div>
               </section>
 

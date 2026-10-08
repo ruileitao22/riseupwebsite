@@ -1638,6 +1638,55 @@ html.bo-modal-open { overflow: hidden; }
   font-size: 0.82rem;
 }
 
+.bo-private-data-section,
+.bo-internal-data-section {
+  display: grid;
+  gap: 1.15rem;
+  padding: 1rem;
+  border: 1px solid rgba(31, 49, 68, 0.09);
+  border-radius: 14px;
+  background: #fbfcfe;
+}
+
+.bo-private-data-group + .bo-private-data-group {
+  padding-top: 1.1rem;
+  border-top: 1px solid rgba(31, 49, 68, 0.09);
+}
+
+.bo-private-data-group h4,
+.bo-internal-data-heading h4 {
+  margin: 0 0 0.7rem;
+  color: #152330;
+  font-size: 0.86rem;
+}
+
+.bo-internal-data-heading p {
+  margin: -0.38rem 0 0;
+  color: #718096;
+  font-size: 0.78rem;
+  font-weight: 600;
+}
+
+.bo-private-data-fields {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.9rem 1rem;
+  align-items: start;
+}
+
+.bo-private-data-fields label {
+  display: grid;
+  gap: 0.5rem;
+  align-content: start;
+  color: #223140;
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+.bo-private-field-wide {
+  grid-column: 1 / -1;
+}
+
 .bo-field-label {
   display: block;
   color: var(--bo-text);
