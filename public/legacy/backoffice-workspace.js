@@ -101,7 +101,10 @@
     select.replaceChildren(element("option", null, "Selecionar membro"));
     select.options[0].value = "";
     [...(core().team || [])]
-      .filter((member) => member.id)
+      .filter((member) => {
+        const accountRole = (core().userProfiles || []).find((profile) => profile.id === member.user_id)?.role;
+        return member.id && member.is_active && !member.is_legend && !member.is_ex_riser && accountRole !== "ex_riser";
+      })
       .sort((left, right) => String(left.name || left.email || "").localeCompare(String(right.name || right.email || ""), "pt"))
       .forEach((member) => {
         const option = element("option", null, member.name || member.email || "Membro");
