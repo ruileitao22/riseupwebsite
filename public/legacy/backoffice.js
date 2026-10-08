@@ -2,6 +2,7 @@
   const defaultTables = {
     userProfiles: "user_profiles",
     teamMembers: "team_members",
+    memberPrivateDetails: "member_private_details",
     backofficeAccessActivity: "backoffice_access_activity",
     projects: "projects",
     projectMembers: "project_members",
@@ -28,6 +29,7 @@
     teamAccessActivityLoaded: false,
     userProfiles: [],
     team: [],
+    memberPrivateDetails: [],
     projects: [],
     projectMembers: [],
     interviewEvaluations: [],
@@ -1364,6 +1366,18 @@
     state.team = data || [];
   }
 
+  async function loadMemberPrivateDetails() {
+    const { data, error } = await state.client
+      .from(table("memberPrivateDetails"))
+      .select("team_member_id,date_of_birth,address,citizen_card_number,emergency_phone");
+
+    if (error) {
+      throw error;
+    }
+
+    state.memberPrivateDetails = data || [];
+  }
+
   async function loadTeamAccessActivity() {
     state.teamAccessActivity = new Map();
     state.teamAccessActivityLoaded = false;
@@ -1547,6 +1561,7 @@
       loadContactSubmissions(),
       loadAuditLogs()
     ]);
+    await loadMemberPrivateDetails();
     showAppView();
     renderAll();
     await startPresence();
@@ -1906,6 +1921,11 @@
     return state.team.find((member) => isOwnMember(member)) || null;
   }
 
+  function getMemberPrivateDetails(member) {
+    if (!member?.id) return null;
+    return state.memberPrivateDetails.find((details) => details.team_member_id === member.id) || null;
+  }
+
   function populateMemberForm(form, member, options = {}) {
     const isNew = !member;
     const profile = findProfileForMember(member);
@@ -1918,6 +1938,11 @@
     setField(form, "email", member?.email || "");
     setField(form, "joined_month", member?.joined_month || "");
     setField(form, "joined_year", member?.joined_year || "");
+    const privateDetails = getMemberPrivateDetails(member);
+    setField(form, "date_of_birth", privateDetails?.date_of_birth || "");
+    setField(form, "address", privateDetails?.address || "");
+    setField(form, "citizen_card_number", privateDetails?.citizen_card_number || "");
+    setField(form, "emergency_phone", privateDetails?.emergency_phone || "");
     setField(form, "account_role", profile?.role || "member");
     if (options.allowAdminFields && form.matches(selectors.teamForm)) {
       setField(form, "role", member?.role || getRoleLabel(profile?.role || "member"));
@@ -2980,6 +3005,27 @@
     }
   }
 
+  async function saveMemberPrivateDetails(form, memberId) {
+    const dateOfBirth = form.elements.date_of_birth?.value || null;
+    if (dateOfBirth && !/^\d{4}-\d{2}-\d{2}$/.test(dateOfBirth)) {
+      throw new Error("Confirma a data de nascimento.");
+    }
+
+    const { error } = await state.client
+      .from(table("memberPrivateDetails"))
+      .upsert({
+        team_member_id: memberId,
+        date_of_birth: dateOfBirth,
+        address: cleanText(form.elements.address?.value, 500) || null,
+        citizen_card_number: cleanText(form.elements.citizen_card_number?.value, 50) || null,
+        emergency_phone: cleanText(form.elements.emergency_phone?.value, 50) || null
+      }, { onConflict: "team_member_id" });
+
+    if (error) {
+      throw error;
+    }
+  }
+
   async function saveMemberForm({ form, statusElement, memberId, allowAdminFields, successMessage }) {
     const existing = state.team.find((member) => member.id === memberId);
 
@@ -3071,8 +3117,11 @@
         }
       }
 
+      await saveMemberPrivateDetails(form, existing.id);
+
       await loadUserProfiles();
       await loadTeam();
+      await loadMemberPrivateDetails();
       await recordAudit(allowAdminFields ? "Perfil de equipa atualizado" : "Perfil próprio atualizado", "team_member", payload.name || existing.name);
       renderAll();
       const refreshed = state.team.find((member) => member.id === existing.id) || null;

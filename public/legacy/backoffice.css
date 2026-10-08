@@ -1621,6 +1621,23 @@ html.bo-modal-open { overflow: hidden; }
   line-height: 1.35;
 }
 
+.bo-private-data-notice {
+  display: grid;
+  gap: 0.28rem;
+  padding: 0.8rem 0.9rem;
+  border: 1px solid rgba(27, 123, 214, 0.2);
+  border-radius: 12px;
+  background: rgba(27, 123, 214, 0.055);
+  color: var(--bo-muted);
+  font-size: 0.8rem;
+  line-height: 1.45;
+}
+
+.bo-private-data-notice strong {
+  color: var(--bo-text);
+  font-size: 0.82rem;
+}
+
 .bo-field-label {
   display: block;
   color: var(--bo-text);

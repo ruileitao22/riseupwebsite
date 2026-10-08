@@ -29,6 +29,7 @@ const tables = {
   application: "join_applications",
   userProfiles: "user_profiles",
   teamMembers: "team_members",
+  memberPrivateDetails: "member_private_details",
   projects: "projects",
   projectMembers: "project_members",
   interviewEvaluations: "interview_evaluations",

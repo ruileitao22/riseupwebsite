@@ -423,6 +423,28 @@
               <input type="email" name="email" />
             </label>
 
+            <div class="bo-field-full bo-private-data-notice"><strong>Informação privada</strong><span>Estes dados não aparecem no site público. Apenas tu e a gestão de equipa com autorização podem consultá-los no BackOffice.</span></div>
+
+            <label>
+              Data de nascimento
+              <input type="date" name="date_of_birth" autocomplete="bday" />
+            </label>
+
+            <label>
+              Número de Cartão de Cidadão
+              <input type="text" name="citizen_card_number" maxlength="50" autocomplete="off" />
+            </label>
+
+            <label class="bo-field-full">
+              Morada
+              <textarea name="address" rows="2" maxlength="500" autocomplete="street-address"></textarea>
+            </label>
+
+            <label>
+              Número de emergência
+              <input type="tel" name="emergency_phone" maxlength="50" autocomplete="tel" />
+            </label>
+
             <label class="bo-field-full">
               Descrição
               <textarea name="description" rows="4" placeholder="Escreve uma breve apresentação sobre ti e o teu papel na Rise Up."></textarea>
@@ -582,6 +604,28 @@
                 Email
                 <input type="email" name="email" />
                 <span class="bo-field-hint" data-account-email-hint hidden>Este email vai ser usado para criar a conta de acesso.</span>
+              </label>
+
+              <div class="bo-field-full bo-private-data-notice"><strong>Informação privada interna</strong><span>Não é publicada no website. Só a pessoa e a gestão de equipa autorizada podem consultar estes dados no BackOffice.</span></div>
+
+              <label>
+                Data de nascimento
+                <input type="date" name="date_of_birth" autocomplete="bday" />
+              </label>
+
+              <label>
+                Número de Cartão de Cidadão
+                <input type="text" name="citizen_card_number" maxlength="50" autocomplete="off" />
+              </label>
+
+              <label class="bo-team-field-wide">
+                Morada
+                <textarea name="address" rows="2" maxlength="500" autocomplete="street-address"></textarea>
+              </label>
+
+              <label>
+                Número de emergência
+                <input type="tel" name="emergency_phone" maxlength="50" autocomplete="tel" />
               </label>
 
               <label data-new-account-field hidden>
