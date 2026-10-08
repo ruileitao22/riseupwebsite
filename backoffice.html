@@ -1044,7 +1044,7 @@
                 <label class="bo-field-full">Título<input name="title" type="text" maxlength="180" required /></label>
                 <label class="bo-field-full">Descrição<textarea name="body" rows="4" maxlength="2000" required></textarea></label>
                 <label>Data do registo<input name="published_at" type="datetime-local" required /></label>
-                <label>Válida até <input name="expires_at" type="datetime-local" readonly aria-readonly="true" /><span class="bo-field-hint">Deixa de contar para progressão após 12 meses.</span></label>
+                <label>Válida até <input name="expires_at" type="datetime-local" disabled aria-disabled="true" /><span class="bo-field-hint">Calculada automaticamente: 12 meses após a data do registo.</span></label>
                 <div class="bo-actions bo-field-full"><button class="bo-button bo-button-primary" type="submit">Guardar advertência</button></div>
                 <p class="bo-status bo-field-full" data-warning-status></p>
               </form>

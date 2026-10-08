@@ -4033,6 +4033,9 @@ body.is-member [data-admin-only] {
   background: #fafbfd;
   box-shadow: none;
 }
+.bo-hr-inline-form[data-warning-form] > label { align-content: start; }
+.bo-hr-inline-form[data-warning-form] > label:has(input[name="expires_at"]) { grid-template-rows: auto 50px auto; }
+.bo-hr-inline-form[data-warning-form] input[name="expires_at"]:disabled { opacity: 1; background: #f1f5f8; color: #506172; cursor: default; }
 .bo-hr-record-list, .bo-attendance-list { display: grid; }
 .bo-hr-record-row {
   min-width: 0;
