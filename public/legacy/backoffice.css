@@ -2056,10 +2056,6 @@ html.bo-modal-open { overflow: hidden; }
   resize: vertical;
 }
 
-.bo-profile-edit textarea[name="address"],
-.bo-team-fields-grid textarea[name="address"] {
-  min-height: 58px;
-}
 
 .bo-form input[type="file"] {
   padding: 0.56rem;

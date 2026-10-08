@@ -1369,7 +1369,7 @@
   async function loadMemberPrivateDetails() {
     const { data, error } = await state.client
       .from(table("memberPrivateDetails"))
-      .select("team_member_id,date_of_birth,address,citizen_card_number,emergency_phone,emergency_contact_name,emergency_contact_relationship");
+      .select("team_member_id,date_of_birth,address_street,address_postal_code,address_city,address_parish,citizen_card_number,emergency_phone,emergency_contact_name,emergency_contact_relationship");
 
     if (error) {
       throw error;
@@ -1940,7 +1940,10 @@
     setField(form, "joined_year", member?.joined_year || "");
     const privateDetails = getMemberPrivateDetails(member);
     setField(form, "date_of_birth", privateDetails?.date_of_birth || "");
-    setField(form, "address", privateDetails?.address || "");
+    setField(form, "address_street", privateDetails?.address_street || "");
+    setField(form, "address_postal_code", privateDetails?.address_postal_code || "");
+    setField(form, "address_city", privateDetails?.address_city || "");
+    setField(form, "address_parish", privateDetails?.address_parish || "");
     setField(form, "citizen_card_number", privateDetails?.citizen_card_number || "");
     setField(form, "emergency_phone", privateDetails?.emergency_phone || "");
     setField(form, "emergency_contact_name", privateDetails?.emergency_contact_name || "");
@@ -3018,7 +3021,10 @@
       .upsert({
         team_member_id: memberId,
         date_of_birth: dateOfBirth,
-        address: cleanText(form.elements.address?.value, 500) || null,
+        address_street: cleanText(form.elements.address_street?.value, 300) || null,
+        address_postal_code: cleanText(form.elements.address_postal_code?.value, 20) || null,
+        address_city: cleanText(form.elements.address_city?.value, 120) || null,
+        address_parish: cleanText(form.elements.address_parish?.value, 120) || null,
         citizen_card_number: cleanText(form.elements.citizen_card_number?.value, 50) || null,
         emergency_phone: cleanText(form.elements.emergency_phone?.value, 50) || null,
         emergency_contact_name: cleanText(form.elements.emergency_contact_name?.value, 120) || null,
