@@ -1043,6 +1043,14 @@
                 <label class="bo-hr-event-picker"><span class="bo-field-label" data-attendance-picker-label>Atividade atual ou próxima</span><select data-attendance-event></select></label>
               </div>
               <form data-attendance-form>
+                <div class="bo-attendance-member-add" data-attendance-member-add>
+                  <label>
+                    <span>Adicionar pessoa</span>
+                    <input type="search" data-attendance-member-search list="attendance-member-options" placeholder="Pesquisa pelo nome" autocomplete="off" />
+                    <datalist id="attendance-member-options" data-attendance-member-options></datalist>
+                  </label>
+                  <button class="bo-button bo-button-ghost" type="button" data-attendance-add-member>Adicionar</button>
+                </div>
                 <div class="bo-attendance-summary" data-attendance-summary></div>
                 <div class="bo-attendance-list" data-attendance-list></div>
                 <div class="bo-actions bo-hr-attendance-actions">

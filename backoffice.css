@@ -4139,6 +4139,11 @@ body.is-member [data-admin-only] {
 .bo-attendance-tabs button { min-height: 34px; padding: 0.35rem 0.7rem; border: 0; border-radius: 7px; background: transparent; color: #657587; font: inherit; font-size: 0.78rem; font-weight: 800; cursor: pointer; }
 .bo-attendance-tabs button.is-active { background: #fff; color: #1f5ea7; box-shadow: 0 1px 3px rgba(26, 49, 73, 0.14); }
 .bo-hr-event-picker { max-width: 520px; margin: 0; display: grid; gap: 0.4rem; }
+.bo-attendance-member-add { display: flex; align-items: end; gap: 0.7rem; margin: 0 0 0.8rem; padding: 0.8rem 0.9rem; border: 1px solid #e2eaf2; border-radius: 11px; background: #fbfdff; }
+.bo-attendance-member-add label { min-width: 0; flex: 1 1 320px; margin: 0; display: grid; gap: 0.38rem; color: #526577; font-size: 0.76rem; font-weight: 800; }
+.bo-attendance-member-add input { width: 100%; min-height: 40px; border: 1px solid #dce4ec; border-radius: 8px; padding: 0.58rem 0.68rem; background: #fff; color: var(--bo-text); font: inherit; }
+.bo-attendance-member-add input:focus { border-color: rgba(43, 113, 202, .55); outline: 0; box-shadow: 0 0 0 3px rgba(43, 113, 202, .09); }
+.bo-attendance-member-add .bo-button { flex: 0 0 auto; min-height: 40px; }
 .bo-attendance-summary { min-height: 62px; margin-bottom: 0.2rem; padding: 0.8rem 0.9rem; display: flex; align-items: center; justify-content: space-between; gap: 1rem; border: 1px solid #e2eaf2; border-radius: 11px; background: #f7fbff; }
 .bo-attendance-summary-copy { min-width: 0; display: grid; gap: 0.2rem; }
 .bo-attendance-summary-copy strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 0.88rem; }
@@ -4263,6 +4268,8 @@ body.is-member [data-admin-only] {
   .bo-attendance-controls { grid-template-columns: 1fr; gap: 0.75rem; }
   .bo-hr-event-picker { max-width: none; }
   .bo-attendance-summary { align-items: flex-start; flex-direction: column; gap: 0.55rem; }
+  .bo-attendance-member-add { align-items: stretch; flex-direction: column; }
+  .bo-attendance-member-add .bo-button { width: 100%; }
   .bo-hr-attendance-actions { align-items: stretch; flex-direction: column; }
   .bo-hr-attendance-actions .bo-button:last-child { margin-left: 0; }
   .bo-attendance-row { grid-template-columns: 1fr; gap: 0.55rem; }
