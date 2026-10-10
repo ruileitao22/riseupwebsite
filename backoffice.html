@@ -758,12 +758,12 @@
 
               <section class="bo-team-form-section bo-team-visibility-section">
                 <div class="bo-team-section-heading"><div><p class="bo-kicker">Visibilidade</p><h4>Estado do perfil</h4></div></div>
-              <label class="bo-check" data-admin-only>
+              <label class="bo-check bo-visibility-option" data-admin-only>
                 <input type="checkbox" name="is_active" checked />
-                Ativo no site público
+                <span><strong>Ativo no site público</strong><small>Mostra este perfil na página pública da equipa.</small></span>
               </label>
 
-              <label class="bo-check bo-legend-toggle" data-admin-only>
+              <label class="bo-check bo-visibility-option" data-admin-only>
                 <input type="checkbox" name="is_legend" />
                 <span><strong>Rise Up Legend</strong><small>Fica visível na página Rise Up Legends e no capítulo final da equipa.</small></span>
               </label>
@@ -1033,12 +1033,22 @@
 
             <section class="bo-hr-module-view" role="tabpanel" data-hr-module-view="attendance">
               <div class="bo-list-head">
-                <div><p class="bo-kicker">Participação</p><h3>Registo de presenças</h3><p>Seleciona uma atividade e atualiza a presença de cada membro.</p></div>
+                <div><p class="bo-kicker">Participação</p><h3>Registo de presenças</h3><p>Regista a participação nas atividades atuais e consulta os registos anteriores quando precisares.</p></div>
               </div>
-              <label class="bo-hr-event-picker"><span class="bo-field-label">Evento ou reunião</span><select data-attendance-event></select></label>
+              <div class="bo-attendance-controls">
+                <div class="bo-attendance-tabs" role="tablist" aria-label="Período das atividades">
+                  <button class="is-active" type="button" role="tab" aria-selected="true" data-attendance-view="upcoming">Para registar</button>
+                  <button type="button" role="tab" aria-selected="false" data-attendance-view="history">Histórico</button>
+                </div>
+                <label class="bo-hr-event-picker"><span class="bo-field-label" data-attendance-picker-label>Atividade atual ou próxima</span><select data-attendance-event></select></label>
+              </div>
               <form data-attendance-form>
+                <div class="bo-attendance-summary" data-attendance-summary></div>
                 <div class="bo-attendance-list" data-attendance-list></div>
-                <div class="bo-actions bo-hr-attendance-actions"><button class="bo-button bo-button-primary" type="submit">Guardar presenças</button></div>
+                <div class="bo-actions bo-hr-attendance-actions">
+                  <button class="bo-button bo-button-ghost" type="button" data-attendance-mark-all>Marcar todos presentes</button>
+                  <button class="bo-button bo-button-primary" type="submit" data-attendance-save>Guardar presenças</button>
+                </div>
                 <p class="bo-status" data-attendance-status></p>
               </form>
             </section>
@@ -1058,7 +1068,19 @@
                 <div class="bo-actions bo-field-full"><button class="bo-button bo-button-primary" type="submit">Guardar cargo</button></div>
                 <p class="bo-status bo-field-full" data-role-history-status></p>
               </form>
-              <div class="bo-hr-record-list" data-role-history-list></div>
+              <div class="bo-role-history-workspace">
+                <aside class="bo-role-member-panel" aria-label="Membros da equipa">
+                  <div class="bo-role-member-panel-head">
+                    <div><strong>Membros</strong><span data-role-history-member-count></span></div>
+                    <label class="bo-role-member-search"><input type="search" aria-label="Pesquisar membro" placeholder="Pesquisar membro" data-role-history-search /></label>
+                  </div>
+                  <div class="bo-role-member-list" data-role-history-members></div>
+                </aside>
+                <div class="bo-role-history-detail">
+                  <div class="bo-role-history-summary" data-role-history-summary></div>
+                  <div class="bo-hr-record-list" data-role-history-list></div>
+                </div>
+              </div>
             </section>
 
             <section class="bo-hr-module-view" role="tabpanel" data-hr-module-view="applications">

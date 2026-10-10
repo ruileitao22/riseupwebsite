@@ -14,6 +14,10 @@
     organizationChart: [],
     organizationSavedIds: new Set(),
     activeHrModule: "schedule",
+    attendanceView: "upcoming",
+    attendanceEventId: "",
+    roleHistoryMemberId: "",
+    roleHistorySearch: "",
     calendarMonth: new Date(new Date().getFullYear(), new Date().getMonth(), 1),
     searchResults: [],
     searchActiveIndex: -1,
@@ -1928,20 +1932,52 @@
   function renderAttendance() {
     const eventSelect = $("[data-attendance-event]");
     const list = $("[data-attendance-list]");
-    if (!eventSelect || !list) return;
-    const selected = eventSelect.value;
-    const records = [...workspace.events].sort((a, b) => String(b.starts_at).localeCompare(String(a.starts_at)));
+    const summary = $("[data-attendance-summary]");
+    const pickerLabel = $("[data-attendance-picker-label]");
+    const saveButton = $("[data-attendance-save]");
+    const markAllButton = $("[data-attendance-mark-all]");
+    if (!eventSelect || !list || !summary) return;
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const allRecords = [...workspace.events]
+      .filter((record) => ["event", "meeting"].includes(record.event_type) && (record.event_type !== "meeting" || meetingVisibleToCurrentUser(record)))
+      .sort((a, b) => new Date(a.starts_at) - new Date(b.starts_at));
+    const records = allRecords.filter((record) => {
+      const startsAt = new Date(record.starts_at);
+      return workspace.attendanceView === "history" ? startsAt < today : startsAt >= today;
+    });
+    const selected = workspace.attendanceEventId || eventSelect.value;
     eventSelect.replaceChildren();
-    if (!records.length) eventSelect.add(new Option("Sem eventos disponíveis", ""));
+    if (!records.length) eventSelect.add(new Option(workspace.attendanceView === "history" ? "Sem registos anteriores" : "Sem atividades próximas", ""));
     records.forEach((record) => eventSelect.add(new Option(`${record.title} · ${safeDate(record.starts_at)}`, record.id)));
-    if (records.some((record) => record.id === selected)) eventSelect.value = selected;
+    const availableSelection = records.some((record) => record.id === selected) ? selected : records[0]?.id || "";
+    eventSelect.value = availableSelection;
+    workspace.attendanceEventId = availableSelection;
+    if (pickerLabel) pickerLabel.textContent = workspace.attendanceView === "history" ? "Atividade anterior" : "Atividade atual ou próxima";
+    $all("[data-attendance-view]").forEach((button) => {
+      const active = button.dataset.attendanceView === workspace.attendanceView;
+      button.classList.toggle("is-active", active);
+      button.setAttribute("aria-selected", active ? "true" : "false");
+    });
     const eventId = eventSelect.value;
     list.replaceChildren();
+    summary.replaceChildren();
     const members = (core().team || []).filter((member) => member.id && !member.is_legend);
+    if (saveButton) saveButton.disabled = !eventId || !members.length;
+    if (markAllButton) markAllButton.disabled = !eventId || !members.length;
     if (!eventId || !members.length) {
-      list.appendChild(element("p", "bo-empty-soft", !eventId ? "Cria primeiro um evento para registar presenças." : "Não existem membros na equipa."));
+      list.appendChild(element("p", "bo-empty-soft", !members.length ? "Não existem membros ativos na equipa." : workspace.attendanceView === "history" ? "Ainda não há atividades anteriores para consultar." : "Não existem atividades para registar. Quando criares uma reunião ou evento, ele aparece aqui."));
       return;
     }
+    const selectedEvent = records.find((record) => record.id === eventId);
+    const recordedCount = workspace.attendance.filter((item) => item.event_id === eventId).length;
+    const eventDetails = element("div", "bo-attendance-summary-copy");
+    eventDetails.append(
+      element("strong", null, selectedEvent?.title || "Atividade"),
+      element("span", null, `${safeDate(selectedEvent?.starts_at, true)} · ${recordedCount} de ${members.length} presenças registadas`)
+    );
+    const progress = element("span", `bo-attendance-progress${recordedCount === members.length ? " is-complete" : ""}`, recordedCount === members.length ? "Concluído" : "Em curso");
+    summary.append(eventDetails, progress);
     members.forEach((member) => {
       const existing = workspace.attendance.find((item) => item.event_id === eventId && item.member_id === member.id);
       const row = element("label", "bo-attendance-row");
@@ -1949,10 +1985,11 @@
       identity.append(element("strong", null, member.name || "Membro"), element("small", null, member.role || member.area || "Equipa"));
       const select = element("select");
       select.name = member.id;
+      select.add(new Option("Por confirmar", ""));
       select.add(new Option("Presente", "present"));
       select.add(new Option("Ausente", "absent"));
       select.add(new Option("Justificada", "justified"));
-      select.value = existing?.status || "present";
+      select.value = existing?.status || "";
       row.append(identity, select);
       list.appendChild(row);
     });
@@ -1966,9 +2003,10 @@
     const records = members.map((member) => ({
       event_id: eventId,
       member_id: member.id,
-      status: event.currentTarget.elements[member.id]?.value || "present",
+      status: event.currentTarget.elements[member.id]?.value,
       recorded_by: currentUserId()
-    }));
+    })).filter((record) => record.status);
+    if (!records.length) return setWorkspaceStatus("[data-attendance-status]", "Indica pelo menos uma presença antes de guardar.", "error");
     try {
       if (!workspace.preview) {
         const { data, error } = await client().from("attendance_records").upsert(records, { onConflict: "event_id,member_id" }).select();
@@ -1985,6 +2023,12 @@
     }
   }
 
+  function selectAllAttendanceAsPresent() {
+    const form = $("[data-attendance-form]");
+    if (!form) return;
+    $all("select", form).forEach((select) => { if (select.name) select.value = "present"; });
+  }
+
   function fillRoleHistoryMembers() {
     const select = $("[data-role-history-member]");
     if (!select) return;
@@ -1997,15 +2041,55 @@
   function renderRoleHistory() {
     fillRoleHistoryMembers();
     const list = $("[data-role-history-list]");
-    if (!list) return;
+    const memberList = $("[data-role-history-members]");
+    const summary = $("[data-role-history-summary]");
+    const count = $("[data-role-history-member-count]");
+    if (!list || !memberList || !summary) return;
     list.replaceChildren();
-    const records = [...workspace.roleHistory].sort((a, b) => String(b.started_on).localeCompare(String(a.started_on)));
-    if (!records.length) list.appendChild(element("p", "bo-empty-soft", "Ainda não existem cargos registados."));
+    memberList.replaceChildren();
+    summary.replaceChildren();
+    const search = workspace.roleHistorySearch.trim().toLocaleLowerCase("pt-PT");
+    const allMembers = [...(core().team || [])]
+      .filter((member) => member.id && !member.is_legend)
+      .sort((a, b) => String(a.name || "").localeCompare(String(b.name || ""), "pt-PT"));
+    const members = allMembers.filter((member) => !search || `${member.name || ""} ${member.role || ""} ${member.area || ""}`.toLocaleLowerCase("pt-PT").includes(search));
+    if (!allMembers.some((member) => member.id === workspace.roleHistoryMemberId)) workspace.roleHistoryMemberId = allMembers[0]?.id || "";
+    if (count) count.textContent = `${allMembers.length} membros`;
+    if (!members.length) {
+      memberList.appendChild(element("p", "bo-empty-soft", "Nenhum membro encontrado."));
+    }
+    members.forEach((member) => {
+      const memberRecords = workspace.roleHistory.filter((record) => record.member_id === member.id);
+      const button = element("button", `bo-role-member-card${member.id === workspace.roleHistoryMemberId ? " is-active" : ""}`);
+      button.type = "button";
+      button.setAttribute("aria-pressed", member.id === workspace.roleHistoryMemberId ? "true" : "false");
+      const copy = element("span", "bo-role-member-copy");
+      copy.append(element("strong", null, member.name || "Membro"), element("small", null, member.role || member.area || "Sem cargo atual"));
+      const total = element("span", "bo-role-member-total", `${memberRecords.length}`);
+      button.append(copy, total);
+      button.addEventListener("click", () => {
+        workspace.roleHistoryMemberId = member.id;
+        renderRoleHistory();
+      });
+      memberList.appendChild(button);
+    });
+    const selectedMember = allMembers.find((member) => member.id === workspace.roleHistoryMemberId);
+    if (!selectedMember) {
+      summary.appendChild(element("p", "bo-empty-soft", "Ainda não existem membros na equipa."));
+      return;
+    }
+    const records = workspace.roleHistory
+      .filter((record) => record.member_id === selectedMember.id)
+      .sort((a, b) => String(b.started_on).localeCompare(String(a.started_on)));
+    const heading = element("div", "bo-role-history-summary-copy");
+    heading.append(element("strong", null, selectedMember.name || "Membro"), element("span", null, selectedMember.role || selectedMember.area || "Sem cargo atual"));
+    const total = element("span", "bo-role-history-total", records.length === 1 ? "1 registo" : `${records.length} registos`);
+    summary.append(heading, total);
+    if (!records.length) list.appendChild(element("p", "bo-empty-soft", `Ainda não existem cargos registados para ${selectedMember.name || "este membro"}.`));
     records.forEach((record) => {
-      const member = (core().team || []).find((item) => item.id === record.member_id);
       const row = element("article", "bo-hr-record-row bo-role-history-row");
       const body = element("div", "bo-hr-record-copy");
-      body.append(element("h4", null, record.role_title), element("p", null, member?.name || "Membro não encontrado"));
+      body.append(element("h4", null, record.role_title), element("p", null, record.ended_on ? "Cargo anterior" : "Cargo atual"));
       if (record.notes) body.appendChild(element("small", null, record.notes));
       const dates = element("span", "bo-hr-role-dates", `${safeDate(record.started_on)} — ${record.ended_on ? safeDate(record.ended_on) : "Atual"}`);
       const actions = element("div", "bo-row-actions");
@@ -2618,11 +2702,27 @@
       event.preventDefault();
       void saveHrEvent(event.currentTarget, "", "[data-hr-event-status]");
     });
-    $("[data-attendance-event]")?.addEventListener("change", renderAttendance);
+    $("[data-attendance-event]")?.addEventListener("change", (event) => {
+      workspace.attendanceEventId = event.currentTarget.value;
+      renderAttendance();
+    });
+    $all("[data-attendance-view]").forEach((button) => button.addEventListener("click", () => {
+      workspace.attendanceView = button.dataset.attendanceView === "history" ? "history" : "upcoming";
+      workspace.attendanceEventId = "";
+      setWorkspaceStatus("[data-attendance-status]", "");
+      renderAttendance();
+    }));
+    $("[data-attendance-mark-all]")?.addEventListener("click", selectAllAttendanceAsPresent);
     $("[data-attendance-form]")?.addEventListener("submit", saveAttendance);
+    $("[data-role-history-search]")?.addEventListener("input", (event) => {
+      workspace.roleHistorySearch = event.currentTarget.value;
+      renderRoleHistory();
+    });
     $("[data-new-role-history]")?.addEventListener("click", () => {
       fillRoleHistoryMembers();
-      $("[data-role-history-form]").hidden = false;
+      const form = $("[data-role-history-form]");
+      if (form?.elements.member_id && workspace.roleHistoryMemberId) form.elements.member_id.value = workspace.roleHistoryMemberId;
+      form.hidden = false;
     });
     $("[data-close-role-history-form]")?.addEventListener("click", () => { $("[data-role-history-form]").hidden = true; });
     $("[data-role-history-form]")?.addEventListener("submit", saveRoleHistory);

@@ -759,9 +759,15 @@ img {
 .bo-team-photo-card .bo-photo-preview-frame, .bo-team-photo-card .bo-photo-preview-frame img { min-height: 214px; }
 .bo-team-photo-card .bo-profile-photo-actions { margin-top: 0.15rem; }
 .bo-team-photo-card .bo-profile-photo-menu { left: 0; right: auto; }
-.bo-team-visibility-section { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); column-gap: 1rem; }
-.bo-team-visibility-section .bo-team-section-heading { grid-column: 1 / -1; }
-.bo-team-visibility-section .bo-check { margin: 0; }
+.bo-team-visibility-section { display: grid; grid-template-columns: minmax(0, 1fr); gap: 0.75rem; }
+.bo-team-visibility-section .bo-team-section-heading { grid-column: 1; margin-bottom: 0.45rem; }
+.bo-team-visibility-section .bo-check { width: 100%; margin: 0; }
+.bo-team-visibility-section .bo-visibility-option { align-items: flex-start; min-height: 0; padding: 1rem 1.05rem; border-radius: 12px; background: #fff; }
+.bo-team-visibility-section .bo-visibility-option input { margin-top: 0.16rem; }
+.bo-team-visibility-section .bo-visibility-option span { display: grid; gap: 0.22rem; }
+.bo-team-visibility-section .bo-visibility-option strong { color: var(--bo-text); font-family: "Sora", "Manrope", sans-serif; font-size: 0.95rem; line-height: 1.25; }
+.bo-team-visibility-section .bo-visibility-option small { color: var(--bo-muted); font-size: 0.8rem; font-weight: 600; line-height: 1.45; }
+.bo-team-visibility-section .bo-visibility-option:has(input:checked) { border-color: rgba(77, 145, 232, 0.42); background: rgba(77, 145, 232, 0.055); box-shadow: 0 0 0 3px rgba(77, 145, 232, 0.06); }
 .bo-team-edit-actions { grid-column: 1 / -1; justify-content: flex-end; padding-top: 0.35rem; }
 @media (max-width: 720px) {
   .bo-request-card { grid-template-columns: 1fr; }
@@ -4118,9 +4124,29 @@ body.is-member [data-admin-only] {
 .bo-workspace-dialog::backdrop { background: rgba(9, 19, 25, .55); backdrop-filter: blur(3px); }
 .bo-workspace-dialog-panel { margin: 0; padding: 1.35rem; }
 .bo-workspace-dialog-panel h2 { margin: .12rem 0 0; font-size: 1.25rem; }
-.bo-hr-event-picker { max-width: 520px; margin-bottom: 1rem; display: grid; gap: 0.4rem; }
+.bo-attendance-controls {
+  display: grid;
+  grid-template-columns: auto minmax(280px, 520px);
+  align-items: end;
+  gap: 1rem;
+  margin-bottom: 1rem;
+  padding: 0.85rem;
+  border: 1px solid #e4eaf0;
+  border-radius: 12px;
+  background: #fafbfd;
+}
+.bo-attendance-tabs { display: inline-flex; width: fit-content; padding: 0.22rem; border-radius: 9px; background: #eaf0f6; }
+.bo-attendance-tabs button { min-height: 34px; padding: 0.35rem 0.7rem; border: 0; border-radius: 7px; background: transparent; color: #657587; font: inherit; font-size: 0.78rem; font-weight: 800; cursor: pointer; }
+.bo-attendance-tabs button.is-active { background: #fff; color: #1f5ea7; box-shadow: 0 1px 3px rgba(26, 49, 73, 0.14); }
+.bo-hr-event-picker { max-width: 520px; margin: 0; display: grid; gap: 0.4rem; }
+.bo-attendance-summary { min-height: 62px; margin-bottom: 0.2rem; padding: 0.8rem 0.9rem; display: flex; align-items: center; justify-content: space-between; gap: 1rem; border: 1px solid #e2eaf2; border-radius: 11px; background: #f7fbff; }
+.bo-attendance-summary-copy { min-width: 0; display: grid; gap: 0.2rem; }
+.bo-attendance-summary-copy strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 0.88rem; }
+.bo-attendance-summary-copy span { color: #718096; font-size: 0.75rem; }
+.bo-attendance-progress { flex: 0 0 auto; padding: 0.32rem 0.55rem; border-radius: 999px; background: #eaf0f6; color: #627386; font-size: 0.7rem; font-weight: 800; }
+.bo-attendance-progress.is-complete { background: #e0f5eb; color: #18704b; }
 .bo-attendance-row {
-  padding: 0.75rem 0;
+  padding: 0.8rem 0.15rem;
   display: grid;
   grid-template-columns: minmax(0, 1fr) 150px;
   align-items: center;
@@ -4130,9 +4156,32 @@ body.is-member [data-admin-only] {
 .bo-attendance-member { display: grid; gap: 0.2rem; }
 .bo-attendance-member strong { font-size: 0.88rem; }
 .bo-attendance-member small { color: #7d8998; font-size: 0.75rem; }
-.bo-hr-attendance-actions { margin-top: 1rem; }
+.bo-hr-attendance-actions { margin-top: 1rem; justify-content: space-between; }
+.bo-hr-attendance-actions .bo-button:last-child { margin-left: auto; }
 .bo-role-history-row { grid-template-columns: minmax(0, 1fr) auto auto; }
 .bo-hr-role-dates { color: #687789; font-size: 0.8rem; white-space: nowrap; }
+.bo-role-history-workspace { display: grid; grid-template-columns: minmax(220px, 0.34fr) minmax(0, 1fr); min-height: 350px; border: 1px solid #e1e7ee; border-radius: 13px; overflow: hidden; background: #fff; }
+.bo-role-member-panel { min-width: 0; padding: 0.9rem; border-right: 1px solid #e7ecf1; background: #fafbfd; }
+.bo-role-member-panel-head { display: grid; gap: 0.7rem; margin-bottom: 0.75rem; }
+.bo-role-member-panel-head > div { display: flex; align-items: baseline; justify-content: space-between; gap: 0.5rem; }
+.bo-role-member-panel-head strong { font-size: 0.82rem; }
+.bo-role-member-panel-head span { color: #82909d; font-size: 0.7rem; font-weight: 700; }
+.bo-role-member-search input { width: 100%; min-height: 36px; padding: 0.48rem 0.65rem; border: 1px solid #dce4ec; border-radius: 8px; background: #fff; font: inherit; font-size: 0.74rem; }
+.bo-role-member-search input:focus { border-color: rgba(43, 113, 202, .55); outline: 0; box-shadow: 0 0 0 3px rgba(43, 113, 202, .09); }
+.bo-role-member-list { display: grid; gap: 0.3rem; max-height: 430px; overflow-y: auto; padding-right: 0.12rem; }
+.bo-role-member-card { width: 100%; min-height: 52px; padding: 0.55rem 0.6rem; display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 0.45rem; border: 1px solid transparent; border-radius: 8px; background: transparent; color: #263746; font: inherit; text-align: left; cursor: pointer; }
+.bo-role-member-card:hover { background: #f0f5fa; }
+.bo-role-member-card.is-active { border-color: #c6daf2; background: #eaf3ff; box-shadow: inset 3px 0 0 #4d91e8; }
+.bo-role-member-copy { min-width: 0; display: grid; gap: 0.16rem; }
+.bo-role-member-copy strong, .bo-role-member-copy small { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.bo-role-member-copy strong { font-size: 0.76rem; }
+.bo-role-member-copy small { color: #7a8998; font-size: 0.67rem; }
+.bo-role-member-total, .bo-role-history-total { padding: 0.25rem 0.45rem; border-radius: 999px; background: #edf2f7; color: #607287; font-size: 0.66rem; font-weight: 800; }
+.bo-role-history-detail { min-width: 0; padding: 1rem 1.1rem; }
+.bo-role-history-summary { margin-bottom: 0.25rem; padding-bottom: 0.8rem; display: flex; align-items: center; justify-content: space-between; gap: 1rem; border-bottom: 1px solid #edf0f4; }
+.bo-role-history-summary-copy { min-width: 0; display: grid; gap: 0.2rem; }
+.bo-role-history-summary-copy strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 0.95rem; }
+.bo-role-history-summary-copy span { color: #748293; font-size: 0.74rem; }
 
 /* Organization chart builder */
 .bo-org-chart-head { align-items: flex-start; }
@@ -4205,9 +4254,17 @@ body.is-member [data-admin-only] {
   .bo-role-history-row { grid-template-columns: minmax(0, 1fr); }
   .bo-role-history-row > .bo-hr-role-dates,
   .bo-role-history-row > .bo-row-actions { grid-column: 1; }
+  .bo-role-history-workspace { grid-template-columns: 1fr; }
+  .bo-role-member-panel { border-right: 0; border-bottom: 1px solid #e7ecf1; }
+  .bo-role-member-list { max-height: 220px; }
 }
 
 @media (max-width: 480px) {
+  .bo-attendance-controls { grid-template-columns: 1fr; gap: 0.75rem; }
+  .bo-hr-event-picker { max-width: none; }
+  .bo-attendance-summary { align-items: flex-start; flex-direction: column; gap: 0.55rem; }
+  .bo-hr-attendance-actions { align-items: stretch; flex-direction: column; }
+  .bo-hr-attendance-actions .bo-button:last-child { margin-left: 0; }
   .bo-attendance-row { grid-template-columns: 1fr; gap: 0.55rem; }
   .bo-attendance-row select { width: 100%; }
   .bo-compact-item.has-actions { grid-template-columns: auto minmax(0, 1fr); }
