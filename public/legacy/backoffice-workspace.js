@@ -1938,6 +1938,7 @@
     const pickerLabel = $("[data-attendance-picker-label]");
     const saveButton = $("[data-attendance-save]");
     const markAllButton = $("[data-attendance-mark-all]");
+    const exportButton = $("[data-export-attendance]");
     if (!eventSelect || !list || !summary) return;
     const today = new Date();
     today.setHours(0, 0, 0, 0);
@@ -1996,6 +1997,7 @@
       markAllButton.disabled = isHistory || !eventId || !members.length;
       markAllButton.hidden = isHistory;
     }
+    if (exportButton) exportButton.hidden = !isHistory;
     if (!eventId || !members.length) {
       list.appendChild(element("p", "bo-empty-soft", !eventId
         ? (isHistory ? "Ainda não há atividades anteriores para consultar." : "Não existem atividades para registar. Quando criares uma reunião ou evento, ele aparece aqui.")
@@ -2069,6 +2071,39 @@
       if (!workspace.attendanceDraftStatuses[eventId]) workspace.attendanceDraftStatuses[eventId] = {};
       workspace.attendanceDraftStatuses[eventId][select.name] = "present";
     });
+  }
+
+  async function exportAttendanceHistory(button) {
+    const supabase = client();
+    if (!supabase) return setWorkspaceStatus("[data-attendance-status]", "Inicia sessão novamente para exportar o Excel.", "error");
+    const { data, error: sessionError } = await supabase.auth.getSession();
+    const accessToken = data?.session?.access_token;
+    if (sessionError || !accessToken) return setWorkspaceStatus("[data-attendance-status]", "Inicia sessão novamente para exportar o Excel.", "error");
+    const label = button.textContent;
+    button.disabled = true;
+    button.textContent = "A preparar Excel…";
+    try {
+      const response = await fetch("/api/backoffice/export/attendance", { headers: { Authorization: `Bearer ${accessToken}` } });
+      if (!response.ok) {
+        const body = await response.json().catch(() => null);
+        throw new Error(body?.error || "Não foi possível preparar o Excel.");
+      }
+      const blob = await response.blob();
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = "historico-presencas-rise-up.xlsx";
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.setTimeout(() => URL.revokeObjectURL(url), 1_000);
+      setWorkspaceStatus("[data-attendance-status]", "Histórico de presenças exportado com sucesso.", "success");
+    } catch (error) {
+      setWorkspaceStatus("[data-attendance-status]", error instanceof Error ? error.message : "Não foi possível preparar o Excel.", "error");
+    } finally {
+      button.disabled = false;
+      button.textContent = label;
+    }
   }
 
   function addAttendanceMember() {
@@ -2771,6 +2806,7 @@
       renderAttendance();
     }));
     $("[data-attendance-add-member]")?.addEventListener("click", addAttendanceMember);
+    $("[data-export-attendance]")?.addEventListener("click", (event) => void exportAttendanceHistory(event.currentTarget));
     $("[data-attendance-member-search]")?.addEventListener("keydown", (event) => {
       if (event.key !== "Enter") return;
       event.preventDefault();

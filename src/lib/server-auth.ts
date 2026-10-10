@@ -41,6 +41,10 @@ export function canReadDrive(role: string) {
   return canWriteDrive(role);
 }
 
+export function canManageHr(role: string) {
+  return ["admin", "coordinator", "vice_coordinator", "hr_team", "team_leader_hr"].includes(role);
+}
+
 export function canDeleteDrive(role: string) {
   return ["admin", "coordinator", "vice_coordinator"].includes(role);
 }
