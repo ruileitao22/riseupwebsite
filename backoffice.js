@@ -488,7 +488,7 @@
       return isActualAdmin();
     }
 
-    if (["dashboard", "todo", "profile"].includes(view)) {
+    if (["dashboard", "todo", "profile", "reports"].includes(view)) {
       return true;
     }
 
@@ -4278,6 +4278,7 @@
 
     const titles = {
       dashboard: "Painel",
+      reports: "Canal de denúncia",
       profile: "Perfil",
       team: "Equipa",
       projects: "Projetos",

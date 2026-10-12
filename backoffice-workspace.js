@@ -345,20 +345,13 @@
     if (!open) showInnovationMenuOverview();
   }
 
-  function showConfidentialReportOverview() {
-    const form = $("[data-confidential-report-form]");
-    const intro = $("[data-confidential-report-intro]");
-    const confirmation = $("[data-confidential-report-confirmation]");
-    if (form) form.hidden = true;
-    if (intro) intro.hidden = false;
-    if (confirmation) confirmation.hidden = true;
-  }
-
   const confidentialReportTypeLabel = (type) => ({ conduct: "Conduta ou incumprimento", conflict: "Conflito interpessoal", harassment: "Assédio, intimidação ou discriminação", security: "Segurança, acessos ou dados", financial: "Irregularidade financeira", other: "Outra situação" })[type] || "Outra situação";
   const confidentialReportStatusLabel = (status) => ({ submitted: "Recebida", reviewing: "Em análise", closed: "Encerrada", archived: "Arquivada" })[status] || "Recebida";
 
   function renderConfidentialReports() {
     const list = $("[data-confidential-report-list]");
+    const panel = $("[data-confidential-report-admin-panel]");
+    if (panel) panel.hidden = !isAdmin();
     if (!list) return;
     list.replaceChildren();
     list.hidden = !isAdmin();
@@ -394,16 +387,6 @@
     });
   }
 
-  function setConfidentialReportMenuOpen(open) {
-    const menu = $("[data-confidential-report-menu]");
-    const toggle = $("[data-confidential-report-toggle]");
-    if (!menu || !toggle) return;
-    menu.hidden = !open;
-    toggle.setAttribute("aria-expanded", String(open));
-    document.documentElement.classList.toggle("bo-modal-open", open);
-    if (!open) showConfidentialReportOverview();
-  }
-
   async function saveConfidentialReport(event) {
     event.preventDefault();
     const form = event.currentTarget;
@@ -424,9 +407,11 @@
         if (error) throw error;
       }
       form.reset();
-      form.hidden = true;
-      $("[data-confidential-report-intro]").hidden = true;
-      $("[data-confidential-report-confirmation]").hidden = false;
+      const confirmation = $("[data-confidential-report-confirmation]");
+      if (confirmation) {
+        confirmation.hidden = false;
+        confirmation.scrollIntoView({ behavior: "smooth", block: "nearest" });
+      }
       setWorkspaceStatus("[data-confidential-report-status]", "");
     } catch (error) {
       setWorkspaceStatus("[data-confidential-report-status]", error?.message || "Não foi possível enviar a denúncia. Tenta novamente.", "error");
@@ -3105,24 +3090,10 @@
     });
     $all("[data-close-innovation-request]").forEach((button) => button.addEventListener("click", showInnovationMenuOverview));
     $("[data-innovation-request-form]")?.addEventListener("submit", saveInnovationRequest);
-    $all("[data-new-confidential-report]").forEach((button) => button.addEventListener("click", () => {
-      const form = $("[data-confidential-report-form]");
-      if (!form) return;
-      setConfidentialReportMenuOpen(true);
-      $("[data-confidential-report-intro]").hidden = true;
-      $("[data-confidential-report-confirmation]").hidden = true;
-      form.hidden = false;
-      form.elements.title.focus();
-    }));
     $("[data-confidential-report-toggle]")?.addEventListener("click", () => {
-      const menu = $("[data-confidential-report-menu]");
-      setConfidentialReportMenuOpen(Boolean(menu?.hidden));
+      api()?.showSection("reports");
+      window.setTimeout(() => $("[data-confidential-report-form]")?.elements.title?.focus(), 0);
     });
-    $all("[data-close-confidential-report-menu], [data-close-confidential-report-confirmation]").forEach((button) => button.addEventListener("click", () => setConfidentialReportMenuOpen(false)));
-    $("[data-confidential-report-menu]")?.addEventListener("pointerdown", (event) => {
-      if (event.target === event.currentTarget) setConfidentialReportMenuOpen(false);
-    });
-    $all("[data-close-confidential-report]").forEach((button) => button.addEventListener("click", showConfidentialReportOverview));
     $("[data-confidential-report-form]")?.addEventListener("submit", saveConfidentialReport);
     $all("[data-new-conflict-declaration]").forEach((button) => button.addEventListener("click", () => {
       const form = $("[data-conflict-declaration-form]");

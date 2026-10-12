@@ -1306,33 +1306,55 @@ html.bo-modal-open { overflow: hidden; }
 .bo-request-menu-panel .bo-innovation-request-form .bo-actions .bo-button { width: 100%; min-height: 46px; gap: .6rem; border-radius: 10px; font-size: .82rem; }
 .bo-request-menu-panel .bo-innovation-request-form .bo-actions .bo-button span { font-size: 1.05rem; transition: transform 160ms ease; }
 .bo-request-menu-panel .bo-innovation-request-form .bo-actions .bo-button:hover span { transform: translateX(3px); }
-.bo-request-menu-panel .bo-form.bo-confidential-report-form { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; margin: 1rem 0 0; padding: 0; border: 0; background: transparent; }
-.bo-request-menu-panel .bo-confidential-report-form .bo-form-head { align-items: flex-start; padding: .9rem; border: 1px solid #efdfe1; border-radius: 12px; background: linear-gradient(135deg, #fff7f7, #fffdfd); }
-.bo-request-menu-panel .bo-confidential-report-form .bo-form-head h3 { margin: .12rem 0 0; font-size: 1.08rem; }
-.bo-request-menu-panel .bo-confidential-report-form .bo-request-field { gap: .38rem; font-size: .78rem; }
-.bo-request-menu-panel .bo-confidential-report-form .bo-request-field > span { color: #172330; font-weight: 800; }
-.bo-request-menu-panel .bo-confidential-report-form .bo-request-field > small { margin-top: -.18rem; color: #758391; font-size: .68rem; font-weight: 600; line-height: 1.4; }
-.bo-request-menu-panel .bo-confidential-report-form input:not([type="checkbox"]), .bo-request-menu-panel .bo-confidential-report-form select, .bo-request-menu-panel .bo-confidential-report-form textarea { min-width: 0; min-height: 46px; padding: .72rem .8rem; border-color: #ead9dc; border-radius: 10px; background: #fff; font-size: .86rem; }
-.bo-request-menu-panel .bo-confidential-report-form textarea { min-height: 132px; line-height: 1.5; resize: vertical; }
-.bo-request-menu-panel .bo-confidential-report-form input::placeholder, .bo-request-menu-panel .bo-confidential-report-form textarea::placeholder { color: #9aa6b1; font-weight: 500; }
-.bo-confidential-anonymous { display: flex; align-items: flex-start; gap: .7rem; padding: .78rem .85rem; border: 1px solid #efdfe1; border-radius: 10px; background: #fffafa; cursor: pointer; }
-.bo-confidential-anonymous input { width: 17px; height: 17px; margin: .1rem 0 0; accent-color: #a63d49; }
+.bo-confidential-page { max-width: 1240px; margin: 0 auto; }
+.bo-confidential-page-hero { position: relative; display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 1.1rem; overflow: hidden; padding: clamp(1.35rem, 3vw, 2.35rem); border-radius: 22px; background: linear-gradient(120deg, #11283a, #1c4360); color: #fff; box-shadow: 0 20px 42px rgba(21, 46, 66, .16); }
+.bo-confidential-page-hero::after { position: absolute; inset: auto -65px -120px auto; width: 270px; height: 270px; border: 1px solid rgba(255,255,255,.16); border-radius: 50%; content: ""; }
+.bo-confidential-page-hero .bo-kicker { color: #82b6ff; }
+.bo-confidential-page-hero h2 { margin: .2rem 0 .35rem; color: #fff; font-size: clamp(1.6rem, 3vw, 2.35rem); }
+.bo-confidential-page-hero p:not(.bo-kicker) { max-width: 650px; margin: 0; color: #d5e2eb; line-height: 1.55; }
+.bo-confidential-page-icon { display: grid; width: 54px; height: 54px; place-items: center; border: 1px solid rgba(180,214,255,.35); border-radius: 16px; background: rgba(255,255,255,.1); }
+.bo-confidential-page-icon svg { width: 27px; fill: none; stroke: #fff; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.bo-confidential-page-badge { position: relative; z-index: 1; padding: .48rem .7rem; border: 1px solid rgba(180,214,255,.32); border-radius: 999px; background: rgba(255,255,255,.1); color: #eef6ff; font-size: .73rem; font-weight: 800; letter-spacing: .05em; text-transform: uppercase; }
+.bo-confidential-page-layout { display: grid; grid-template-columns: minmax(235px, .72fr) minmax(0, 1.6fr); gap: 1.25rem; margin-top: 1.25rem; align-items: start; }
+.bo-confidential-guidance, .bo-confidential-workspace { border: 1px solid #e0e8ed; border-radius: 18px; background: #fff; box-shadow: 0 10px 28px rgba(34, 58, 76, .055); }
+.bo-confidential-guidance { padding: 1.3rem; }
+.bo-confidential-guidance h3, .bo-confidential-workspace-head h3, .bo-confidential-admin-head h3 { margin: .25rem 0 .45rem; color: #142433; font-size: 1.05rem; }
+.bo-confidential-guidance ol { display: grid; gap: .85rem; margin: 1.1rem 0; padding: 0; list-style: none; counter-reset: steps; }
+.bo-confidential-guidance li { position: relative; display: grid; gap: .18rem; min-height: 42px; padding-left: 2.35rem; counter-increment: steps; }
+.bo-confidential-guidance li::before { position: absolute; left: 0; top: .05rem; display: grid; width: 1.55rem; height: 1.55rem; place-items: center; border-radius: 50%; background: #eaf3ff; color: #287de8; content: counter(steps); font-size: .7rem; font-weight: 800; }
+.bo-confidential-guidance strong { color: #223546; font-size: .81rem; }
+.bo-confidential-guidance li span, .bo-confidential-guidance-note { color: #6d7d8b; font-size: .75rem; line-height: 1.45; }
+.bo-confidential-guidance-note { margin: 0; padding: .85rem; border-radius: 11px; background: #f5f8fa; }
+.bo-confidential-guidance-note strong { display: block; margin-bottom: .15rem; color: #344b5d; }
+.bo-confidential-workspace { overflow: hidden; }
+.bo-confidential-workspace-head { display: flex; justify-content: space-between; gap: 1rem; padding: 1.3rem 1.35rem 1rem; border-bottom: 1px solid #e8eef2; }
+.bo-confidential-workspace-head p:not(.bo-kicker), .bo-confidential-admin-head p:not(.bo-kicker) { margin: 0; color: #71808c; font-size: .81rem; line-height: 1.45; }
+.bo-confidential-workspace-head > span { align-self: flex-start; padding: .38rem .55rem; border-radius: 999px; background: #edf6ff; color: #287de8; font-size: .68rem; font-weight: 800; white-space: nowrap; }
+.bo-confidential-report-form { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; margin: 0; padding: 1.35rem; border: 0; background: transparent; }
+.bo-confidential-report-form .bo-request-field { gap: .38rem; font-size: .8rem; }
+.bo-confidential-report-form .bo-request-field > span { color: #172b3a; font-weight: 800; }
+.bo-confidential-report-form .bo-request-field > small { margin-top: -.16rem; color: #778694; font-size: .7rem; font-weight: 600; line-height: 1.4; }
+.bo-confidential-report-form input:not([type="checkbox"]), .bo-confidential-report-form select, .bo-confidential-report-form textarea { min-width: 0; min-height: 47px; padding: .75rem .82rem; border-color: #dce6ec; border-radius: 10px; background: #fff; font-size: .88rem; }
+.bo-confidential-report-form textarea { min-height: 154px; line-height: 1.5; resize: vertical; }
+.bo-confidential-report-form input::placeholder, .bo-confidential-report-form textarea::placeholder { color: #98a6b4; font-weight: 500; }
+.bo-confidential-anonymous { display: flex; align-items: flex-start; gap: .75rem; padding: .9rem; border: 1px solid #dce8f0; border-radius: 12px; background: #f8fbfd; cursor: pointer; }
+.bo-confidential-anonymous input { width: 17px; height: 17px; margin: .1rem 0 0; accent-color: #237de8; }
 .bo-confidential-anonymous span { display: grid; gap: .2rem; }
-.bo-confidential-anonymous strong { color: #3d2227; font-size: .78rem; }
-.bo-confidential-anonymous small { color: #77808a; font-size: .68rem; font-weight: 600; line-height: 1.45; }
-.bo-confidential-report-intro { display: grid; gap: .8rem; padding: 1rem 0 .2rem; }
-.bo-confidential-report-intro p { margin: 0; color: var(--bo-muted); font-size: .78rem; line-height: 1.55; }
-.bo-confidential-report-intro ul { display: grid; gap: .4rem; margin: 0; padding: .75rem .85rem .75rem 2rem; border: 1px solid #f0e1e3; border-radius: 11px; background: #fffafa; color: #5e6873; font-size: .73rem; line-height: 1.45; }
-.bo-confidential-report-intro .bo-button { justify-self: start; }
-.bo-confidential-report-confirmation { display: grid; gap: .6rem; margin-top: 1rem; padding: 1rem; border: 1px solid #cfe9da; border-radius: 12px; background: #f4fcf7; }
+.bo-confidential-anonymous strong { color: #263b4b; font-size: .81rem; }
+.bo-confidential-anonymous small { color: #71808c; font-size: .7rem; font-weight: 600; line-height: 1.45; }
+.bo-confidential-report-form .bo-actions { padding-top: .1rem; }
+.bo-confidential-report-form .bo-button { min-height: 47px; border-radius: 10px; }
+.bo-confidential-report-confirmation { display: grid; gap: .45rem; margin: 0 1.35rem 1.35rem; padding: 1rem; border: 1px solid #cce7d8; border-radius: 12px; background: #f3fcf7; }
 .bo-confidential-report-confirmation strong { color: #176441; font-size: .9rem; }
-.bo-confidential-report-confirmation p { margin: 0; color: #5d6d65; font-size: .76rem; line-height: 1.5; }
-.bo-confidential-report-confirmation .bo-button { justify-self: start; }
-.bo-confidential-report-list { margin-top: 1rem; }
-.bo-confidential-report { border-left-color: #b85a65; }
+.bo-confidential-report-confirmation p { margin: 0; color: #5d7165; font-size: .77rem; line-height: 1.5; }
+.bo-confidential-admin-panel { margin: 0; padding: 1.35rem; border-top: 1px solid #e7edf1; background: #fbfcfd; }
+.bo-confidential-admin-head { margin-bottom: .9rem; }
+.bo-confidential-report-list { margin: 0; max-height: none; }
+.bo-confidential-report { border-left-color: #4b86bd; }
 .bo-confidential-report small + small { margin-top: .22rem; }
-.bo-confidential-report .bo-mini-action { display: inline-flex; width: fit-content; margin-top: .5rem; color: #8a3944; text-decoration: none; }
-@media (max-width: 520px) { .bo-request-menu-panel .bo-form.bo-innovation-request-form, .bo-request-menu-panel .bo-form.bo-confidential-report-form { grid-template-columns: 1fr; } }
+.bo-confidential-report .bo-mini-action { display: inline-flex; width: fit-content; margin-top: .5rem; color: #236db9; text-decoration: none; }
+@media (max-width: 860px) { .bo-confidential-page-layout { grid-template-columns: 1fr; } }
+@media (max-width: 600px) { .bo-confidential-page-hero { grid-template-columns: auto minmax(0, 1fr); padding: 1.2rem; border-radius: 16px; } .bo-confidential-page-badge { grid-column: 1 / -1; justify-self: start; } .bo-confidential-workspace-head { display: grid; padding: 1.1rem; } .bo-confidential-workspace-head > span { justify-self: start; } .bo-confidential-report-form { grid-template-columns: 1fr; padding: 1.1rem; } .bo-confidential-report-confirmation, .bo-confidential-admin-panel { margin-left: 1.1rem; margin-right: 1.1rem; } .bo-confidential-admin-panel { margin: 0; padding: 1.1rem; } }
 .bo-request-menu-panel .bo-request-list { max-height: 330px; overflow-y: auto; padding-right: .15rem; }
 .bo-request-menu-panel .bo-request-card { grid-template-columns: minmax(0, 1fr) auto; padding: .72rem; gap: .45rem .65rem; }
 .bo-request-menu-panel .bo-request-card h4 { font-size: .82rem; }
