@@ -1660,7 +1660,11 @@
   }
 
   function renderMetrics() {
-    $("[data-metric-team]").textContent = String(state.team.length);
+    const activeMembers = state.team.filter((member) => {
+      const accountRole = findProfileForMember(member)?.role || "";
+      return member.is_active !== false && !member.is_legend && !member.is_ex_riser && accountRole !== "ex_riser";
+    });
+    $("[data-metric-team]").textContent = String(activeMembers.length);
     const published = state.projects.filter((project) => project.status === "published").length;
     const drafts = state.projects.filter((project) => project.status === "draft").length;
 
