@@ -9,6 +9,7 @@
     innovationRequests: [],
     confidentialReports: [],
     conflictDeclarations: [],
+    internalDocuments: [],
     opportunities: [],
     documents: [],
     attendance: [],
@@ -247,7 +248,7 @@
       ["roleHistory", "role_history", "started_on"],
       ["organizationChart", "organization_chart_nodes", "sort_order"]
     ];
-    if (isAdmin()) sources.push(["confidentialReports", "confidential_reports", "created_at"]);
+    if (isAdmin()) sources.push(["confidentialReports", "confidential_reports", "created_at"], ["internalDocuments", "internal_document_records", "created_at"]);
     sources.push(["conflictDeclarations", "conflict_of_interest_declarations", "created_at"]);
     const results = await Promise.allSettled(sources.map(([, table, order]) => selectTable(table, order)));
     results.forEach((result, index) => {
@@ -321,6 +322,7 @@
     renderInnovationRequests();
     renderConfidentialReports();
     renderConflictDeclarations();
+    renderInternalDocuments();
   }
 
   const innovationTypeLabel = (type) => type === "problem" ? "Problema" : "Ideia";
@@ -402,17 +404,22 @@
     };
     try {
       setWorkspaceStatus("[data-confidential-report-status]", "A enviar…");
-      if (!workspace.preview) {
-        const { error } = await client().from("confidential_reports").insert(payload);
-        if (error) throw error;
+      let result;
+      if (workspace.preview) result = { source: { id: crypto.randomUUID(), ...payload, created_at: new Date().toISOString() }, emailSent: true };
+      else {
+        const response = await fetch("/api/internal-records", { method: "POST", headers: { "Content-Type": "application/json", Authorization: `Bearer ${core().session?.access_token || ""}` }, body: JSON.stringify({ type: "confidential_report", payload }) });
+        result = await response.json();
+        if (!response.ok) throw new Error(result.error || "Não foi possível criar a ficha institucional.");
       }
+      if (isAdmin() && result?.source) { workspace.confidentialReports.unshift(result.source); renderConfidentialReports(); }
+      if (isAdmin() && result?.document) { workspace.internalDocuments.unshift(result.document); renderInternalDocuments(); }
       form.reset();
       const confirmation = $("[data-confidential-report-confirmation]");
       if (confirmation) {
         confirmation.hidden = false;
         confirmation.scrollIntoView({ behavior: "smooth", block: "nearest" });
       }
-      setWorkspaceStatus("[data-confidential-report-status]", "");
+      setWorkspaceStatus("[data-confidential-report-status]", result?.emailSent === false ? "Denúncia e ficha guardadas. O email para a Direção não foi enviado." : "");
     } catch (error) {
       setWorkspaceStatus("[data-confidential-report-status]", error?.message || "Não foi possível enviar a denúncia. Tenta novamente.", "error");
     }
@@ -483,17 +490,22 @@
     };
     try {
       setWorkspaceStatus("[data-conflict-declaration-status]", "A enviar…");
-      if (!workspace.preview) {
-        const { error } = await client().from("conflict_of_interest_declarations").insert(payload);
-        if (error) throw error;
+      let result;
+      if (workspace.preview) result = { source: { id: crypto.randomUUID(), ...payload, created_at: new Date().toISOString() }, emailSent: true };
+      else {
+        const response = await fetch("/api/internal-records", { method: "POST", headers: { "Content-Type": "application/json", Authorization: `Bearer ${core().session?.access_token || ""}` }, body: JSON.stringify({ type: "conflict_declaration", payload }) });
+        result = await response.json();
+        if (!response.ok) throw new Error(result.error || "Não foi possível criar a ficha institucional.");
       }
+      if (result?.source) { workspace.conflictDeclarations.unshift(result.source); renderConflictDeclarations(); }
+      if (isAdmin() && result?.document) { workspace.internalDocuments.unshift(result.document); renderInternalDocuments(); }
       form.reset();
       const confirmation = $("[data-conflict-declaration-confirmation]");
       if (confirmation) {
         confirmation.hidden = false;
         confirmation.scrollIntoView({ behavior: "smooth", block: "nearest" });
       }
-      setWorkspaceStatus("[data-conflict-declaration-status]", "");
+      setWorkspaceStatus("[data-conflict-declaration-status]", result?.emailSent === false ? "Declaração e ficha guardadas. O email para a Direção não foi enviado." : "");
     } catch (error) {
       setWorkspaceStatus("[data-conflict-declaration-status]", error?.message || "Não foi possível enviar a declaração. Tenta novamente.", "error");
     }
@@ -1320,6 +1332,39 @@
       throw new Error(message);
     }
     return response;
+  }
+
+  function internalDocumentLabel(type) { return type === "confidential_report" ? "Denúncia confidencial" : "Conflito de interesse"; }
+
+  async function openInternalDocument(document) {
+    try {
+      const response = await fetch(`/api/internal-documents/${encodeURIComponent(document.id)}/content`, { headers: { Authorization: `Bearer ${core().session?.access_token || ""}` } });
+      if (!response.ok) throw new Error("Não foi possível abrir o documento.");
+      const url = URL.createObjectURL(await response.blob());
+      window.open(url, "_blank", "noopener");
+      window.setTimeout(() => URL.revokeObjectURL(url), 60_000);
+    } catch (error) { window.alert(error?.message || "Não foi possível abrir o documento."); }
+  }
+
+  function renderInternalDocuments() {
+    const panel = $("[data-internal-documents-panel]");
+    const list = $("[data-internal-documents-list]");
+    if (panel) panel.hidden = !isAdmin();
+    if (!list || !isAdmin()) return;
+    list.replaceChildren();
+    const records = [...workspace.internalDocuments].sort((left, right) => String(right.created_at).localeCompare(String(left.created_at)));
+    if (!records.length) { list.appendChild(element("p", "bo-empty-soft", "Ainda não foram geradas fichas institucionais reservadas.")); return; }
+    records.forEach((document) => {
+      const row = element("article", "bo-internal-document-row");
+      const copy = element("div", "bo-internal-document-copy");
+      copy.append(element("span", "bo-internal-document-icon", "PDF"), element("div"));
+      const text = copy.lastElementChild;
+      text.append(element("strong", null, document.title), element("small", null, `${internalDocumentLabel(document.source_type)} · ${safeDate(document.created_at, true)} · ${document.classification}`));
+      if (document.email_sent_at) text.appendChild(element("small", "is-sent", "Enviado à Direção"));
+      else if (document.email_error) text.appendChild(element("small", "is-warning", "Email pendente"));
+      const button = element("button", "bo-button bo-button-ghost", "Abrir PDF"); button.type = "button"; button.addEventListener("click", () => void openInternalDocument(document));
+      row.append(copy, button); list.appendChild(row);
+    });
   }
 
   async function loadDrive(folderId = workspace.drive.rootFolderId, folderName = "Drive Rise Up", reset = false) {
