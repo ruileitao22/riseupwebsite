@@ -8,6 +8,7 @@
     communicationRequests: [],
     innovationRequests: [],
     confidentialReports: [],
+    conflictDeclarations: [],
     opportunities: [],
     documents: [],
     attendance: [],
@@ -247,6 +248,7 @@
       ["organizationChart", "organization_chart_nodes", "sort_order"]
     ];
     if (isAdmin()) sources.push(["confidentialReports", "confidential_reports", "created_at"]);
+    sources.push(["conflictDeclarations", "conflict_of_interest_declarations", "created_at"]);
     const results = await Promise.allSettled(sources.map(([, table, order]) => selectTable(table, order)));
     results.forEach((result, index) => {
       if (result.status === "fulfilled") workspace[sources[index][0]] = result.value;
@@ -318,6 +320,7 @@
     renderMyCommunicationRequests();
     renderInnovationRequests();
     renderConfidentialReports();
+    renderConflictDeclarations();
   }
 
   const innovationTypeLabel = (type) => type === "problem" ? "Problema" : "Ideia";
@@ -443,6 +446,104 @@
       renderConfidentialReports();
     } catch (error) {
       window.alert(error?.message || "Não foi possível atualizar a denúncia.");
+      select.disabled = false;
+    }
+  }
+
+  function showConflictDeclarationOverview() {
+    const form = $("[data-conflict-declaration-form]");
+    const intro = $("[data-conflict-declaration-intro]");
+    const confirmation = $("[data-conflict-declaration-confirmation]");
+    if (form) form.hidden = true;
+    if (intro) intro.hidden = false;
+    if (confirmation) confirmation.hidden = true;
+  }
+
+  const conflictCategoryLabel = (category) => ({ financial: "Financeiro", family_personal: "Familiar ou pessoal", professional: "Profissional", institutional: "Institucional", other: "Outro" })[category] || "Outro";
+  const conflictStatusLabel = (status) => ({ declared: "Declarado", reviewing: "Em análise", resolved: "Gerido", archived: "Arquivado" })[status] || "Declarado";
+
+  function renderConflictDeclarations() {
+    const list = $("[data-conflict-declaration-list]");
+    if (!list) return;
+    list.replaceChildren();
+    const records = [...workspace.conflictDeclarations].sort((left, right) => String(right.created_at).localeCompare(String(left.created_at)));
+    if (!records.length) {
+      list.appendChild(element("p", "bo-empty-soft", isAdmin() ? "Ainda não foram registados conflitos de interesse." : "Ainda não registaste conflitos de interesse."));
+      return;
+    }
+    records.forEach((record) => {
+      const card = element("article", `bo-request-card bo-conflict-declaration is-${record.status}`);
+      const body = element("div");
+      body.append(element("h4", null, record.subject), element("p", null, record.description));
+      const declarant = isAdmin() ? `Declarado por ${getMemberName(record.declarant_id)}` : "Declarado por ti";
+      body.appendChild(element("small", null, `${conflictCategoryLabel(record.category)} · ${declarant} · ${safeDate(record.created_at, true)}`));
+      if (record.related_party) body.appendChild(element("small", null, `Envolvido: ${record.related_party}`));
+      if (record.proposed_mitigation) body.appendChild(element("small", null, `Medida proposta: ${record.proposed_mitigation}`));
+      const status = element("span", "bo-request-status", conflictStatusLabel(record.status));
+      card.append(body, status);
+      if (isAdmin()) {
+        const select = document.createElement("select");
+        select.className = "bo-innovation-status-select";
+        [["declared", "Declarado"], ["reviewing", "Em análise"], ["resolved", "Gerido"], ["archived", "Arquivado"]].forEach(([value, label]) => select.add(new Option(label, value)));
+        select.value = record.status;
+        select.setAttribute("aria-label", `Estado de ${record.subject}`);
+        select.addEventListener("change", () => void updateConflictDeclarationStatus(record, select));
+        card.appendChild(select);
+      }
+      list.appendChild(card);
+    });
+  }
+
+  function setConflictDeclarationMenuOpen(open) {
+    const menu = $("[data-conflict-declaration-menu]");
+    const toggle = $("[data-conflict-declaration-toggle]");
+    if (!menu || !toggle) return;
+    menu.hidden = !open;
+    toggle.setAttribute("aria-expanded", String(open));
+    document.documentElement.classList.toggle("bo-modal-open", open);
+    if (!open) showConflictDeclarationOverview();
+  }
+
+  async function saveConflictDeclaration(event) {
+    event.preventDefault();
+    const form = event.currentTarget;
+    const payload = {
+      declarant_id: currentUserId(),
+      category: form.elements.category.value,
+      subject: form.elements.subject.value.trim(),
+      related_party: form.elements.related_party.value.trim() || null,
+      description: form.elements.description.value.trim(),
+      proposed_mitigation: form.elements.proposed_mitigation.value.trim() || null
+    };
+    try {
+      setWorkspaceStatus("[data-conflict-declaration-status]", "A enviar…");
+      if (!workspace.preview) {
+        const { error } = await client().from("conflict_of_interest_declarations").insert(payload);
+        if (error) throw error;
+      }
+      form.reset();
+      form.hidden = true;
+      $("[data-conflict-declaration-intro]").hidden = true;
+      $("[data-conflict-declaration-confirmation]").hidden = false;
+      setWorkspaceStatus("[data-conflict-declaration-status]", "");
+    } catch (error) {
+      setWorkspaceStatus("[data-conflict-declaration-status]", error?.message || "Não foi possível enviar a declaração. Tenta novamente.", "error");
+    }
+  }
+
+  async function updateConflictDeclarationStatus(record, select) {
+    const status = select.value;
+    select.disabled = true;
+    try {
+      if (workspace.preview) record.status = status;
+      else {
+        const { data, error } = await client().from("conflict_of_interest_declarations").update({ status, updated_at: new Date().toISOString() }).eq("id", record.id).select().single();
+        if (error) throw error;
+        Object.assign(record, data);
+      }
+      renderConflictDeclarations();
+    } catch (error) {
+      window.alert(error?.message || "Não foi possível atualizar a declaração.");
       select.disabled = false;
     }
   }
@@ -3023,6 +3124,25 @@
     });
     $all("[data-close-confidential-report]").forEach((button) => button.addEventListener("click", showConfidentialReportOverview));
     $("[data-confidential-report-form]")?.addEventListener("submit", saveConfidentialReport);
+    $all("[data-new-conflict-declaration]").forEach((button) => button.addEventListener("click", () => {
+      const form = $("[data-conflict-declaration-form]");
+      if (!form) return;
+      setConflictDeclarationMenuOpen(true);
+      $("[data-conflict-declaration-intro]").hidden = true;
+      $("[data-conflict-declaration-confirmation]").hidden = true;
+      form.hidden = false;
+      form.elements.subject.focus();
+    }));
+    $("[data-conflict-declaration-toggle]")?.addEventListener("click", () => {
+      const menu = $("[data-conflict-declaration-menu]");
+      setConflictDeclarationMenuOpen(Boolean(menu?.hidden));
+    });
+    $all("[data-close-conflict-declaration-menu], [data-close-conflict-declaration-confirmation]").forEach((button) => button.addEventListener("click", () => setConflictDeclarationMenuOpen(false)));
+    $("[data-conflict-declaration-menu]")?.addEventListener("pointerdown", (event) => {
+      if (event.target === event.currentTarget) setConflictDeclarationMenuOpen(false);
+    });
+    $all("[data-close-conflict-declaration]").forEach((button) => button.addEventListener("click", showConflictDeclarationOverview));
+    $("[data-conflict-declaration-form]")?.addEventListener("submit", saveConflictDeclaration);
     $("[data-close-communication-decision]")?.addEventListener("click", () => { $("[data-communication-decision-form]").hidden = true; });
     $("[data-communication-decision-form]")?.addEventListener("submit", saveCommunicationDecision);
     $all("[data-new-opportunity]").forEach((button) => button.addEventListener("click", () => openOpportunityForm()));

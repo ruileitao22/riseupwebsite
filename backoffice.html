@@ -185,6 +185,27 @@
                     </div>
                   </div>
                 </div>
+                <div class="bo-request-menu">
+                  <button class="bo-request-menu-toggle bo-conflict-menu-toggle" type="button" aria-label="Declarar um conflito de interesse" aria-expanded="false" aria-controls="conflict-declaration-menu" data-conflict-declaration-toggle><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8"/><path d="m8.5 15.5 7-7"/><path d="M12 8v4"/><path d="M12 16h.01"/></svg><span>Conflito de interesse</span></button>
+                  <div class="bo-request-menu-panel" id="conflict-declaration-menu" role="dialog" aria-modal="true" aria-labelledby="conflict-declaration-menu-title" data-conflict-declaration-menu hidden>
+                    <div class="bo-request-dialog">
+                      <div class="bo-request-menu-head"><div><p class="bo-kicker">Transparência</p><h3 id="conflict-declaration-menu-title">Registo de conflitos de interesse</h3></div><button class="bo-icon-button" type="button" aria-label="Fechar registo de conflitos de interesse" data-close-conflict-declaration-menu>×</button></div>
+                      <div class="bo-conflict-declaration-intro" data-conflict-declaration-intro><p>Declara uma situação pessoal, familiar, profissional, institucional ou financeira que possa afetar — ou parecer afetar — a tua imparcialidade numa decisão ou atividade da Rise Up.</p><ul><li>O registo é reservado e analisado apenas pela Coordenação.</li><li>A declaração não é uma denúncia nem pressupõe qualquer irregularidade.</li><li>Indica os factos relevantes e, se souberes, como a situação pode ser gerida.</li></ul><button class="bo-button bo-button-primary" type="button" data-new-conflict-declaration>Registar conflito</button></div>
+                      <div class="bo-request-list bo-conflict-declaration-list" data-conflict-declaration-list></div>
+                      <form class="bo-form bo-conflict-declaration-form" data-conflict-declaration-form hidden>
+                        <div class="bo-form-head"><div><p class="bo-kicker">Declaração reservada</p><h3>Novo conflito de interesse</h3><p class="bo-request-form-copy">A declaração fica disponível para ti e para a Coordenação. Não é apresentada à restante equipa.</p></div><button class="bo-icon-button" type="button" data-close-conflict-declaration aria-label="Cancelar declaração">×</button></div>
+                        <label class="bo-request-field"><span>Tipo de interesse</span><select name="category" required><option value="financial">Financeiro</option><option value="family_personal">Familiar ou pessoal</option><option value="professional">Profissional</option><option value="institutional">Institucional</option><option value="other">Outro</option></select></label>
+                        <label class="bo-request-field"><span>Assunto ou atividade</span><input name="subject" maxlength="180" required placeholder="Ex.: Decisão sobre parceria com…" /></label>
+                        <label class="bo-field-full bo-request-field"><span>Pessoa, entidade ou relação envolvida</span><small>Opcional. Indica apenas o necessário para compreender a situação.</small><input name="related_party" maxlength="1000" placeholder="Ex.: Empresa, familiar, parceiro ou outro vínculo" /></label>
+                        <label class="bo-field-full bo-request-field"><span>Descrição da situação</span><small>Explica de que forma esta situação pode influenciar, ou parecer influenciar, a tua participação ou decisão.</small><textarea name="description" rows="6" maxlength="5000" required placeholder="Descreve os factos de forma clara e objetiva."></textarea></label>
+                        <label class="bo-field-full bo-request-field"><span>Medida que propões</span><small>Opcional. Ex.: não participar na decisão, abster-me de votar ou pedir reatribuição.</small><textarea name="proposed_mitigation" rows="3" maxlength="3000" placeholder="Como poderá ser gerido este conflito?"></textarea></label>
+                        <div class="bo-actions bo-field-full"><button class="bo-button bo-button-primary" type="submit">Enviar declaração <span aria-hidden="true">→</span></button></div>
+                        <p class="bo-status bo-field-full" data-conflict-declaration-status></p>
+                      </form>
+                      <div class="bo-conflict-declaration-confirmation" data-conflict-declaration-confirmation hidden><strong>Declaração recebida</strong><p>O registo ficou disponível para a Coordenação no canal interno reservado. A situação será analisada com imparcialidade e discrição.</p><button class="bo-button bo-button-ghost" type="button" data-close-conflict-declaration-confirmation>Fechar</button></div>
+                    </div>
+                  </div>
+                </div>
                 <time data-dashboard-date></time>
               </div>
             </div>

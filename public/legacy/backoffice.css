@@ -5636,3 +5636,28 @@ body.is-member [data-admin-only] {
 }
 
 .bo-od-table-wrap{overflow-x:auto;margin-top:20px}.bo-od-table{width:100%;border-collapse:collapse;font-size:13px}.bo-od-table th,.bo-od-table td{padding:15px 12px;border-bottom:1px solid #e1e6ed;text-align:left;vertical-align:top}.bo-od-table th{font-size:11px;text-transform:uppercase;color:#626e7e}.bo-od-table td{max-width:240px;overflow-wrap:anywhere}.bo-od-table td span{display:block;margin-top:5px;color:#626e7e}.bo-od-table td button{margin:0 5px 5px 0}.bo-od-dialog{width:min(680px,95vw);max-height:90vh;overflow:auto;border:1px solid #ddd;border-radius:20px;padding:28px}.bo-od-dialog::backdrop{background:#10182780}[data-od-search]{display:block;width:min(480px,100%);padding:12px;border:1px solid #dce2eb;border-radius:9px;margin-top:8px}
+
+.bo-conflict-menu-toggle:hover, .bo-conflict-menu-toggle[aria-expanded="true"] { border-color: #b8d8d0; background: #f4fbf8; color: #16715d; }
+.bo-request-menu-panel .bo-form.bo-conflict-declaration-form { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; margin: 1rem 0 0; padding: 0; border: 0; background: transparent; }
+.bo-request-menu-panel .bo-conflict-declaration-form .bo-form-head { align-items: flex-start; padding: .9rem; border: 1px solid #d8ebe4; border-radius: 12px; background: linear-gradient(135deg, #f4fbf8, #fbfefd); }
+.bo-request-menu-panel .bo-conflict-declaration-form .bo-form-head h3 { margin: .12rem 0 0; font-size: 1.08rem; }
+.bo-request-menu-panel .bo-conflict-declaration-form .bo-request-field { gap: .38rem; font-size: .78rem; }
+.bo-request-menu-panel .bo-conflict-declaration-form .bo-request-field > span { color: #172330; font-weight: 800; }
+.bo-request-menu-panel .bo-conflict-declaration-form .bo-request-field > small { margin-top: -.18rem; color: #758391; font-size: .68rem; font-weight: 600; line-height: 1.4; }
+.bo-request-menu-panel .bo-conflict-declaration-form input, .bo-request-menu-panel .bo-conflict-declaration-form select, .bo-request-menu-panel .bo-conflict-declaration-form textarea { min-width: 0; min-height: 46px; padding: .72rem .8rem; border-color: #d5e6e0; border-radius: 10px; background: #fff; font-size: .86rem; }
+.bo-request-menu-panel .bo-conflict-declaration-form textarea { min-height: 104px; line-height: 1.5; resize: vertical; }
+.bo-request-menu-panel .bo-conflict-declaration-form input::placeholder, .bo-request-menu-panel .bo-conflict-declaration-form textarea::placeholder { color: #9aa6b1; font-weight: 500; }
+.bo-request-menu-panel .bo-conflict-declaration-form .bo-actions { padding-top: .15rem; }
+.bo-request-menu-panel .bo-conflict-declaration-form .bo-actions .bo-button { width: 100%; min-height: 46px; gap: .6rem; border-radius: 10px; font-size: .82rem; }
+.bo-conflict-declaration-intro { display: grid; gap: .8rem; padding: 1rem 0 .2rem; }
+.bo-conflict-declaration-intro p { margin: 0; color: var(--bo-muted); font-size: .78rem; line-height: 1.55; }
+.bo-conflict-declaration-intro ul { display: grid; gap: .4rem; margin: 0; padding: .75rem .85rem .75rem 2rem; border: 1px solid #d8ebe4; border-radius: 11px; background: #f7fcfa; color: #5e6873; font-size: .73rem; line-height: 1.45; }
+.bo-conflict-declaration-intro .bo-button { justify-self: start; }
+.bo-conflict-declaration-confirmation { display: grid; gap: .6rem; margin-top: 1rem; padding: 1rem; border: 1px solid #cfe9da; border-radius: 12px; background: #f4fcf7; }
+.bo-conflict-declaration-confirmation strong { color: #176441; font-size: .9rem; }
+.bo-conflict-declaration-confirmation p { margin: 0; color: #5d6d65; font-size: .76rem; line-height: 1.5; }
+.bo-conflict-declaration-confirmation .bo-button { justify-self: start; }
+.bo-conflict-declaration-list { margin-top: 1rem; }
+.bo-conflict-declaration { border-left-color: #29957d; }
+.bo-conflict-declaration small + small { margin-top: .22rem; }
+@media (max-width: 520px) { .bo-request-menu-panel .bo-form.bo-conflict-declaration-form { grid-template-columns: 1fr; } }
