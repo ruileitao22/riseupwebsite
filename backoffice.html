@@ -12,7 +12,6 @@
     <script src="backoffice.js?v=20260905-3" defer></script>
     <script src="backoffice-workspace.js?v=20260905-3" defer></script>
     <script src="backoffice-selects.js?v=20260905-3" defer></script>
-    <script src="backoffice-open-day.js?v=20260905-3" defer></script>
   </head>
   <body>
     <section class="bo-auth-boot" data-auth-boot aria-live="polite" aria-label="A iniciar sessão">
@@ -73,7 +72,6 @@
               <button type="button" data-view-button="communication" aria-pressed="false"><span class="bo-nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 10.5v3l13 5v-13z"/><path d="M7 14.5 8.5 20H12l-1.5-4.2"/><path d="M20 9v6"/></svg></span>Comunicação</button>
               <button type="button" data-view-button="documents" aria-pressed="false"><span class="bo-nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M6 3h8l4 4v14H6z"/><path d="M14 3v5h5"/><path d="M9 12h6M9 16h6"/></svg></span>Documentos</button>
               <button type="button" data-view-button="contacts" aria-pressed="false"><span class="bo-nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m4 7 8 6 8-6"/></svg></span>Contactos</button>
-              <button type="button" data-view-button="open-day" aria-pressed="false" hidden><span class="bo-nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M7 3v4M17 3v4M3 11h18M8 16l3 3 5-5"/></svg></span>Inscrições Open Day</button>
               <button type="button" data-view-button="settings" aria-pressed="false"><span class="bo-nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 7h10M18 7h2M4 17h2M10 17h10M9 4v6M8 14v6"/><circle cx="16" cy="7" r="2"/><circle cx="8" cy="17" r="2"/></svg></span>Definições</button>
             </div>
             <span class="bo-nav-divider" aria-hidden="true"></span>
@@ -115,11 +113,6 @@
           <button class="bo-button bo-button-ghost" type="button" data-reset-view-as>Voltar à vista real</button>
         </div>
 
-        <section class="bo-section" data-section="open-day" hidden>
-          <div class="bo-panel"><div class="bo-form-head"><div><p class="bo-kicker">18 setembro 2026 · 09h30–18h00</p><h2>Inscrições Open Day</h2><p>Almoço: 3 € por pessoa, pagos no local.</p></div><div class="bo-actions"><button class="bo-button bo-button-ghost" type="button" data-od-refresh>Atualizar</button><button class="bo-button bo-button-primary" type="button" data-od-export>Exportar Excel</button></div></div>
-          <p data-od-totals></p><label>Pesquisar inscrições<input type="search" data-od-search placeholder="Nome, email, curso ou número de aluno" /></label><p class="bo-status" role="status" data-od-status></p><div class="bo-od-table-wrap"><table class="bo-od-table"><thead><tr><th>Nome / contacto</th><th>Perfil / organização</th><th>Curso / n.º aluno</th><th>Almoço</th><th>Restrições alimentares</th><th>Inscrição</th><th>Ações</th></tr></thead><tbody data-od-rows></tbody></table></div></div>
-          <dialog class="bo-od-dialog" data-od-dialog aria-labelledby="od-edit-title"><form class="bo-form" data-od-edit><div class="bo-form-head bo-field-full"><h2 id="od-edit-title">Editar inscrição</h2><button class="bo-button bo-button-ghost" type="button" data-od-cancel>Fechar</button></div><input type="hidden" name="id" /><label>Nome completo<input name="name" required minlength="2" maxlength="160" /></label><label>Perfil<select name="participant_type"><option value="student">Estudante</option><option value="professor">Professor/a</option><option value="legend">Rise Up Legend</option><option value="external">Participante externo/a</option></select></label><label>Organização / instituição<input name="organization" maxlength="160" /></label><label>Número de aluno<input name="student_number" maxlength="40" /></label><label>Curso<input name="course" maxlength="160" /></label><label>Email<input name="email" type="email" required maxlength="254" /></label><label>Telemóvel<input name="phone" type="tel" required maxlength="26" /></label><label>Almoço<select name="lunch"><option value="yes">Sim</option><option value="no">Não</option></select></label><label class="bo-field-full">Restrições alimentares<textarea name="dietary_requirements" maxlength="500" rows="3"></textarea></label><p class="bo-status bo-field-full" role="status" data-od-edit-status></p><button class="bo-button bo-button-primary" type="submit">Guardar alterações</button></form></dialog>
-        </section>
         <section class="bo-section is-active" data-section="dashboard">
           <div class="bo-dashboard-grid">
             <div class="bo-welcome">

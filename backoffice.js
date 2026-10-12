@@ -278,7 +278,6 @@
     communication: "Comunicação",
     documents: "Documentos",
     contacts: "Contactos",
-    "open-day": "Inscrições Open Day",
     profile: "Perfil"
   };
 
@@ -493,9 +492,6 @@
       return true;
     }
 
-    if (view === "open-day") {
-      return ["coordinator", "vice_coordinator"].includes(role) || teamLeaderRoles.has(role);
-    }
 
     if (view === "documents") {
       return adminRoles.has(role) || teamLeaderRoles.has(role);
@@ -4289,7 +4285,6 @@
       communication: "Comunicação",
       documents: "Documentos",
       contacts: "Contactos",
-    "open-day": "Inscrições Open Day",
       hr: "Recursos Humanos",
       settings: "Definições"
     };
