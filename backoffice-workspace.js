@@ -435,15 +435,6 @@
     }
   }
 
-  function showConflictDeclarationOverview() {
-    const form = $("[data-conflict-declaration-form]");
-    const intro = $("[data-conflict-declaration-intro]");
-    const confirmation = $("[data-conflict-declaration-confirmation]");
-    if (form) form.hidden = true;
-    if (intro) intro.hidden = false;
-    if (confirmation) confirmation.hidden = true;
-  }
-
   const conflictCategoryLabel = (category) => ({ financial: "Financeiro", family_personal: "Familiar ou pessoal", professional: "Profissional", institutional: "Institucional", other: "Outro" })[category] || "Outro";
   const conflictStatusLabel = (status) => ({ declared: "Declarado", reviewing: "Em análise", resolved: "Gerido", archived: "Arquivado" })[status] || "Declarado";
 
@@ -479,16 +470,6 @@
     });
   }
 
-  function setConflictDeclarationMenuOpen(open) {
-    const menu = $("[data-conflict-declaration-menu]");
-    const toggle = $("[data-conflict-declaration-toggle]");
-    if (!menu || !toggle) return;
-    menu.hidden = !open;
-    toggle.setAttribute("aria-expanded", String(open));
-    document.documentElement.classList.toggle("bo-modal-open", open);
-    if (!open) showConflictDeclarationOverview();
-  }
-
   async function saveConflictDeclaration(event) {
     event.preventDefault();
     const form = event.currentTarget;
@@ -507,9 +488,11 @@
         if (error) throw error;
       }
       form.reset();
-      form.hidden = true;
-      $("[data-conflict-declaration-intro]").hidden = true;
-      $("[data-conflict-declaration-confirmation]").hidden = false;
+      const confirmation = $("[data-conflict-declaration-confirmation]");
+      if (confirmation) {
+        confirmation.hidden = false;
+        confirmation.scrollIntoView({ behavior: "smooth", block: "nearest" });
+      }
       setWorkspaceStatus("[data-conflict-declaration-status]", "");
     } catch (error) {
       setWorkspaceStatus("[data-conflict-declaration-status]", error?.message || "Não foi possível enviar a declaração. Tenta novamente.", "error");
@@ -3095,24 +3078,10 @@
       window.setTimeout(() => $("[data-confidential-report-form]")?.elements.title?.focus(), 0);
     });
     $("[data-confidential-report-form]")?.addEventListener("submit", saveConfidentialReport);
-    $all("[data-new-conflict-declaration]").forEach((button) => button.addEventListener("click", () => {
-      const form = $("[data-conflict-declaration-form]");
-      if (!form) return;
-      setConflictDeclarationMenuOpen(true);
-      $("[data-conflict-declaration-intro]").hidden = true;
-      $("[data-conflict-declaration-confirmation]").hidden = true;
-      form.hidden = false;
-      form.elements.subject.focus();
-    }));
     $("[data-conflict-declaration-toggle]")?.addEventListener("click", () => {
-      const menu = $("[data-conflict-declaration-menu]");
-      setConflictDeclarationMenuOpen(Boolean(menu?.hidden));
+      api()?.showSection("conflicts");
+      window.setTimeout(() => $("[data-conflict-declaration-form]")?.elements.subject?.focus(), 0);
     });
-    $all("[data-close-conflict-declaration-menu], [data-close-conflict-declaration-confirmation]").forEach((button) => button.addEventListener("click", () => setConflictDeclarationMenuOpen(false)));
-    $("[data-conflict-declaration-menu]")?.addEventListener("pointerdown", (event) => {
-      if (event.target === event.currentTarget) setConflictDeclarationMenuOpen(false);
-    });
-    $all("[data-close-conflict-declaration]").forEach((button) => button.addEventListener("click", showConflictDeclarationOverview));
     $("[data-conflict-declaration-form]")?.addEventListener("submit", saveConflictDeclaration);
     $("[data-close-communication-decision]")?.addEventListener("click", () => { $("[data-communication-decision-form]").hidden = true; });
     $("[data-communication-decision-form]")?.addEventListener("submit", saveCommunicationDecision);
