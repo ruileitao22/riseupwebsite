@@ -7,6 +7,7 @@
     posts: [],
     communicationRequests: [],
     innovationRequests: [],
+    confidentialReports: [],
     opportunities: [],
     documents: [],
     attendance: [],
@@ -245,6 +246,7 @@
       ["roleHistory", "role_history", "started_on"],
       ["organizationChart", "organization_chart_nodes", "sort_order"]
     ];
+    if (isAdmin()) sources.push(["confidentialReports", "confidential_reports", "created_at"]);
     const results = await Promise.allSettled(sources.map(([, table, order]) => selectTable(table, order)));
     results.forEach((result, index) => {
       if (result.status === "fulfilled") workspace[sources[index][0]] = result.value;
@@ -315,6 +317,7 @@
     renderWorkspaceCalendar();
     renderMyCommunicationRequests();
     renderInnovationRequests();
+    renderConfidentialReports();
   }
 
   const innovationTypeLabel = (type) => type === "problem" ? "Problema" : "Ideia";
@@ -337,6 +340,111 @@
     toggle.setAttribute("aria-expanded", String(open));
     document.documentElement.classList.toggle("bo-modal-open", open);
     if (!open) showInnovationMenuOverview();
+  }
+
+  function showConfidentialReportOverview() {
+    const form = $("[data-confidential-report-form]");
+    const intro = $("[data-confidential-report-intro]");
+    const confirmation = $("[data-confidential-report-confirmation]");
+    if (form) form.hidden = true;
+    if (intro) intro.hidden = false;
+    if (confirmation) confirmation.hidden = true;
+  }
+
+  const confidentialReportTypeLabel = (type) => ({ conduct: "Conduta ou incumprimento", conflict: "Conflito interpessoal", harassment: "Assédio, intimidação ou discriminação", security: "Segurança, acessos ou dados", financial: "Irregularidade financeira", other: "Outra situação" })[type] || "Outra situação";
+  const confidentialReportStatusLabel = (status) => ({ submitted: "Recebida", reviewing: "Em análise", closed: "Encerrada", archived: "Arquivada" })[status] || "Recebida";
+
+  function renderConfidentialReports() {
+    const list = $("[data-confidential-report-list]");
+    if (!list) return;
+    list.replaceChildren();
+    list.hidden = !isAdmin();
+    if (!isAdmin()) return;
+    const reports = [...workspace.confidentialReports].sort((left, right) => String(right.created_at).localeCompare(String(left.created_at)));
+    if (!reports.length) {
+      list.appendChild(element("p", "bo-empty-soft", "Ainda não foram recebidas denúncias confidenciais."));
+      return;
+    }
+    reports.forEach((report) => {
+      const card = element("article", `bo-request-card bo-confidential-report is-${report.status}`);
+      const body = element("div");
+      body.append(element("h4", null, report.title), element("p", null, report.description));
+      const reporter = report.is_anonymous ? "Denúncia anónima" : `Enviada por ${getMemberName(report.submitted_by)}`;
+      body.appendChild(element("small", null, `${confidentialReportTypeLabel(report.report_type)} · ${reporter} · ${safeDate(report.created_at, true)}`));
+      if (report.people_involved) body.appendChild(element("small", null, `Pessoas envolvidas: ${report.people_involved}`));
+      if (report.evidence_url) {
+        const evidence = element("a", "bo-mini-action", "Abrir elementos de suporte");
+        evidence.href = report.evidence_url;
+        evidence.target = "_blank";
+        evidence.rel = "noopener noreferrer";
+        body.appendChild(evidence);
+      }
+      const status = element("span", "bo-request-status", confidentialReportStatusLabel(report.status));
+      const select = document.createElement("select");
+      select.className = "bo-innovation-status-select";
+      [["submitted", "Recebida"], ["reviewing", "Em análise"], ["closed", "Encerrada"], ["archived", "Arquivada"]].forEach(([value, label]) => select.add(new Option(label, value)));
+      select.value = report.status;
+      select.setAttribute("aria-label", `Estado de ${report.title}`);
+      select.addEventListener("change", () => void updateConfidentialReportStatus(report, select));
+      card.append(body, status, select);
+      list.appendChild(card);
+    });
+  }
+
+  function setConfidentialReportMenuOpen(open) {
+    const menu = $("[data-confidential-report-menu]");
+    const toggle = $("[data-confidential-report-toggle]");
+    if (!menu || !toggle) return;
+    menu.hidden = !open;
+    toggle.setAttribute("aria-expanded", String(open));
+    document.documentElement.classList.toggle("bo-modal-open", open);
+    if (!open) showConfidentialReportOverview();
+  }
+
+  async function saveConfidentialReport(event) {
+    event.preventDefault();
+    const form = event.currentTarget;
+    const isAnonymous = Boolean(form.elements.is_anonymous?.checked);
+    const payload = {
+      report_type: form.elements.report_type.value,
+      title: form.elements.title.value.trim(),
+      description: form.elements.description.value.trim(),
+      people_involved: form.elements.people_involved.value.trim() || null,
+      evidence_url: form.elements.evidence_url.value.trim() || null,
+      is_anonymous: isAnonymous,
+      submitted_by: isAnonymous ? null : currentUserId()
+    };
+    try {
+      setWorkspaceStatus("[data-confidential-report-status]", "A enviar…");
+      if (!workspace.preview) {
+        const { error } = await client().from("confidential_reports").insert(payload);
+        if (error) throw error;
+      }
+      form.reset();
+      form.hidden = true;
+      $("[data-confidential-report-intro]").hidden = true;
+      $("[data-confidential-report-confirmation]").hidden = false;
+      setWorkspaceStatus("[data-confidential-report-status]", "");
+    } catch (error) {
+      setWorkspaceStatus("[data-confidential-report-status]", error?.message || "Não foi possível enviar a denúncia. Tenta novamente.", "error");
+    }
+  }
+
+  async function updateConfidentialReportStatus(report, select) {
+    const status = select.value;
+    select.disabled = true;
+    try {
+      if (workspace.preview) report.status = status;
+      else {
+        const { data, error } = await client().from("confidential_reports").update({ status, updated_at: new Date().toISOString() }).eq("id", report.id).select().single();
+        if (error) throw error;
+        Object.assign(report, data);
+      }
+      renderConfidentialReports();
+    } catch (error) {
+      window.alert(error?.message || "Não foi possível atualizar a denúncia.");
+      select.disabled = false;
+    }
   }
 
   function renderInnovationRequests() {
@@ -2896,6 +3004,25 @@
     });
     $all("[data-close-innovation-request]").forEach((button) => button.addEventListener("click", showInnovationMenuOverview));
     $("[data-innovation-request-form]")?.addEventListener("submit", saveInnovationRequest);
+    $all("[data-new-confidential-report]").forEach((button) => button.addEventListener("click", () => {
+      const form = $("[data-confidential-report-form]");
+      if (!form) return;
+      setConfidentialReportMenuOpen(true);
+      $("[data-confidential-report-intro]").hidden = true;
+      $("[data-confidential-report-confirmation]").hidden = true;
+      form.hidden = false;
+      form.elements.title.focus();
+    }));
+    $("[data-confidential-report-toggle]")?.addEventListener("click", () => {
+      const menu = $("[data-confidential-report-menu]");
+      setConfidentialReportMenuOpen(Boolean(menu?.hidden));
+    });
+    $all("[data-close-confidential-report-menu], [data-close-confidential-report-confirmation]").forEach((button) => button.addEventListener("click", () => setConfidentialReportMenuOpen(false)));
+    $("[data-confidential-report-menu]")?.addEventListener("pointerdown", (event) => {
+      if (event.target === event.currentTarget) setConfidentialReportMenuOpen(false);
+    });
+    $all("[data-close-confidential-report]").forEach((button) => button.addEventListener("click", showConfidentialReportOverview));
+    $("[data-confidential-report-form]")?.addEventListener("submit", saveConfidentialReport);
     $("[data-close-communication-decision]")?.addEventListener("click", () => { $("[data-communication-decision-form]").hidden = true; });
     $("[data-communication-decision-form]")?.addEventListener("submit", saveCommunicationDecision);
     $all("[data-new-opportunity]").forEach((button) => button.addEventListener("click", () => openOpportunityForm()));

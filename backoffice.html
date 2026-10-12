@@ -163,6 +163,28 @@
                     </div>
                   </div>
                 </div>
+                <div class="bo-request-menu">
+                  <button class="bo-request-menu-toggle bo-report-menu-toggle" type="button" aria-label="Apresentar uma denúncia confidencial" aria-expanded="false" aria-controls="confidential-report-menu" data-confidential-report-toggle><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 20 6v5c0 5.1-3.4 8.5-8 10-4.6-1.5-8-4.9-8-10V6z"/><path d="M12 8v4"/><path d="M12 16h.01"/></svg><span>Canal de denúncia</span></button>
+                  <div class="bo-request-menu-panel" id="confidential-report-menu" role="dialog" aria-modal="true" aria-labelledby="confidential-report-menu-title" data-confidential-report-menu hidden>
+                    <div class="bo-request-dialog">
+                      <div class="bo-request-menu-head"><div><p class="bo-kicker">Confidencial</p><h3 id="confidential-report-menu-title">Canal de denúncia</h3></div><button class="bo-icon-button" type="button" aria-label="Fechar canal de denúncia" data-close-confidential-report-menu>×</button></div>
+                      <div class="bo-confidential-report-intro" data-confidential-report-intro><p>Comunica uma situação que consideres incompatível com as normas, valores ou segurança da Rise Up. A denúncia é tratada apenas pela Coordenação.</p><ul><li>Podes enviar de forma identificada ou anónima.</li><li>Descreve os factos com clareza e indica as pessoas envolvidas, se aplicável.</li><li>Em caso de risco imediato, contacta diretamente uma pessoa da Coordenação.</li></ul><button class="bo-button bo-button-primary" type="button" data-new-confidential-report>Fazer denúncia</button></div>
+                      <div class="bo-request-list bo-confidential-report-list" data-confidential-report-list hidden></div>
+                      <form class="bo-form bo-confidential-report-form" data-confidential-report-form hidden>
+                        <div class="bo-form-head"><div><p class="bo-kicker">Canal confidencial</p><h3>Nova denúncia</h3><p class="bo-request-form-copy">A informação só fica disponível para a Coordenação. Não é apresentada à equipa nem no teu perfil.</p></div><button class="bo-icon-button" type="button" data-close-confidential-report aria-label="Cancelar denúncia">×</button></div>
+                        <label class="bo-request-field"><span>Tipo de situação</span><select name="report_type" required><option value="conduct">Conduta ou incumprimento</option><option value="conflict">Conflito interpessoal</option><option value="harassment">Assédio, intimidação ou discriminação</option><option value="security">Segurança, acessos ou dados</option><option value="financial">Irregularidade financeira</option><option value="other">Outra situação</option></select></label>
+                        <label class="bo-request-field"><span>Assunto</span><input name="title" maxlength="180" required placeholder="Ex.: Situação ocorrida numa reunião" /></label>
+                        <label class="bo-field-full bo-request-field"><span>Descrição dos factos</span><small>Indica o que aconteceu, quando e onde, e qualquer contexto útil para a análise.</small><textarea name="description" rows="6" maxlength="5000" required placeholder="Descreve a situação de forma objetiva."></textarea></label>
+                        <label class="bo-field-full bo-request-field"><span>Pessoas envolvidas</span><small>Opcional. Podes deixar em branco se preferires não identificar ninguém nesta fase.</small><input name="people_involved" maxlength="1000" placeholder="Nomes ou relação com a situação" /></label>
+                        <label class="bo-field-full bo-request-field"><span>Elementos de suporte</span><small>Opcional. Partilha uma ligação segura para documentos, imagens ou outros elementos relevantes.</small><input type="url" name="evidence_url" maxlength="2000" placeholder="https://..." /></label>
+                        <label class="bo-confidential-anonymous bo-field-full"><input type="checkbox" name="is_anonymous" /><span><strong>Enviar de forma anónima</strong><small>A tua identidade não será guardada com a denúncia. Não será possível enviar-te confirmação ou pedir esclarecimentos diretamente.</small></span></label>
+                        <div class="bo-actions bo-field-full"><button class="bo-button bo-button-primary" type="submit">Enviar denúncia confidencial <span aria-hidden="true">→</span></button></div>
+                        <p class="bo-status bo-field-full" data-confidential-report-status></p>
+                      </form>
+                      <div class="bo-confidential-report-confirmation" data-confidential-report-confirmation hidden><strong>Denúncia recebida</strong><p>A denúncia ficou disponível para a Coordenação no canal interno confidencial. A situação será analisada com imparcialidade e reserva.</p><button class="bo-button bo-button-ghost" type="button" data-close-confidential-report-confirmation>Fechar</button></div>
+                    </div>
+                  </div>
+                </div>
                 <time data-dashboard-date></time>
               </div>
             </div>
