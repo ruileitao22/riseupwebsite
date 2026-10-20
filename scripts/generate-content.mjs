@@ -1,4 +1,4 @@
-import { mkdir, readFile, writeFile, cp } from "node:fs/promises";
+import { mkdir, readFile, writeFile, cp, rm } from "node:fs/promises";
 import { join, sep } from "node:path";
 
 const root = process.cwd();
@@ -8,6 +8,7 @@ const pageFiles = [
   "equipa.html",
   "riseuplegends.html",
   "projetos.html",
+  "empresas.html",
   "junta-te.html",
   "contactos.html",
   "politica-protecao-dados.html",
@@ -71,6 +72,7 @@ for (const file of ["style.css", "backoffice.css", "script.js", "riseup-data.js"
 for (const file of ["favicon.ico", "apple-touch-icon.png", "hero-desktop.png", "hero-mobile.png", "site.webmanifest"]) {
   await cp(join(root, file), join(root, "public", file));
 }
+await rm(join(root, "public", "img", "empresas"), { recursive: true, force: true });
 await cp(join(root, "img"), join(root, "public", "img"), {
   recursive: true,
   filter: (source) => {
