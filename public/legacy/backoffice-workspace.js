@@ -16,6 +16,7 @@
     roleHistory: [],
     organizationChart: [],
     organizationSavedIds: new Set(),
+    organizationZoom: 1,
     activeHrModule: "schedule",
     attendanceView: "upcoming",
     attendanceEventId: "",
@@ -26,7 +27,8 @@
     calendarMonth: new Date(new Date().getFullYear(), new Date().getMonth(), 1),
     searchResults: [],
     searchActiveIndex: -1,
-    drive: { files: [], folderId: "18mdhHygC7zUMlU7U0r_2lR5SXkvg2s8T", rootFolderId: "18mdhHygC7zUMlU7U0r_2lR5SXkvg2s8T", history: [], permissions: { write: true, delete: true }, loading: false, search: "" },
+    drive: { files: [], folderId: "", rootFolderId: "", history: [], permissions: { write: true, delete: true }, loading: false, search: "" },
+    internalDocumentMove: { document: null, files: [], folderId: "root", rootFolderId: "root", history: [], loading: false },
     taskFilter: "open",
     configured: true,
     preview: ["localhost", "127.0.0.1"].includes(window.location.hostname)
@@ -210,10 +212,10 @@
     ];
     workspace.organizationSavedIds = new Set(workspace.organizationChart.map((node) => node.id));
     workspace.drive.files = [
-      { id: "drive-folder-projects", name: "Projetos", mimeType: "application/vnd.google-apps.folder", modifiedTime: plus(-2) },
-      { id: "drive-folder-rh", name: "Recursos Humanos", mimeType: "application/vnd.google-apps.folder", modifiedTime: plus(-4) },
-      { id: "drive-file-statutes", name: "Estatutos Rise Up.pdf", mimeType: "application/pdf", modifiedTime: plus(-12), size: "428000", webViewLink: "https://drive.google.com/" },
-      { id: "drive-file-brand", name: "Manual de Identidade Visual", mimeType: "application/vnd.google-apps.presentation", modifiedTime: plus(-8), webViewLink: "https://drive.google.com/" }
+      { id: "drive-folder-projects", name: "Projetos", mimeType: "application/vnd.riseup.folder", modifiedTime: plus(-2) },
+      { id: "drive-folder-rh", name: "Recursos Humanos", mimeType: "application/vnd.riseup.folder", modifiedTime: plus(-4) },
+      { id: "drive-file-statutes", name: "Estatutos Rise Up.pdf", mimeType: "application/pdf", modifiedTime: plus(-12), size: "428000" },
+      { id: "drive-file-brand", name: "Manual de Identidade Visual", mimeType: "application/pdf", modifiedTime: plus(-8) }
     ];
   }
 
@@ -1296,17 +1298,13 @@
   }
 
   function driveIsFolder(file) {
-    return file.mimeType === "application/vnd.google-apps.folder";
+    return file.mimeType === "application/vnd.riseup.folder";
   }
 
   function driveFileKind(file) {
     const mime = file.mimeType || "";
     if (driveIsFolder(file)) return { label: "Pasta", className: "is-folder" };
     if (mime === "application/pdf") return { label: "PDF", className: "is-pdf" };
-    if (mime === "application/vnd.google-apps.form") return { label: "Google Forms", className: "is-form" };
-    if (mime === "application/vnd.google-apps.document") return { label: "Google Docs", className: "is-document" };
-    if (mime === "application/vnd.google-apps.spreadsheet") return { label: "Google Sheets", className: "is-spreadsheet" };
-    if (mime === "application/vnd.google-apps.presentation") return { label: "Google Slides", className: "is-presentation" };
     if (mime.startsWith("image/")) return { label: "Imagem", className: "is-image" };
     if (mime.startsWith("video/")) return { label: "Vídeo", className: "is-video" };
     return { label: "Ficheiro", className: "is-file" };
@@ -1327,7 +1325,7 @@
     if (options.body && !(options.body instanceof FormData)) headers.set("Content-Type", "application/json");
     const response = await fetch(path, { ...options, headers });
     if (!response.ok) {
-      let message = "Não foi possível comunicar com a Google Drive.";
+      let message = "Não foi possível comunicar com a Drive interna.";
       try { message = (await response.json()).error || message; } catch { /* resposta sem JSON */ }
       throw new Error(message);
     }
@@ -1336,14 +1334,160 @@
 
   function internalDocumentLabel(type) { return type === "confidential_report" ? "Denúncia confidencial" : "Conflito de interesse"; }
 
-  async function openInternalDocument(document) {
+  async function openInternalDocument(document, button) {
+    const preview = window.open("about:blank", "_blank");
+    if (preview) {
+      preview.opener = null;
+      preview.document.title = "A abrir PDF…";
+      preview.document.body.textContent = "A abrir documento reservado…";
+    }
+    const originalLabel = button?.textContent;
+    if (button) { button.disabled = true; button.textContent = "A abrir…"; }
     try {
       const response = await fetch(`/api/internal-documents/${encodeURIComponent(document.id)}/content`, { headers: { Authorization: `Bearer ${core().session?.access_token || ""}` } });
       if (!response.ok) throw new Error("Não foi possível abrir o documento.");
-      const url = URL.createObjectURL(await response.blob());
-      window.open(url, "_blank", "noopener");
-      window.setTimeout(() => URL.revokeObjectURL(url), 60_000);
-    } catch (error) { window.alert(error?.message || "Não foi possível abrir o documento."); }
+      const result = await response.json();
+      if (!result?.url) throw new Error("Não foi possível abrir o documento.");
+      if (preview) preview.location.replace(result.url);
+      else window.open(result.url, "_blank", "noopener");
+    } catch (error) {
+      if (preview && !preview.closed) preview.close();
+      window.alert(error?.message || "Não foi possível abrir o documento.");
+    } finally {
+      if (button) { button.disabled = false; button.textContent = originalLabel || "Abrir PDF"; }
+    }
+  }
+
+  function setInternalDocumentMoveStatus(message = "", type = "") {
+    const status = $("[data-internal-document-move-status]");
+    if (!status) return;
+    status.textContent = message;
+    status.className = "bo-status" + (type ? " is-" + type : "");
+  }
+
+  function closeInternalDocumentMove() {
+    const dialog = $("[data-internal-document-move-dialog]");
+    if (dialog?.open) dialog.close();
+    workspace.internalDocumentMove.document = null;
+  }
+
+  function renderInternalDocumentMove() {
+    const move = workspace.internalDocumentMove;
+    const dialog = $("[data-internal-document-move-dialog]");
+    const breadcrumbs = $("[data-internal-document-move-breadcrumbs]");
+    const folders = $("[data-internal-document-move-folders]");
+    const confirm = $("[data-confirm-internal-document-move]");
+    if (!dialog || !breadcrumbs || !folders || !confirm) return;
+    confirm.disabled = move.loading || !move.document || move.folderId === move.rootFolderId;
+    confirm.textContent = move.loading ? "A mover…" : "Mover para esta pasta";
+    breadcrumbs.replaceChildren();
+    move.history.forEach((item, index) => {
+      if (index) breadcrumbs.appendChild(element("span", null, "/"));
+      const button = element("button", index === move.history.length - 1 ? "is-current" : "", item.name);
+      button.type = "button";
+      button.addEventListener("click", () => {
+        move.history = move.history.slice(0, index + 1);
+        void loadInternalDocumentMoveFolder(item.id, item.name);
+      });
+      breadcrumbs.appendChild(button);
+    });
+    folders.replaceChildren();
+    if (move.loading) {
+      folders.appendChild(element("p", "bo-empty-soft", "A carregar pastas…"));
+      return;
+    }
+    const directoryEntries = move.files.filter(driveIsFolder).sort((left, right) => left.name.localeCompare(right.name, "pt-PT", { sensitivity: "base" }));
+    if (!directoryEntries.length) {
+      folders.appendChild(element("p", "bo-empty-soft", move.folderId === move.rootFolderId ? "Escolhe um departamento para continuar." : "Esta pasta não tem subpastas. Podes mover a ficha para aqui."));
+      return;
+    }
+    directoryEntries.forEach((folder) => {
+      const button = element("button", "bo-internal-document-move-folder", folder.name);
+      button.type = "button";
+      button.addEventListener("click", () => void loadInternalDocumentMoveFolder(folder.id, folder.name));
+      folders.appendChild(button);
+    });
+  }
+
+  async function loadInternalDocumentMoveFolder(folderId, folderName = "Drive interna", reset = false) {
+    const move = workspace.internalDocumentMove;
+    if (reset || !move.history.length) move.history = [{ id: move.rootFolderId, name: "Drive interna" }];
+    if (!reset && folderId !== move.rootFolderId && !move.history.some((item) => item.id === folderId)) move.history.push({ id: folderId, name: folderName });
+    move.folderId = folderId;
+    move.loading = true;
+    setInternalDocumentMoveStatus();
+    renderInternalDocumentMove();
+    if (workspace.preview) {
+      move.files = folderId === move.rootFolderId ? [
+        { id: "direcao", name: "Direção", mimeType: "application/vnd.riseup.folder" },
+        { id: "comunicacao", name: "Comunicação", mimeType: "application/vnd.riseup.folder" }
+      ] : [];
+      move.loading = false;
+      renderInternalDocumentMove();
+      return;
+    }
+    try {
+      const response = await driveRequest("/api/drive/files?folderId=" + encodeURIComponent(folderId));
+      const data = await response.json();
+      move.files = data.files || [];
+      move.rootFolderId = data.rootFolderId || move.rootFolderId;
+      move.loading = false;
+      renderInternalDocumentMove();
+    } catch (error) {
+      move.files = [];
+      move.loading = false;
+      setInternalDocumentMoveStatus(error?.message || "Não foi possível carregar as pastas.", "error");
+      renderInternalDocumentMove();
+    }
+  }
+
+  async function openInternalDocumentMove(document) {
+    const dialog = $("[data-internal-document-move-dialog]");
+    if (!dialog) return;
+    workspace.internalDocumentMove.document = document;
+    workspace.internalDocumentMove.rootFolderId = workspace.drive.rootFolderId || "root";
+    $("[data-internal-document-move-title]").textContent = document.title;
+    if (typeof dialog.showModal === "function") dialog.showModal();
+    else dialog.setAttribute("open", "");
+    await loadInternalDocumentMoveFolder(workspace.internalDocumentMove.rootFolderId, "Drive interna", true);
+  }
+
+  async function moveInternalDocumentToDrive() {
+    const move = workspace.internalDocumentMove;
+    if (!move.document || move.folderId === move.rootFolderId || move.loading) return;
+    move.loading = true;
+    setInternalDocumentMoveStatus();
+    renderInternalDocumentMove();
+    try {
+      if (workspace.preview) {
+        workspace.internalDocuments = workspace.internalDocuments.filter((item) => item.id !== move.document.id);
+      } else {
+        await driveRequest("/api/internal-documents/" + encodeURIComponent(move.document.id), { method: "PATCH", body: JSON.stringify({ action: "move_to_drive", folderId: move.folderId }) });
+        workspace.internalDocuments = workspace.internalDocuments.filter((item) => item.id !== move.document.id);
+        if (workspace.drive.folderId === move.folderId) void loadDrive(workspace.drive.folderId);
+      }
+      renderInternalDocuments();
+      closeInternalDocumentMove();
+      setDriveMessage("Ficha institucional movida para a Drive interna.", "success");
+    } catch (error) {
+      move.loading = false;
+      setInternalDocumentMoveStatus(error?.message || "Não foi possível mover a ficha.", "error");
+      renderInternalDocumentMove();
+    }
+  }
+
+  async function deleteInternalDocument(document) {
+    if (!window.confirm("Apagar esta ficha institucional? O PDF será eliminado definitivamente.")) return;
+    const index = workspace.internalDocuments.findIndex((item) => item.id === document.id);
+    workspace.internalDocuments = workspace.internalDocuments.filter((item) => item.id !== document.id);
+    renderInternalDocuments();
+    try {
+      if (!workspace.preview) await driveRequest("/api/internal-documents/" + encodeURIComponent(document.id), { method: "DELETE" });
+    } catch (error) {
+      workspace.internalDocuments.splice(Math.max(0, index), 0, document);
+      renderInternalDocuments();
+      window.alert(error?.message || "Não foi possível apagar a ficha.");
+    }
   }
 
   function renderInternalDocuments() {
@@ -1362,8 +1506,12 @@
       text.append(element("strong", null, document.title), element("small", null, `${internalDocumentLabel(document.source_type)} · ${safeDate(document.created_at, true)} · ${document.classification}`));
       if (document.email_sent_at) text.appendChild(element("small", "is-sent", "Enviado à Direção"));
       else if (document.email_error) text.appendChild(element("small", "is-warning", "Email pendente"));
-      const button = element("button", "bo-button bo-button-ghost", "Abrir PDF"); button.type = "button"; button.addEventListener("click", () => void openInternalDocument(document));
-      row.append(copy, button); list.appendChild(row);
+      const actions = element("div", "bo-internal-document-actions");
+      const open = element("button", "bo-button bo-button-ghost", "Abrir PDF"); open.type = "button"; open.addEventListener("click", () => void openInternalDocument(document, open));
+      const move = element("button", "bo-button bo-button-ghost", "Mover para Drive"); move.type = "button"; move.addEventListener("click", () => void openInternalDocumentMove(document));
+      const remove = element("button", "bo-button bo-button-danger", "Apagar"); remove.type = "button"; remove.addEventListener("click", () => void deleteInternalDocument(document));
+      actions.append(open, move, remove);
+      row.append(copy, actions); list.appendChild(row);
     });
   }
 
@@ -1376,13 +1524,20 @@
     }
     workspace.drive.loading = true;
     setDriveMessage();
-    if (reset || !workspace.drive.history.length) workspace.drive.history = [{ id: workspace.drive.rootFolderId, name: "Drive Rise Up" }];
+    if (reset || !workspace.drive.history.length) workspace.drive.history = [{ id: workspace.drive.rootFolderId, name: "Drive interna" }];
     if (!reset && folderId !== workspace.drive.rootFolderId && !workspace.drive.history.some((item) => item.id === folderId)) {
       workspace.drive.history.push({ id: folderId, name: folderName });
     }
     workspace.drive.folderId = folderId;
     renderDrive();
     if (workspace.preview) {
+      workspace.drive.files = folderId === workspace.drive.rootFolderId ? [
+        { id: "direcao", name: "Direção", mimeType: "application/vnd.riseup.folder", modifiedTime: new Date().toISOString() },
+        { id: "comercial-marketing", name: "Comercial e Marketing", mimeType: "application/vnd.riseup.folder", modifiedTime: new Date().toISOString() },
+        { id: "recursos-humanos", name: "Recursos Humanos", mimeType: "application/vnd.riseup.folder", modifiedTime: new Date().toISOString() },
+        { id: "comunicacao", name: "Comunicação", mimeType: "application/vnd.riseup.folder", modifiedTime: new Date().toISOString() },
+        { id: "inovacao-projetos", name: "Inovação e Projetos", mimeType: "application/vnd.riseup.folder", modifiedTime: new Date().toISOString() }
+      ] : [];
       workspace.drive.loading = false;
       renderDrive();
       return;
@@ -1417,14 +1572,14 @@
       status.textContent = workspace.drive.loading ? "A ligar…" : workspace.preview ? "Demonstração" : "Ligado";
       status.className = `bo-drive-status${workspace.drive.loading ? "" : " is-ready"}`;
     }
-    const canWrite = workspace.drive.permissions.write && canAssign();
-    const canDelete = workspace.drive.permissions.delete && isAdmin();
-    if (actions) actions.hidden = !canWrite;
+    const canWrite = workspace.drive.permissions.write;
+    const canDelete = workspace.drive.permissions.delete;
+    if (actions) actions.hidden = !canWrite || !workspace.drive.folderId || workspace.drive.folderId === workspace.drive.rootFolderId;
 
     const breadcrumbs = $("[data-drive-breadcrumbs]");
     if (breadcrumbs) {
       breadcrumbs.replaceChildren();
-      const history = workspace.drive.history.length ? workspace.drive.history : [{ id: workspace.drive.rootFolderId, name: "Drive Rise Up" }];
+      const history = workspace.drive.history.length ? workspace.drive.history : [{ id: workspace.drive.rootFolderId, name: "Drive interna" }];
       history.forEach((item, index) => {
         if (index) breadcrumbs.appendChild(element("span", null, "/"));
         const button = element("button", index === history.length - 1 ? "is-current" : "", item.name);
@@ -1479,7 +1634,7 @@
       const copy = element("div", "bo-drive-file");
       const title = element("div", "bo-drive-file-title");
       title.append(element("strong", null, file.name), element("span", `bo-drive-kind ${kind.className}`, kind.label));
-      copy.append(title, element("span", "bo-drive-size", folder ? "Conteúdo partilhado" : (formatBytes(file.size) || "Documento Google")));
+      copy.append(title, element("span", "bo-drive-size", folder ? "Conteúdo partilhado" : (formatBytes(file.size) || "Documento")));
       const modified = element("time", "bo-drive-modified", safeDate(file.modifiedTime));
       if (file.modifiedTime) modified.dateTime = file.modifiedTime;
       const rowActions = element("div", "bo-drive-row-actions");
@@ -1492,7 +1647,8 @@
         open.addEventListener("click", (event) => { event.preventDefault(); void previewDriveFile(file); });
       }
       rowActions.appendChild(open);
-      if (canWrite || canDelete) {
+      const isDepartmentRoot = workspace.drive.folderId === workspace.drive.rootFolderId || !workspace.drive.folderId;
+      if ((canWrite || canDelete) && !isDepartmentRoot) {
         const more = element("details", "bo-drive-more");
         const summary = element("summary", null, "•••");
         summary.setAttribute("aria-label", `Mais ações para ${file.name}`);
@@ -1528,20 +1684,11 @@
     if (!dialog || !body) return;
     $("[data-drive-preview-title]").textContent = file.name;
     const original = $("[data-drive-open-original]");
-    original.href = file.webViewLink || `https://drive.google.com/open?id=${encodeURIComponent(file.id)}`;
+    original.href = file.webViewLink || `#`;
     body.replaceChildren(element("p", "bo-empty-soft", "A preparar a pré-visualização…"));
     dialog.showModal();
     if (workspace.preview) {
-      body.replaceChildren(element("p", "bo-empty-soft", "Pré-visualização disponível quando a Google Drive estiver configurada."));
-      return;
-    }
-
-    if (file.mimeType === "application/vnd.google-apps.form") {
-      const frame = element("iframe", "bo-drive-preview-frame");
-      frame.src = `https://docs.google.com/forms/d/${encodeURIComponent(file.id)}/viewform?embedded=true`;
-      frame.title = `Pré-visualização de ${file.name}`;
-      frame.referrerPolicy = "strict-origin-when-cross-origin";
-      body.replaceChildren(frame);
+      body.replaceChildren(element("p", "bo-empty-soft", "Pré-visualização disponível quando a Drive interna estiver disponível."));
       return;
     }
 
@@ -1563,11 +1710,11 @@
       }
     } catch (error) {
       const messages = {
-        DRIVE_PREVIEW_UNSUPPORTED: "Este formato não permite pré-visualização no backoffice. Abre o ficheiro diretamente na Drive.",
+        DRIVE_PREVIEW_UNSUPPORTED: "Este formato não permite pré-visualização no backoffice. Abre o ficheiro diretamente na Drive interna.",
         DRIVE_FILE_NOT_FOUND: "O ficheiro já não existe ou deixou de estar dentro da pasta da Rise Up.",
-        DRIVE_REQUEST_FAILED: "Não foi possível preparar a pré-visualização. Tenta abrir o ficheiro diretamente na Drive."
+        DRIVE_REQUEST_FAILED: "Não foi possível preparar a pré-visualização. Tenta abrir o ficheiro diretamente na Drive interna."
       };
-      const message = messages[error?.message] || "Este ficheiro deve ser aberto diretamente na Drive.";
+      const message = messages[error?.message] || "Este ficheiro deve ser aberto diretamente na Drive interna.";
       body.replaceChildren(element("p", "bo-empty-soft", message));
     }
   }
@@ -1587,7 +1734,7 @@
   }
 
   async function deleteDriveFile(file) {
-    if (!window.confirm(`Eliminar “${file.name}”? Esta ação envia o item para o lixo da Drive.`)) return;
+    if (!window.confirm(`Eliminar “${file.name}”? Esta ação envia o item para o lixo da Drive interna.`)) return;
     if (workspace.preview) {
       workspace.drive.files = workspace.drive.files.filter((item) => item.id !== file.id);
       renderDrive();
@@ -1605,7 +1752,7 @@
     const name = form.elements.name.value.trim();
     if (!name) return;
     try {
-      if (workspace.preview) workspace.drive.files.unshift({ id: crypto.randomUUID(), name, mimeType: "application/vnd.google-apps.folder", modifiedTime: new Date().toISOString() });
+      if (workspace.preview) workspace.drive.files.unshift({ id: crypto.randomUUID(), name, mimeType: "application/vnd.riseup.folder", modifiedTime: new Date().toISOString() });
       else await driveRequest("/api/drive/files", { method: "POST", body: JSON.stringify({ action: "createFolder", parentId: workspace.drive.folderId, name }) });
       form.reset();
       form.hidden = true;
@@ -1619,7 +1766,7 @@
     if (!file) return;
     setDriveMessage(`A carregar ${file.name}…`);
     try {
-      if (workspace.preview) workspace.drive.files.push({ id: crypto.randomUUID(), name: file.name, mimeType: file.type || "application/octet-stream", size: String(file.size), modifiedTime: new Date().toISOString(), webViewLink: "https://drive.google.com/" });
+      if (workspace.preview) workspace.drive.files.push({ id: crypto.randomUUID(), name: file.name, mimeType: file.type || "application/octet-stream", size: String(file.size), modifiedTime: new Date().toISOString() });
       else {
         const data = new FormData();
         data.set("action", "upload");
@@ -2604,6 +2751,17 @@
     return branch;
   }
 
+  function renderOrganizationZoom() {
+    const label = $("[data-org-zoom-label]");
+    if (label) label.textContent = Math.round(workspace.organizationZoom * 100) + "%";
+  }
+
+  function setOrganizationZoom(next) {
+    workspace.organizationZoom = Math.max(.6, Math.min(1.5, Math.round(next * 100) / 100));
+    renderOrganizationZoom();
+    renderOrganizationChart();
+  }
+
   function renderOrganizationChart() {
     const canvas = $("[data-org-chart]");
     if (!canvas) return;
@@ -2620,6 +2778,7 @@
     }
     const roots = organizationChildren(null);
     const rootWrap = element("div", "bo-org-roots");
+    rootWrap.style.setProperty("--bo-org-zoom", String(workspace.organizationZoom));
     roots.forEach((root) => rootWrap.appendChild(createOrganizationBranch(root)));
     canvas.appendChild(rootWrap);
   }
@@ -2845,7 +3004,7 @@
       ["team", "Equipa", "Membros e contactos"],
       ["hr", "Recursos Humanos", "Cronograma, eventos, advertências privadas, presenças, cargos, candidaturas e organigrama"],
       ["communication", "Comunicação", "Calendário editorial e publicações"],
-      ["documents", "Documentos", "Biblioteca e Google Drive"],
+      ["documents", "Documentos", "Biblioteca interna"],
       ["contacts", "Contactos", "Mensagens recebidas"],
       ["settings", "Definições", "Permissões e visualização por cargo"],
       ["profile", "Perfil", "Dados pessoais e histórico"]
@@ -3005,6 +3164,9 @@
     $("[data-add-org-node]")?.addEventListener("click", () => addOrganizationNode());
     $("[data-save-org-chart]")?.addEventListener("click", saveOrganizationChart);
     $("[data-export-org-pdf]")?.addEventListener("click", exportOrganizationPdf);
+    $("[data-org-zoom-out]")?.addEventListener("click", () => setOrganizationZoom(workspace.organizationZoom - .1));
+    $("[data-org-zoom-in]")?.addEventListener("click", () => setOrganizationZoom(workspace.organizationZoom + .1));
+    $("[data-org-zoom-reset]")?.addEventListener("click", () => setOrganizationZoom(1));
     $("[data-new-hr-milestone]")?.addEventListener("click", () => { $("[data-hr-milestone-form]").hidden = false; });
     $("[data-close-hr-milestone-form]")?.addEventListener("click", () => { $("[data-hr-milestone-form]").hidden = true; });
     $("[data-hr-milestone-form]")?.addEventListener("submit", (event) => {
@@ -3160,6 +3322,9 @@
       if (workspace.drive.previewUrl) URL.revokeObjectURL(workspace.drive.previewUrl);
       workspace.drive.previewUrl = "";
     });
+    $all("[data-close-internal-document-move]").forEach((button) => button.addEventListener("click", closeInternalDocumentMove));
+    $("[data-confirm-internal-document-move]")?.addEventListener("click", () => void moveInternalDocumentToDrive());
+    $("[data-internal-document-move-dialog]")?.addEventListener("close", () => { workspace.internalDocumentMove.document = null; });
     $("[data-global-search]")?.addEventListener("input", renderGlobalSearch);
     $("[data-global-search]")?.addEventListener("focus", renderGlobalSearch);
     $("[data-global-search]")?.addEventListener("keydown", handleGlobalSearchKeydown);

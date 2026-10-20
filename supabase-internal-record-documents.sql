@@ -32,3 +32,16 @@ drop policy if exists "Direction reads internal document records" on public.inte
 create policy "Direction reads internal document records"
   on public.internal_document_records for select to authenticated
   using ((select public.is_admin()));
+
+-- Permite ao endpoint local, autenticado, arquivar PDFs gerados pelo próprio fluxo.
+-- A leitura continua exclusiva da Direção.
+drop policy if exists "Authenticated archive institutional PDFs" on storage.objects;
+create policy "Authenticated archive institutional PDFs"
+on storage.objects for insert to authenticated
+with check (bucket_id = 'internal-record-pdfs' and (storage.foldername(name))[1] in ('confidential_report', 'conflict_declaration'));
+
+drop policy if exists "Authenticated create internal document records" on public.internal_document_records;
+grant insert on public.internal_document_records to authenticated;
+create policy "Authenticated create internal document records"
+on public.internal_document_records for insert to authenticated
+with check (source_type in ('confidential_report', 'conflict_declaration'));

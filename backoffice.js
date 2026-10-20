@@ -2,6 +2,7 @@
   const defaultTables = {
     userProfiles: "user_profiles",
     teamMembers: "team_members",
+    teamMemberPublicRoles: "team_member_public_roles",
     memberPrivateDetails: "member_private_details",
     backofficeAccessActivity: "backoffice_access_activity",
     projects: "projects",
@@ -29,6 +30,7 @@
     teamAccessActivityLoaded: false,
     userProfiles: [],
     team: [],
+    teamMemberPublicRoles: [],
     memberPrivateDetails: [],
     projects: [],
     projectMembers: [],
@@ -60,7 +62,8 @@
     activeView: "dashboard",
     activeHrView: "guide",
     hrSetupMissing: false,
-    projectFormBaseline: ""
+    projectFormBaseline: "",
+    restoringHistory: false
   };
 
   window.RISEUP_BACKOFFICE = {
@@ -206,19 +209,19 @@
     },
     communication_team: {
       label: "Comunicação",
-      summary: "Acesso ao Dashboard, To-Do, Comunicação, Contactos e Perfil."
+      summary: "Acesso ao Dashboard, To-Do, Comunicação, Contactos, Documentos e Perfil."
     },
     projects_innovation_team: {
       label: "Projetos e Inovação",
-      summary: "Acesso ao Dashboard, To-Do, Projetos e Perfil."
+      summary: "Acesso ao Dashboard, To-Do, Projetos, Documentos e Perfil."
     },
     commercial_team: {
-      label: "Comercial",
-      summary: "Acesso ao Dashboard, To-Do, Comercial, Contactos e Perfil."
+      label: "Comercial e Marketing",
+      summary: "Acesso ao Dashboard, To-Do, Comercial e Marketing, Contactos, Documentos e Perfil."
     },
     hr_team: {
       label: "Recursos Humanos",
-      summary: "Acesso ao Dashboard, To-Do, Equipa, Recursos Humanos e Perfil."
+      summary: "Acesso ao Dashboard, To-Do, Equipa, Recursos Humanos, Documentos e Perfil."
     },
     team_leader_communication: {
       label: "Team Líder — Comunicação",
@@ -229,7 +232,7 @@
       summary: "Lidera Projetos e Inovação, gere projetos, tarefas e documentos."
     },
     team_leader_commercial: {
-      label: "Team Líder — Comercial",
+      label: "Team Líder — Comercial e Marketing",
       summary: "Acompanha tarefas, projetos, contactos comerciais e documentos."
     },
     team_leader_hr: {
@@ -261,6 +264,10 @@
     "team_leader_hr"
   ]);
   const adminRoles = new Set(["admin", "coordinator", "vice_coordinator"]);
+  const documentRoles = new Set([
+    "communication_team", "projects_innovation_team", "commercial_team", "hr_team",
+    "team_leader_communication", "team_leader_projects_innovation", "team_leader_commercial", "team_leader_hr"
+  ]);
 
   const roleDisplayGroups = [
     { label: "Coordenação", hint: "Controlo completo", roles: ["coordinator", "vice_coordinator", "admin"] },
@@ -272,7 +279,7 @@
     dashboard: "Dashboard",
     todo: "To-Do",
     projects: "Projetos",
-    commercial: "Comercial",
+    commercial: "Comercial e Marketing",
     team: "Equipa",
     hr: "Recursos Humanos",
     communication: "Comunicação",
@@ -494,7 +501,7 @@
 
 
     if (view === "documents") {
-      return adminRoles.has(role) || teamLeaderRoles.has(role);
+      return adminRoles.has(role) || documentRoles.has(role);
     }
 
     if (view === "team") {
@@ -1362,6 +1369,21 @@
     state.team = data || [];
   }
 
+  async function loadTeamMemberPublicRoles() {
+    try {
+      const { data, error } = await state.client
+        .from(table("teamMemberPublicRoles"))
+        .select("id,team_member_id,group_key,title,sort_order")
+        .order("sort_order", { ascending: true })
+        .order("title", { ascending: true });
+      if (error) throw error;
+      state.teamMemberPublicRoles = data || [];
+    } catch (error) {
+      if (!isMissingRelationError(error)) console.warn("Public team roles unavailable", error);
+      state.teamMemberPublicRoles = [];
+    }
+  }
+
   async function loadMemberPrivateDetails() {
     const { data, error } = await state.client
       .from(table("memberPrivateDetails"))
@@ -1550,6 +1572,7 @@
     await Promise.all([
       loadUserProfiles(),
       loadTeam(),
+      loadTeamMemberPublicRoles(),
       loadTeamAccessActivity(),
       loadProjects(),
       loadInterviewEvaluations(),
@@ -1926,6 +1949,69 @@
     return state.memberPrivateDetails.find((details) => details.team_member_id === member.id) || null;
   }
 
+  const publicRoleGroups = [
+    ["coordination", "Coordenação"],
+    ["commercial_marketing", "Comercial e Marketing"],
+    ["human_resources", "Recursos Humanos"],
+    ["communication", "Comunicação"],
+    ["innovation_projects", "Inovação e Projetos"]
+  ];
+
+  function appendPublicRoleRow(list, role = {}) {
+    const row = createElement("div", "bo-public-role-row");
+    row.dataset.publicRoleId = role.id || "";
+    const group = document.createElement("select");
+    group.dataset.publicRoleGroup = "";
+    publicRoleGroups.forEach(([value, label]) => group.add(new Option(label, value)));
+    group.value = role.group_key || "communication";
+    const title = document.createElement("input");
+    title.type = "text";
+    title.maxLength = 120;
+    title.placeholder = "Ex.: Tesoureiro";
+    title.value = role.title || "";
+    title.dataset.publicRoleTitle = "";
+    const remove = createElement("button", "bo-button bo-button-ghost bo-button-danger-text", "Remover");
+    remove.type = "button";
+    remove.addEventListener("click", () => row.remove());
+    row.append(group, title, remove);
+    list.appendChild(row);
+  }
+
+  function renderPublicRoleEditor(form, member) {
+    const section = form?.querySelector("[data-public-role-editor]");
+    const list = form?.querySelector("[data-public-role-list]");
+    if (!section || !list) return;
+    section.hidden = !member?.id;
+    list.replaceChildren();
+    if (!member?.id) return;
+    const roles = state.teamMemberPublicRoles.filter((role) => role.team_member_id === member.id);
+    roles.forEach((role) => appendPublicRoleRow(list, role));
+    if (!roles.length) appendPublicRoleRow(list, { title: member.role || "" });
+  }
+
+  async function saveMemberPublicRoles(form, memberId) {
+    const list = form?.querySelector("[data-public-role-list]");
+    if (!list || !memberId) return;
+    const roles = [...list.querySelectorAll(".bo-public-role-row")].map((row, index) => ({
+      team_member_id: memberId,
+      group_key: row.querySelector("[data-public-role-group]")?.value,
+      title: cleanText(row.querySelector("[data-public-role-title]")?.value, 120),
+      sort_order: (index + 1) * 10
+    })).filter((role) => role.title);
+    if ([...list.querySelectorAll(".bo-public-role-row")].length !== roles.length) {
+      throw new Error("Indica um título para cada função pública ou remove a linha vazia.");
+    }
+    const { error: deleteError } = await state.client
+      .from(table("teamMemberPublicRoles"))
+      .delete()
+      .eq("team_member_id", memberId);
+    if (deleteError) throw deleteError;
+    if (roles.length) {
+      const { error: insertError } = await state.client.from(table("teamMemberPublicRoles")).insert(roles);
+      if (insertError) throw insertError;
+    }
+  }
+
   function populateMemberForm(form, member, options = {}) {
     const isNew = !member;
     const profile = findProfileForMember(member);
@@ -1986,6 +2072,7 @@
     }
 
     updateMemberPhotoPreview(form, { url: member?.photo_url || "" });
+    renderPublicRoleEditor(form, member);
   }
 
   function renderProfileSection() {
@@ -2048,7 +2135,7 @@
       { id: "direction", label: "Direção" },
       { id: "communication", label: "Comunicação" },
       { id: "projects", label: "Projetos e Inovação" },
-      { id: "commercial", label: "Comercial" },
+      { id: "commercial", label: "Comercial e Marketing" },
       { id: "hr", label: "Recursos Humanos" },
       { id: "general", label: "Equipa geral" },
       { id: "legends", label: "Rise Up Legends" },
@@ -3106,6 +3193,10 @@
         throw error;
       }
 
+      if (allowAdminFields) {
+        await saveMemberPublicRoles(form, existing.id);
+      }
+
       const linkedProfile = findProfileForMember(existing);
       if (allowAdminFields && linkedProfile && form.elements.account_role) {
         const targetRole = backofficeRoles[form.elements.account_role.value]
@@ -3131,6 +3222,7 @@
 
       await loadUserProfiles();
       await loadTeam();
+      await loadTeamMemberPublicRoles();
       await loadMemberPrivateDetails();
       await recordAudit(allowAdminFields ? "Perfil de equipa atualizado" : "Perfil próprio atualizado", "team_member", payload.name || existing.name);
       renderAll();
@@ -3343,7 +3435,7 @@
     if (role.includes("communication") || role.includes("comunicacao")) return { key: "communication", label: "Comunicação" };
     if (role.includes("project") || role.includes("projeto") || role.includes("inovacao")) return { key: "projects", label: "Projetos e Inovação" };
     if (role.includes("human") || role.includes("recursos humanos") || role === "rh" || role.includes("_hr")) return { key: "hr", label: "Recursos Humanos" };
-    if (role.includes("commercial") || role.includes("comercial")) return { key: "commercial", label: "Comercial" };
+    if (role.includes("commercial") || role.includes("comercial")) return { key: "commercial", label: "Comercial e Marketing" };
     return null;
   }
 
@@ -4260,7 +4352,21 @@
     });
   }
 
-  function showSection(view) {
+  function viewFromHistory() {
+    const view = new URLSearchParams(window.location.search).get("view");
+    return view && canAccessView(view) ? view : getDefaultView();
+  }
+
+  function updateBackofficeHistory(view, mode = "push") {
+    const url = new URL(window.location.href);
+    if (view === getDefaultView()) url.searchParams.delete("view");
+    else url.searchParams.set("view", view);
+    const payload = { backofficeView: view };
+    if (mode === "replace") window.history.replaceState(payload, "", url);
+    else if (mode === "push") window.history.pushState(payload, "", url);
+  }
+
+  function showSection(view, historyMode = "push") {
     if (!canAccessView(view)) {
       view = getDefaultView();
     }
@@ -4291,6 +4397,7 @@
       settings: "Definições"
     };
     $(selectors.pageTitle).textContent = titles[view] || "BackOffice";
+    if (historyMode !== "none") updateBackofficeHistory(view, historyMode);
   }
 
   function bindEvents() {
@@ -4371,6 +4478,12 @@
     $all("[data-view-button]").forEach((button) => {
       button.addEventListener("click", () => showSection(button.dataset.viewButton));
     });
+    window.addEventListener("popstate", (event) => {
+      const view = event.state?.backofficeView || viewFromHistory();
+      state.restoringHistory = true;
+      showSection(view, "none");
+      state.restoringHistory = false;
+    });
     $all("[data-reset-view-as]").forEach((button) => button.addEventListener("click", () => applyViewAsRole("admin")));
 
     const newTeamMemberButton = $("[data-new-team-member]");
@@ -4387,6 +4500,10 @@
     bindPhotoEditor(profileForm, $(selectors.profileStatus));
     $("[data-close-team-form]").addEventListener("click", closeTeamForm);
     $(selectors.teamForm).addEventListener("submit", saveTeamMember);
+    $(selectors.teamForm).querySelector("[data-add-public-role]")?.addEventListener("click", () => {
+      const list = $(selectors.teamForm).querySelector("[data-public-role-list]");
+      if (list) appendPublicRoleRow(list);
+    });
     $(selectors.teamForm).elements.account_role?.addEventListener("change", (event) => {
       syncTeamMemberRoleFromAccess(event.currentTarget.form);
     });
@@ -4584,7 +4701,7 @@
       state.auditLogs = [];
       showAppView();
       renderAll();
-      showSection("dashboard");
+      showSection(viewFromHistory(), "replace");
       document.dispatchEvent(new CustomEvent("riseup:backoffice-ready"));
       return;
     }
@@ -4605,7 +4722,7 @@
 
     try {
       await loadData();
-      showSection(getDefaultView());
+      showSection(viewFromHistory(), "replace");
     } catch (loadError) {
       showAuthView();
       const message = getErrorMessage(loadError);

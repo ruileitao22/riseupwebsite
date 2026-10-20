@@ -755,6 +755,8 @@ img {
 .bo-team-fields-grid textarea { min-height: 118px; }
 .bo-team-managed-role input[readonly] { border-color: rgba(31, 49, 68, 0.09); background: #f3f6f8; color: #5d6c7a; cursor: not-allowed; }
 .bo-team-managed-role input[readonly]:focus { border-color: rgba(31, 49, 68, 0.09); box-shadow: none; }
+.bo-public-role-list { display: grid; gap: 0.7rem; margin-bottom: 0.85rem; }
+.bo-public-role-row { display: grid; grid-template-columns: minmax(12rem, 0.7fr) minmax(0, 1fr) auto; gap: 0.65rem; align-items: center; }
 .bo-team-photo-card { width: 100%; padding: 0.85rem; border: 1px solid rgba(31, 49, 68, 0.1); border-radius: 12px; background: #fff; }
 .bo-team-photo-card .bo-photo-preview-frame, .bo-team-photo-card .bo-photo-preview-frame img { min-height: 214px; }
 .bo-team-photo-card .bo-profile-photo-actions { margin-top: 0.15rem; }
@@ -1337,10 +1339,10 @@ html.bo-modal-open { overflow: hidden; }
 .bo-confidential-report-form input:not([type="checkbox"]), .bo-confidential-report-form select, .bo-confidential-report-form textarea { min-width: 0; min-height: 47px; padding: .75rem .82rem; border-color: #dce6ec; border-radius: 10px; background: #fff; font-size: .88rem; }
 .bo-confidential-report-form textarea { min-height: 154px; line-height: 1.5; resize: vertical; }
 .bo-confidential-report-form input::placeholder, .bo-confidential-report-form textarea::placeholder { color: #98a6b4; font-weight: 500; }
-.bo-confidential-anonymous { display: flex; align-items: flex-start; gap: .75rem; padding: .9rem; border: 1px solid #dce8f0; border-radius: 12px; background: #f8fbfd; cursor: pointer; }
-.bo-confidential-anonymous input { width: 17px; height: 17px; margin: .1rem 0 0; accent-color: #237de8; }
-.bo-confidential-anonymous span { display: grid; gap: .2rem; }
-.bo-confidential-anonymous strong { color: #263b4b; font-size: .81rem; }
+.bo-confidential-anonymous { display: inline-flex; align-items: flex-start; gap: .55rem; max-width: 100%; padding: .15rem 0; cursor: pointer; }
+.bo-confidential-anonymous input { flex: 0 0 auto; width: 15px; height: 15px; margin: .17rem 0 0; accent-color: #237de8; }
+.bo-confidential-anonymous span { display: grid; gap: .12rem; }
+.bo-confidential-anonymous strong { color: #263b4b; font-size: .8rem; }
 .bo-confidential-anonymous small { color: #71808c; font-size: .7rem; font-weight: 600; line-height: 1.45; }
 .bo-confidential-report-form .bo-actions { padding-top: .1rem; }
 .bo-confidential-report-form .bo-button { min-height: 47px; border-radius: 10px; }
@@ -4243,6 +4245,10 @@ body.is-member [data-admin-only] {
 .bo-org-chart-help { display: flex; flex-wrap: wrap; gap: 0.55rem; margin-bottom: 1rem; }
 .bo-org-chart-help span { padding: 0.42rem 0.62rem; border-radius: 7px; background: #f1f5f9; color: #607080; font-size: 0.73rem; }
 .bo-org-chart-help strong { color: #236dc9; }
+.bo-org-chart-zoom { display: inline-flex; align-items: center; gap: .35rem; margin-left: auto; padding-left: .25rem; }
+.bo-org-chart-zoom .bo-icon-button { width: 30px; height: 30px; min-height: 30px; font-size: 1.05rem; }
+.bo-org-chart-zoom output { min-width: 44px; color: #35506b; font-size: .72rem; font-weight: 800; text-align: center; }
+.bo-org-chart-zoom .bo-button { min-height: 30px; padding: .32rem .55rem; font-size: .68rem; }
 .bo-org-chart-canvas {
   min-height: 300px;
   padding: 1.25rem;
@@ -4252,6 +4258,7 @@ body.is-member [data-admin-only] {
   background: #f8fafc;
   scrollbar-width: thin;
 }
+.bo-org-roots { zoom: var(--bo-org-zoom, 1); transform-origin: top center; }
 .bo-org-roots,
 .bo-org-children { display: flex; align-items: flex-start; justify-content: center; gap: 1.15rem; min-width: max-content; }
 .bo-org-branch { position: relative; display: flex; flex-direction: column; align-items: center; }
@@ -4285,6 +4292,7 @@ body.is-member [data-admin-only] {
 
 @media (max-width: 760px) {
   .bo-org-chart-head .bo-actions { width: 100%; display: grid; grid-template-columns: 1fr; }
+  .bo-org-chart-zoom { width: 100%; justify-content: flex-start; margin-left: 0; }
   .bo-org-node-card { width: 240px; }
 }
 
@@ -5140,7 +5148,7 @@ body.is-member [data-admin-only] {
   }
 }
 
-/* Google Drive file explorer */
+/* Drive interna file explorer */
 .bo-drive-browser {
   overflow: visible;
   border-color: #dfe6ec;
@@ -5713,4 +5721,47 @@ body.is-member [data-admin-only] {
 .bo-internal-document-copy small { color: var(--bo-muted); font-size: .7rem; }
 .bo-internal-document-copy .is-sent { color: #197652; font-weight: 750; }
 .bo-internal-document-copy .is-warning { color: #a56a1b; font-weight: 750; }
-@media (max-width: 600px) { .bo-internal-document-row { align-items: flex-start; flex-direction: column; } }
+.bo-internal-document-actions { display: flex; flex: 0 0 auto; flex-wrap: wrap; justify-content: flex-end; gap: .45rem; }
+.bo-internal-document-actions .bo-button { min-height: 34px; padding: .42rem .62rem; border-radius: 9px; box-shadow: none; font-size: .72rem; font-weight: 800; letter-spacing: 0; }
+.bo-internal-document-actions .bo-button::before { display: inline-grid; width: 1rem; height: 1rem; place-items: center; border-radius: 4px; color: currentColor; font-size: .85rem; font-weight: 600; line-height: 1; }
+.bo-internal-document-actions .bo-button:nth-child(1)::before { content: "↗"; background: #edf5fc; }
+.bo-internal-document-actions .bo-button:nth-child(2)::before { content: "→"; background: #edf5fc; }
+.bo-internal-document-actions .bo-button:nth-child(3) { border-color: transparent; background: #fff7f7; color: #b64b4b; }
+.bo-internal-document-actions .bo-button:nth-child(3)::before { content: "×"; background: #fdeaea; font-size: 1rem; }
+.bo-internal-document-actions .bo-button:hover { transform: translateY(-1px); box-shadow: 0 5px 12px rgba(26, 51, 73, .08); }
+.bo-internal-document-actions .bo-button:nth-child(3):hover { background: #fceeee; color: #a63e3e; }
+.bo-internal-document-move-dialog { width: min(560px, calc(100% - 2rem)); padding: 0; overflow: hidden; border: 0; border-radius: 15px; background: #fff; box-shadow: 0 25px 80px rgba(10, 27, 43, .25); }
+.bo-internal-document-move-dialog::backdrop { background: rgba(13, 28, 42, .55); backdrop-filter: blur(4px); }
+.bo-internal-document-move-dialog[open] { display: grid; grid-template-rows: auto minmax(180px, 1fr) auto; }
+.bo-internal-document-move-dialog .bo-drive-preview-head p:not(.bo-kicker) { max-width: 430px; margin: .24rem 0 0; color: var(--bo-muted); font-size: .76rem; line-height: 1.45; }
+.bo-internal-document-move-body { display: grid; align-content: start; gap: .8rem; min-height: 210px; padding: 1rem 1.2rem; background: #fbfcfd; }
+.bo-internal-document-move-folders { display: grid; gap: .45rem; }
+.bo-internal-document-move-folder { display: flex; align-items: center; width: 100%; gap: .65rem; padding: .72rem .8rem; border: 1px solid #e0e8ee; border-radius: 10px; background: #fff; color: #243847; font: inherit; font-size: .8rem; font-weight: 750; text-align: left; cursor: pointer; }
+.bo-internal-document-move-folder::before { display: grid; width: 28px; height: 28px; flex: 0 0 auto; place-items: center; border-radius: 7px; background: #fff5e4; color: #be7614; content: "⌑"; font-size: 1rem; }
+.bo-internal-document-move-folder:hover { border-color: #9ec9ef; background: #f7fbff; }
+.bo-internal-document-move-dialog > .bo-actions { justify-content: flex-end; margin: 0; padding: .85rem 1.2rem; border-top: 1px solid #e4ebf0; }
+@media (max-width: 600px) { .bo-internal-document-row { align-items: flex-start; flex-direction: column; } .bo-internal-document-actions { justify-content: flex-start; } .bo-internal-document-move-dialog > .bo-actions { flex-direction: column-reverse; } .bo-internal-document-move-dialog > .bo-actions .bo-button { width: 100%; } }
+/* Dedicated record forms: clearer institutional flow for confidential reports and declarations. */
+.bo-confidential-guidance, .bo-conflict-guidance { position: sticky; top: 1rem; }
+.bo-record-workflow { display: flex; align-items: center; flex-wrap: wrap; justify-content: flex-end; gap: .38rem; max-width: 285px; }
+.bo-record-workflow span { display: inline-flex; align-items: center; gap: .32rem; padding: .33rem .5rem; border: 1px solid #d9e8f4; border-radius: 999px; background: #f7fbff; color: #47718e; font-size: .66rem; font-weight: 800; white-space: nowrap; }
+.bo-record-workflow b { display: grid; width: 1.1rem; height: 1.1rem; place-items: center; border-radius: 50%; background: #dceeff; color: #236db9; font-size: .62rem; }
+.bo-conflict-workspace .bo-record-workflow span { border-color: #d7ebe3; background: #f5fbf8; color: #4c766f; }
+.bo-conflict-workspace .bo-record-workflow b { background: #ddf4ec; color: #16715d; }
+.bo-confidential-report-form, .bo-conflict-declaration-form { display: grid; gap: .8rem; padding: 1.1rem 1.35rem 1.35rem; }
+.bo-record-form-section { display: grid; gap: .9rem; padding: 1rem; border: 1px solid #e4edf3; border-radius: 14px; background: #fbfdff; }
+.bo-conflict-declaration-form .bo-record-form-section { border-color: #deede8; background: #fbfefd; }
+.bo-record-section-head { display: flex; align-items: flex-start; gap: .65rem; }
+.bo-record-section-head h4 { margin: .02rem 0 .18rem; color: #183044; font-size: .88rem; }
+.bo-record-section-head p { margin: 0; color: #6d7f8e; font-size: .72rem; line-height: 1.45; }
+.bo-record-section-number { display: grid; width: 1.65rem; height: 1.65rem; flex: 0 0 auto; place-items: center; border-radius: 8px; background: #e5f2ff; color: #226bab; font-size: .7rem; font-weight: 850; }
+.bo-conflict-declaration-form .bo-record-section-number { background: #e3f6ef; color: #176f5e; }
+.bo-record-field-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .8rem; }
+.bo-record-form-section .bo-request-field { margin: 0; }
+.bo-record-form-section-final { background: #f5faff; border-color: #d8eafa; }
+.bo-conflict-declaration-form .bo-record-form-section-final { background: #f3fbf7; border-color: #d4ebe1; }
+.bo-record-form-section-final .bo-actions { padding-top: .1rem; }
+.bo-record-form-section-final .bo-status { margin: 0; }
+@media (max-width: 860px) { .bo-confidential-guidance, .bo-conflict-guidance { position: static; } }
+@media (max-width: 600px) { .bo-record-workflow { justify-content: flex-start; max-width: none; } .bo-record-field-grid { grid-template-columns: 1fr; } .bo-confidential-report-form, .bo-conflict-declaration-form { padding: .9rem 1.1rem 1.1rem; } .bo-record-form-section { padding: .85rem; } }
+@media (max-width: 620px) { .bo-public-role-row { grid-template-columns: 1fr; } .bo-public-role-row .bo-button { justify-self: start; } }

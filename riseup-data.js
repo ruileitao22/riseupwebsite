@@ -1,6 +1,7 @@
 (function () {
   const defaultTables = {
     teamMembers: "team_members",
+    teamMemberPublicRoles: "team_member_public_roles",
     projects: "projects",
     projectMembers: "project_members"
   };
@@ -569,6 +570,16 @@
         })
       ]);
 
+      let publicRoles = [];
+      try {
+        publicRoles = await supabaseSelect("teamMemberPublicRoles", {
+          select: "id,team_member_id,group_key,title,sort_order",
+          order: "sort_order.asc,title.asc"
+        });
+      } catch (error) {
+        console.warn("Rise Up public roles fallback:", error);
+      }
+
       const normalizedProjects = projects.map((project) => normalizeProjectRecord(project));
 
       if (!members.length) {
@@ -589,48 +600,62 @@
         return map;
       }, new Map());
 
-      list.replaceChildren();
-      const visibleMembers = members.filter((member) => !member.is_ex_riser);
-      const orderedMembers = [...visibleMembers].sort((left, right) => Number(left.is_legend) - Number(right.is_legend) || (left.name || "").localeCompare(right.name || "", "pt"));
-      orderedMembers.forEach((member, index) => {
-        if (member.is_legend && (index === 0 || !orderedMembers[index - 1].is_legend)) {
-          const heading = createElement("div", "public-team-group-heading");
-          appendText(heading, "span", "eyebrow", "Rise Up Legends");
-          appendText(heading, "h2", null, "Legado que continua a inspirar");
-          list.appendChild(heading);
-        }
-        const card = createElement("article", "member-card public-member-card reveal is-visible");
-        card.tabIndex = 0;
-        card.setAttribute("aria-label", `Ver descrição de ${member.name || "membro Rise Up"}`);
-        const cardInner = createElement("div", "public-member-card-inner");
-        const front = createElement("div", "public-member-card-face public-member-card-front");
-        const photoWrap = createElement("figure", "public-member-photo");
+      const groups = [
+        ["coordination", "Estrutura de liderança", "Coordenação", "Orientação estratégica e acompanhamento da atividade da Rise Up."],
+        ["commercial_marketing", "Departamento", "Comercial e Marketing", "Relações, oportunidades e presença de marca."],
+        ["human_resources", "Departamento", "Recursos Humanos", "Pessoas, cultura e desenvolvimento da equipa."],
+        ["communication", "Departamento", "Comunicação", "Conteúdo, comunidade e identidade da Rise Up."],
+        ["innovation_projects", "Departamento", "Inovação e Projetos", "Projetos, parcerias e novas iniciativas."]
+      ];
+      const inferredGroup = (role) => {
+        const value = String(role || "").toLocaleLowerCase("pt-PT");
+        if (value.includes("coordenador")) return "coordination";
+        if (value.includes("comercial") || value.includes("marketing")) return "commercial_marketing";
+        if (value.includes("recursos humanos")) return "human_resources";
+        if (value.includes("comunica")) return "communication";
+        return "innovation_projects";
+      };
+      const visibleMembers = members.filter((member) => !member.is_ex_riser && !member.is_legend);
+      const rolesByMember = new Map();
+      publicRoles.forEach((role) => {
+        const current = rolesByMember.get(role.team_member_id) || [];
+        current.push(role);
+        rolesByMember.set(role.team_member_id, current);
+      });
+      visibleMembers.forEach((member) => {
+        if (!rolesByMember.has(member.id)) rolesByMember.set(member.id, [{ group_key: inferredGroup(member.role), title: member.role || "Membro", sort_order: 100 }]);
+      });
 
+      let dialog = document.querySelector("[data-team-member-dialog]");
+      if (!dialog) {
+        dialog = createElement("dialog", "team-member-dialog");
+        dialog.dataset.teamMemberDialog = "";
+        dialog.addEventListener("click", (event) => { if (event.target === dialog) dialog.close(); });
+        document.body.appendChild(dialog);
+      }
+      const showMember = (member) => {
+        dialog.replaceChildren();
+        const panel = createElement("article", "team-member-dialog-panel");
+        const close = createElement("button", "team-member-dialog-close", "Fechar");
+        close.type = "button";
+        close.setAttribute("aria-label", "Fechar perfil");
+        close.addEventListener("click", () => dialog.close());
+        const photo = createElement("figure", "team-member-dialog-photo");
         if (member.photo_url) {
-          const img = createElement("img");
-          img.src = safeUrl(member.photo_url, true);
-          img.alt = member.name || "Membro Rise Up";
-          img.loading = "lazy";
-          photoWrap.appendChild(img);
-        } else {
-          photoWrap.appendChild(createElement("span", null, (member.name || "RU").slice(0, 2).toUpperCase()));
-        }
-
-        const frontMeta = createElement("div", "member-meta");
-        appendText(frontMeta, "h3", "member-name", member.name);
-        appendText(frontMeta, "span", "member-role", member.role);
-
-        const back = createElement("div", "public-member-card-face public-member-card-back");
-        const body = createElement("div", "public-member-card-back-content");
-        appendText(body, "span", "public-member-card-kicker", member.role || "Rise Up");
-        appendText(body, "h3", "member-name", member.name);
-        appendText(body, "p", "member-copy", member.description || "Sem descrição disponível.");
-        const joined = appendText(body, "p", "public-member-joined", formatJoined(member.joined_month, member.joined_year));
-        if (joined) {
-          joined.dataset.joinedMonth = member.joined_month || "";
-          joined.dataset.joinedYear = member.joined_year || "";
-        }
-
+          const image = createElement("img");
+          image.src = safeUrl(member.photo_url, true);
+          image.alt = member.name || "Membro Rise Up";
+          photo.appendChild(image);
+        } else appendText(photo, "span", null, (member.name || "RU").slice(0, 2).toUpperCase());
+        const content = createElement("div", "team-member-dialog-content");
+        appendText(content, "p", "eyebrow", "Equipa Rise Up");
+        appendText(content, "h3", null, member.name || "Membro Rise Up");
+        const roleList = createElement("div", "team-member-dialog-roles");
+        (rolesByMember.get(member.id) || []).forEach((role) => appendText(roleList, "span", null, role.title));
+        content.appendChild(roleList);
+        appendText(content, "p", "team-member-dialog-copy", member.description || "Este perfil está a ser preparado.");
+        const joined = formatJoined(member.joined_month, member.joined_year);
+        if (joined) appendText(content, "p", "team-member-dialog-joined", joined);
         const linksWrap = createElement("div", "public-member-links");
         const linkedinUrl = safeUrl(member.linkedin_url);
         if (linkedinUrl) {
@@ -641,45 +666,52 @@
           linkedin.prepend(createMemberLinkIcon("linkedin"));
           linksWrap.appendChild(linkedin);
         }
-
         if (member.email) {
           const email = createElement("a", null, "Email");
           email.href = `mailto:${member.email}`;
           email.prepend(createMemberLinkIcon("email"));
           linksWrap.appendChild(email);
         }
+        if (linksWrap.children.length) content.appendChild(linksWrap);
+        panel.append(close, photo, content);
+        dialog.appendChild(panel);
+        dialog.showModal();
+      };
 
-        if (linksWrap.children.length) {
-          body.appendChild(linksWrap);
-        }
-
-        const memberProjects = projectsByMember.get(member.id) || [];
-        if (memberProjects.length) {
-          const projectsBlock = createElement("div", "public-member-projects");
-          appendText(projectsBlock, "strong", null, document.documentElement.lang === "en" ? "Projects" : "Projetos");
-          const projectList = createElement("ul");
-          memberProjects.forEach((project) => {
-            appendText(projectList, "li", null, project.title);
-          });
-          projectsBlock.appendChild(projectList);
-          body.appendChild(projectsBlock);
-        }
-
-        front.append(photoWrap, frontMeta);
-        back.appendChild(body);
-        cardInner.append(front, back);
-        card.appendChild(cardInner);
-        list.appendChild(card);
-      });
-
-      document.addEventListener("riseup:languagechange", () => {
-        list.querySelectorAll(".public-member-joined").forEach((element) => {
-          element.textContent = formatJoined(element.dataset.joinedMonth, element.dataset.joinedYear);
+      list.classList.add("team-directory");
+      list.replaceChildren();
+      groups.forEach(([key, eyebrow, title, copy]) => {
+        const placements = visibleMembers.flatMap((member) => (rolesByMember.get(member.id) || []).filter((role) => role.group_key === key).map((role) => ({ member, role })));
+        if (!placements.length) return;
+        placements.sort((left, right) => Number(left.role.sort_order || 100) - Number(right.role.sort_order || 100) || String(left.member.name || "").localeCompare(String(right.member.name || ""), "pt"));
+        const section = createElement("section", `team-directory-section${key === "coordination" ? " is-coordination" : ""}`);
+        const heading = createElement("div", "team-directory-heading");
+        appendText(heading, "span", "eyebrow", eyebrow);
+        appendText(heading, "h2", null, title);
+        appendText(heading, "p", null, copy);
+        const grid = createElement("div", "team-directory-grid");
+        placements.forEach(({ member, role }) => {
+          const card = createElement("button", "team-directory-card");
+          card.type = "button";
+          card.setAttribute("aria-label", `Ver perfil de ${member.name || "membro Rise Up"}`);
+          const photo = createElement("figure", "team-directory-photo");
+          if (member.photo_url) {
+            const image = createElement("img");
+            image.src = safeUrl(member.photo_url, true);
+            image.alt = "";
+            image.loading = "lazy";
+            photo.appendChild(image);
+          } else appendText(photo, "span", null, (member.name || "RU").slice(0, 2).toUpperCase());
+          const cardCopy = createElement("span", "team-directory-copy");
+          appendText(cardCopy, "strong", null, member.name || "Membro Rise Up");
+          appendText(cardCopy, "span", "team-directory-role", role.title);
+          appendText(cardCopy, "span", "team-directory-action", "Ver perfil →");
+          card.append(photo, cardCopy);
+          card.addEventListener("click", () => showMember(member));
+          grid.appendChild(card);
         });
-
-        list.querySelectorAll(".public-member-projects strong").forEach((element) => {
-          element.textContent = document.documentElement.lang === "en" ? "Projects" : "Projetos";
-        });
+        section.append(heading, grid);
+        list.appendChild(section);
       });
     } catch (error) {
       console.warn("Rise Up team data fallback:", error);
@@ -771,46 +803,76 @@
         return;
       }
 
-      list.replaceChildren();
-      legends.forEach((member) => {
-        const card = createElement("article", "member-card public-member-card reveal is-visible");
-        card.tabIndex = 0;
-        card.setAttribute("aria-label", `Ver descrição de ${member.name || "Rise Up Legend"}`);
-        const cardInner = createElement("div", "public-member-card-inner");
-        const front = createElement("div", "public-member-card-face public-member-card-front");
-        const photo = createElement("figure", "public-member-photo");
+      let dialog = document.querySelector("[data-legend-dialog]");
+      if (!dialog) {
+        dialog = createElement("dialog", "team-member-dialog");
+        dialog.dataset.legendDialog = "";
+        dialog.addEventListener("click", (event) => { if (event.target === dialog) dialog.close(); });
+        document.body.appendChild(dialog);
+      }
+      const showLegend = (member) => {
+        dialog.replaceChildren();
+        const panel = createElement("article", "team-member-dialog-panel");
+        const close = createElement("button", "team-member-dialog-close", "Fechar");
+        close.type = "button";
+        close.setAttribute("aria-label", "Fechar perfil");
+        close.addEventListener("click", () => dialog.close());
+        const photo = createElement("figure", "team-member-dialog-photo");
         if (member.photo_url) {
           const image = createElement("img");
           image.src = safeUrl(member.photo_url, true);
           image.alt = member.name || "Rise Up Legend";
-          image.loading = "lazy";
           photo.appendChild(image);
-        } else {
-          photo.appendChild(createElement("span", null, (member.name || "RU").slice(0, 2).toUpperCase()));
-        }
-        const frontMeta = createElement("div", "member-meta");
-        appendText(frontMeta, "h3", "member-name", member.name);
-        appendText(frontMeta, "span", "member-role", member.role);
-
-        const back = createElement("div", "public-member-card-face public-member-card-back");
-        const body = createElement("div", "public-member-card-back-content");
-        appendText(body, "span", "public-member-card-kicker", member.role || "Rise Up");
-        appendText(body, "h3", "member-name", member.name);
-        appendText(body, "p", "member-copy", member.description || "Sem descrição disponível.");
+        } else appendText(photo, "span", null, (member.name || "RU").slice(0, 2).toUpperCase());
+        const content = createElement("div", "team-member-dialog-content");
+        appendText(content, "p", "eyebrow", "Rise Up Legend");
+        appendText(content, "h3", null, member.name || "Rise Up Legend");
+        const roleList = createElement("div", "team-member-dialog-roles");
+        appendText(roleList, "span", null, member.role || "Rise Up");
+        content.appendChild(roleList);
+        appendText(content, "p", "team-member-dialog-copy", member.description || "Este percurso faz parte da história da Rise Up.");
+        const links = createElement("div", "public-member-links");
         const linkedin = safeUrl(member.linkedin_url);
         if (linkedin) {
-          const links = createElement("div", "public-member-links");
           const link = createElement("a", null, "LinkedIn");
           link.href = linkedin;
           link.target = "_blank";
           link.rel = "noreferrer";
+          link.prepend(createMemberLinkIcon("linkedin"));
           links.appendChild(link);
-          body.appendChild(links);
         }
-        front.append(photo, frontMeta);
-        back.appendChild(body);
-        cardInner.append(front, back);
-        card.appendChild(cardInner);
+        if (member.email) {
+          const email = createElement("a", null, "Email");
+          email.href = `mailto:${member.email}`;
+          email.prepend(createMemberLinkIcon("email"));
+          links.appendChild(email);
+        }
+        if (links.children.length) content.appendChild(links);
+        panel.append(close, photo, content);
+        dialog.appendChild(panel);
+        dialog.showModal();
+      };
+
+      list.classList.add("legends-directory");
+      list.replaceChildren();
+      legends.forEach((member) => {
+        const card = createElement("button", "team-directory-card");
+        card.type = "button";
+        card.setAttribute("aria-label", `Ver perfil de ${member.name || "Rise Up Legend"}`);
+        const photo = createElement("figure", "team-directory-photo");
+        if (member.photo_url) {
+          const image = createElement("img");
+          image.src = safeUrl(member.photo_url, true);
+          image.alt = "";
+          image.loading = "lazy";
+          photo.appendChild(image);
+        } else appendText(photo, "span", null, (member.name || "RU").slice(0, 2).toUpperCase());
+        const copy = createElement("span", "team-directory-copy");
+        appendText(copy, "strong", null, member.name || "Rise Up Legend");
+        appendText(copy, "span", "team-directory-role", member.role || "Rise Up Legend");
+        appendText(copy, "span", "team-directory-action", "Conhecer percurso →");
+        card.append(photo, copy);
+        card.addEventListener("click", () => showLegend(member));
         list.appendChild(card);
       });
     } catch (error) {

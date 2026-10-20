@@ -1,12 +1,15 @@
 import { describe, expect, it } from "vitest";
 import { canDeleteDrive, canReadDrive, canWriteDrive } from "./server-auth";
 
-describe("Google Drive role permissions", () => {
+describe("Drive interna role permissions", () => {
   it.each([
     "admin",
     "coordinator",
     "vice_coordinator",
-    "team_leader",
+    "communication_team",
+    "projects_innovation_team",
+    "commercial_team",
+    "hr_team",
     "team_leader_communication",
     "team_leader_projects_innovation",
     "team_leader_commercial",
@@ -16,7 +19,7 @@ describe("Google Drive role permissions", () => {
     expect(canReadDrive(role)).toBe(true);
   });
 
-  it.each(["communication_team", "projects_innovation_team", "hr_team", "member"])("keeps %s read-only", (role) => {
+  it.each(["team_leader", "member", "ex_riser"])("keeps %s read-only", (role) => {
     expect(canWriteDrive(role)).toBe(false);
     expect(canReadDrive(role)).toBe(false);
   });

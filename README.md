@@ -27,6 +27,10 @@ Os emails incluem os dados do formulário, ligação ao backoffice e Reply-To do
 
 O envio decorre após a resposta HTTP, através de `after` do Next.js. Falhas transitórias têm até três tentativas com a mesma chave de idempotência. Uma falha de email nunca invalida o formulário já guardado: fica registada nos logs da aplicação, sem reenvio persistente automático. Se a consulta dos RH falhar, o endereço institucional continua a ser notificado.
 
+## Denúncias e conflitos de interesse
+
+Cada denúncia confidencial e declaração de conflito gera uma ficha PDF privada no BackOffice. A Direção — administradores, Coordenação e Vice-Coordenação — recebe apenas uma notificação por email, sem anexo nem informação sensível; a ficha é consultada na área **Documentos**. Este envio requer `SUPABASE_SERVICE_ROLE_KEY` para encontrar os destinatários e `RESEND_API_KEY` para entregar a mensagem. Se uma destas variáveis não estiver configurada, a ficha é arquivada na mesma e o respetivo registo em **Documentos** indica a configuração em falta.
+
 ## Verificação
 
 `npm run check` executa lint, TypeScript, testes e a compilação de produção. `npm audit --omit=dev` verifica as dependências de produção.
@@ -45,7 +49,7 @@ Durante desenvolvimento, o design pode ser revisto sem autenticação em `/backo
 
 Os administradores têm uma área **Definições → Ver como um cargo** para validar a navegação de Administrador, Team Líder por área, Comunicação, Projetos e Inovação e Recursos Humanos. A simulação é apenas visual, fica no navegador e não altera o cargo persistido nem as autorizações aplicadas pelo Supabase.
 
-A área **Documentos**, os registos da biblioteca, os ficheiros privados e as rotas da Google Drive são exclusivos de Administradores e de todos os cargos Team Líder. Os restantes cargos não veem o menu e recebem acesso negado se tentarem chamar diretamente a API.
+A área **Documentos**, os registos da biblioteca, os ficheiros privados e a Drive interna são exclusivos de Administradores e de todos os cargos Team Líder. Os restantes cargos não veem o menu e recebem acesso negado se tentarem chamar diretamente a API.
 
 Depois desta atualização, voltar a executar `supabase-workspace-setup.sql` no Supabase para instalar os novos cargos e respetivas políticas. Os valores antigos `member` e `team_leader` continuam aceites apenas para compatibilidade com contas existentes.
 
@@ -66,18 +70,6 @@ O Dashboard permite que qualquer membro envie uma ideia ou problema. Cada membro
 
 A tabela e as políticas estão em `supabase-innovation-requests.sql`. Confirmar também `SUPABASE_SERVICE_ROLE_KEY`, `RESEND_API_KEY` e `NEXT_PUBLIC_APP_URL` na Vercel.
 
-## Google Drive no backoffice
+## Drive interna no BackOffice
 
-A secção Documentos usa como raiz a pasta `18mdhHygC7zUMlU7U0r_2lR5SXkvg2s8T`. A autenticação dos membros continua a ser feita apenas pelo Supabase. A ligação à Drive existe exclusivamente no servidor e utiliza a conta Google pessoal da Rise Up através de OAuth 2.0.
-
-Configuração:
-
-1. No Google Cloud, criar um projeto, ativar a Google Drive API e configurar o ecrã de consentimento OAuth.
-2. Criar credenciais OAuth 2.0 do tipo aplicação Web.
-3. Autorizar uma vez a conta Google proprietária da pasta com o scope `https://www.googleapis.com/auth/drive` e obter um refresh token com acesso offline.
-4. Guardar em `.env.local` e na Vercel `GOOGLE_DRIVE_ROOT_FOLDER_ID`, `GOOGLE_OAUTH_CLIENT_ID`, `GOOGLE_OAUTH_CLIENT_SECRET` e `GOOGLE_OAUTH_REFRESH_TOKEN`.
-5. Nunca colocar o client secret ou o refresh token no Git, no JavaScript do browser ou numa mensagem.
-
-Permissões internas: membros autenticados podem navegar e pré-visualizar; administradores e todos os cargos Team Líder podem criar pastas, carregar ficheiros e mudar nomes; apenas administradores podem enviar itens para o lixo. O botão Abrir e editar abre o original na Google Drive. Como a API atua pela conta proprietária, o link da pasta pode ficar como **Restrito**, evitando um link público de editor.
-
-Uma service account só é adequada para escrita se a pasta estiver num Shared Drive do Google Workspace. Numa pasta pessoal em O meu disco, a Google não permite que service accounts sejam proprietárias de ficheiros novos.
+A secção **Documentos** usa a Drive interna da Rise Up, guardada no bucket privado `workspace-documents` do Supabase. Não depende de Google Drive nem de credenciais Google. Administradores, Coordenação, Vice-Coordenação e Team Leaders podem consultar a biblioteca; os mesmos cargos podem criar pastas e carregar ficheiros, enquanto apenas a Direção pode eliminar itens.

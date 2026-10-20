@@ -34,12 +34,10 @@ export async function requireBackofficeUser(request: NextRequest): Promise<Backo
 }
 
 export function canWriteDrive(role: string) {
-  return ["admin", "coordinator", "vice_coordinator"].includes(role) || role.startsWith("team_leader");
+  return ["admin", "coordinator", "vice_coordinator", "commercial_team", "team_leader_commercial", "hr_team", "team_leader_hr", "communication_team", "team_leader_communication", "projects_innovation_team", "team_leader_projects_innovation"].includes(role);
 }
 
-export function canReadDrive(role: string) {
-  return canWriteDrive(role);
-}
+export function canReadDrive(role: string) { return canWriteDrive(role); }
 
 export function canManageHr(role: string) {
   return ["admin", "coordinator", "vice_coordinator", "hr_team", "team_leader_hr"].includes(role);
