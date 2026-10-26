@@ -1762,7 +1762,9 @@
   }
 
   async function uploadDriveFile(event) {
-    const file = event.currentTarget.files?.[0];
+    // currentTarget is cleared once the browser finishes dispatching the event.
+    const input = event.currentTarget;
+    const file = input.files?.[0];
     if (!file) return;
     setDriveMessage(`A carregar ${file.name}…`);
     try {
@@ -1774,10 +1776,10 @@
         data.set("file", file);
         await driveRequest("/api/drive/files", { method: "POST", body: data });
       }
-      event.currentTarget.value = "";
       if (workspace.preview) renderDrive(); else await loadDrive(workspace.drive.folderId);
       setDriveMessage("Ficheiro carregado.", "success");
     } catch (error) { setDriveMessage(error?.message, "error"); }
+    finally { input.value = ""; }
   }
 
   function renderProfileModules() {
