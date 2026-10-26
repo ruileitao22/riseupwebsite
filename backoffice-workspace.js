@@ -1720,7 +1720,10 @@
   }
 
   async function renameDriveFile(file) {
-    const name = window.prompt("Novo nome", file.name)?.trim();
+    let name = window.prompt("Novo título do ficheiro (mantém a extensão, por exemplo .pdf)", file.name)?.trim();
+    if (name && file.mimeType !== "application/vnd.riseup.folder" && !/\.[a-z0-9]{1,10}$/i.test(name)) {
+      name += file.name.match(/\.[a-z0-9]{1,10}$/i)?.[0] || "";
+    }
     if (!name || name === file.name) return;
     if (workspace.preview) {
       file.name = name;

@@ -27,10 +27,22 @@ function decode(id: string) {
   if (id === RISEUP_DRIVE_ROOT) return "";
   let path = "";
   try { path = Buffer.from(id, "base64url").toString("utf8"); } catch { throw new Error("DRIVE_FILE_NOT_FOUND"); }
-  if (!path || path.startsWith("/") || path.includes("..") || path.includes("\\")) throw new Error("DRIVE_FILE_NOT_FOUND");
+  if (!path || path.startsWith("/") || path.split("/").some((part) => part === ".." || part === ".") || path.includes("\\")) throw new Error("DRIVE_FILE_NOT_FOUND");
   return path;
 }
 function cleanName(value: string) { const name = value.trim().replace(/[\\/]+/g, "-"); if (!name || name === "." || name === ".." || name.length > 180) throw new Error("INVALID_NAME"); return name; }
+// Storage keys are ASCII; encode unsupported titles reversibly without losing accents.
+const TITLE_PREFIX = "__riseup_title__";
+function storageName(name: string) {
+  return /^[a-zA-Z0-9_. ()-]+$/.test(name) && !name.startsWith(TITLE_PREFIX) && name !== ".keep"
+    ? name : TITLE_PREFIX + Buffer.from(name, "utf8").toString("base64url");
+}
+function displayName(key: string) {
+  if (!key.startsWith(TITLE_PREFIX)) return key;
+  const encoded = key.slice(TITLE_PREFIX.length);
+  const name = Buffer.from(encoded, "base64url").toString("utf8");
+  return name && Buffer.from(name, "utf8").toString("base64url") === encoded ? name : key;
+}
 function isDirection(role: string) { return ["admin", "coordinator", "vice_coordinator"].includes(role); }
 export function driveDepartmentsForRole(role: string) { return isDirection(role) ? DRIVE_DEPARTMENTS : DRIVE_DEPARTMENTS.filter((department) => department.roles.includes(role)); }
 function assertPathAccess(role: string, path: string, allowRoot = true) {
@@ -53,23 +65,23 @@ export async function listDriveFolder(folderId: string | undefined, role: string
   const files: DriveFile[] = (data as StorageEntry[] || []).filter((entry) => entry.name !== ".keep").map((entry) => {
     const entryPath = `${path}/${entry.name}`;
     const isFolder = !entry.metadata;
-    return { id: encode(entryPath), name: entry.name, mimeType: isFolder ? DRIVE_FOLDER_MIME : entry.metadata?.mimetype || "application/octet-stream", modifiedTime: entry.metadata?.lastModified || new Date().toISOString(), size: entry.metadata?.size ? String(entry.metadata.size) : undefined };
+    return { id: encode(entryPath), name: displayName(entry.name), mimeType: isFolder ? DRIVE_FOLDER_MIME : entry.metadata?.mimetype || "application/octet-stream", modifiedTime: entry.metadata?.lastModified || new Date().toISOString(), size: entry.metadata?.size ? String(entry.metadata.size) : undefined };
   });
   return { files, rootFolderId: RISEUP_DRIVE_ROOT };
 }
 
 export async function createDriveFolder(parentId: string | undefined, name: string, role: string, accessToken: string) {
   const parent = folderPath(parentId); assertPathAccess(role, parent, false);
-  const path = `${parent}/${cleanName(name)}/.keep`;
+  const path = `${parent}/${storageName(cleanName(name))}/.keep`;
   const { error } = await requestClient(accessToken).storage.from(WORKSPACE_DOCUMENTS_BUCKET).upload(path, new Blob([""]), { contentType: "text/plain", upsert: false });
   if (error) throw error;
   const folderPathValue = path.slice(0, -"/.keep".length);
-  return { id: encode(folderPathValue), name: folderPathValue.split("/").at(-1) || name, mimeType: DRIVE_FOLDER_MIME, modifiedTime: new Date().toISOString() } satisfies DriveFile;
+  return { id: encode(folderPathValue), name: cleanName(name), mimeType: DRIVE_FOLDER_MIME, modifiedTime: new Date().toISOString() } satisfies DriveFile;
 }
 
 export async function uploadDriveFile(parentId: string | undefined, file: File, role: string, accessToken: string) {
   const parent = folderPath(parentId); assertPathAccess(role, parent, false);
-  const name = cleanName(file.name); const path = `${parent}/${name}`;
+  const name = cleanName(file.name); const path = `${parent}/${storageName(name)}`;
   const { error } = await requestClient(accessToken).storage.from(WORKSPACE_DOCUMENTS_BUCKET).upload(path, await file.arrayBuffer(), { contentType: file.type || "application/octet-stream", upsert: false });
   if (error) throw error;
   return { id: encode(path), name, mimeType: file.type || "application/octet-stream", modifiedTime: new Date().toISOString(), size: String(file.size) } satisfies DriveFile;
@@ -77,7 +89,7 @@ export async function uploadDriveFile(parentId: string | undefined, file: File, 
 
 export async function uploadDriveFileBytes(parentId: string | undefined, filename: string, content: ArrayBuffer | Uint8Array, mimeType: string, role: string, accessToken: string) {
   const parent = folderPath(parentId); assertPathAccess(role, parent, false);
-  const name = cleanName(filename); const path = parent + "/" + name;
+  const name = cleanName(filename); const path = parent + "/" + storageName(name);
   const bytes = content instanceof Uint8Array ? content : new Uint8Array(content);
   const { error } = await requestClient(accessToken).storage.from(WORKSPACE_DOCUMENTS_BUCKET).upload(path, bytes, { contentType: mimeType || "application/octet-stream", upsert: false });
   if (error) throw error;
@@ -86,10 +98,10 @@ export async function uploadDriveFileBytes(parentId: string | undefined, filenam
 
 export async function renameDriveFile(fileId: string, name: string, role: string, accessToken: string) {
   const current = decode(fileId); assertPathAccess(role, current, false); assertNotDepartmentRoot(current);
-  const parent = current.split("/").slice(0, -1).join("/"); const target = `${parent}/${cleanName(name)}`;
+  const parent = current.split("/").slice(0, -1).join("/"); const target = `${parent}/${storageName(cleanName(name))}`;
   const { error } = await requestClient(accessToken).storage.from(WORKSPACE_DOCUMENTS_BUCKET).move(current, target);
   if (error) throw error;
-  return { id: encode(target), name: target.split("/").at(-1) || name, mimeType: "application/octet-stream", modifiedTime: new Date().toISOString() } satisfies DriveFile;
+  return { id: encode(target), name: cleanName(name), mimeType: "application/octet-stream", modifiedTime: new Date().toISOString() } satisfies DriveFile;
 }
 
 export async function trashDriveFile(fileId: string, role: string, accessToken: string) {
@@ -102,5 +114,5 @@ export async function getDrivePreview(fileId: string, role: string, accessToken:
   const path = decode(fileId); assertPathAccess(role, path, false);
   const { data, error } = await requestClient(accessToken).storage.from(WORKSPACE_DOCUMENTS_BUCKET).download(path);
   if (error || !data) throw error || new Error("DRIVE_FILE_NOT_FOUND");
-  return { response: new Response(data.stream()), file: { name: path.split("/").at(-1) || "documento" }, contentType: data.type || "application/octet-stream" };
+  return { response: new Response(data.stream()), file: { name: displayName(path.split("/").at(-1) || "documento") }, contentType: data.type || "application/octet-stream" };
 }
