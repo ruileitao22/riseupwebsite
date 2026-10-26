@@ -1761,25 +1761,89 @@
     } catch (error) { setDriveMessage(error?.message, "error"); }
   }
 
-  async function uploadDriveFile(event) {
-    // currentTarget is cleared once the browser finishes dispatching the event.
-    const input = event.currentTarget;
-    const file = input.files?.[0];
-    if (!file) return;
-    setDriveMessage(`A carregar ${file.name}…`);
+  async function uploadDriveFiles(files) {
+    if (!files.length || workspace.drive.uploading) return;
+    if (!workspace.drive.permissions.write) {
+      setDriveMessage("Não tens permissão para carregar ficheiros nesta pasta.", "error");
+      return;
+    }
+    const folderId = workspace.drive.folderId;
+    if (!folderId || folderId === workspace.drive.rootFolderId) {
+      setDriveMessage("Abre uma pasta para carregar os ficheiros.", "error");
+      return;
+    }
+    workspace.drive.uploading = true;
+    const button = $("[data-drive-upload]");
+    if (button) button.disabled = true;
+    const failures = [];
+    let uploaded = 0;
     try {
-      if (workspace.preview) workspace.drive.files.push({ id: crypto.randomUUID(), name: file.name, mimeType: file.type || "application/octet-stream", size: String(file.size), modifiedTime: new Date().toISOString() });
-      else {
-        const data = new FormData();
-        data.set("action", "upload");
-        data.set("parentId", workspace.drive.folderId);
-        data.set("file", file);
-        await driveRequest("/api/drive/files", { method: "POST", body: data });
+      for (const [index, file] of files.entries()) {
+        setDriveMessage(`A carregar ${index + 1} de ${files.length}: ${file.name}…`);
+        try {
+          if (!file.size || file.size > 25 * 1024 * 1024) throw new Error("O ficheiro deve ter entre 1 byte e 25 MB.");
+          if (workspace.preview) workspace.drive.files.push({ id: crypto.randomUUID(), name: file.name, mimeType: file.type || "application/octet-stream", size: String(file.size), modifiedTime: new Date().toISOString() });
+          else {
+            const data = new FormData();
+            data.set("action", "upload");
+            data.set("parentId", folderId);
+            data.set("file", file);
+            await driveRequest("/api/drive/files", { method: "POST", body: data });
+          }
+          uploaded++;
+        } catch (error) { failures.push(`${file.name}: ${error?.message || "Não foi possível carregar."}`); }
       }
-      if (workspace.preview) renderDrive(); else await loadDrive(workspace.drive.folderId);
-      setDriveMessage("Ficheiro carregado.", "success");
-    } catch (error) { setDriveMessage(error?.message, "error"); }
+      if (uploaded) {
+        if (workspace.preview) renderDrive();
+        else await loadDrive(workspace.drive.folderId);
+      }
+      const summary = uploaded === 1 ? "Ficheiro carregado." : `${uploaded} ficheiros carregados.`;
+      setDriveMessage(failures.length ? `${summary} ${failures.join(" ")}` : summary, failures.length ? "error" : "success");
+    } catch (error) {
+      setDriveMessage(error?.message || "Não foi possível atualizar a lista de ficheiros.", "error");
+    } finally {
+      workspace.drive.uploading = false;
+      if (button) button.disabled = false;
+    }
+  }
+
+  async function uploadDriveFile(event) {
+    // Keep the input reference across the asynchronous upload.
+    const input = event.currentTarget;
+    try { await uploadDriveFiles(Array.from(input.files || [])); }
     finally { input.value = ""; }
+  }
+
+  function bindDriveDropZone() {
+    const zone = $("[data-drive-drop-zone]");
+    if (!zone) return;
+    let depth = 0;
+    const isFileDrag = (event) => Array.from(event.dataTransfer?.types || []).includes("Files");
+    const reset = () => { depth = 0; zone.classList.remove("is-dragging"); };
+    zone.addEventListener("dragenter", (event) => {
+      if (!isFileDrag(event)) return;
+      event.preventDefault();
+      depth++;
+      if (workspace.drive.permissions.write && !workspace.drive.uploading) zone.classList.add("is-dragging");
+    });
+    zone.addEventListener("dragover", (event) => {
+      if (!isFileDrag(event)) return;
+      event.preventDefault();
+      event.dataTransfer.dropEffect = workspace.drive.permissions.write && !workspace.drive.uploading ? "copy" : "none";
+    });
+    zone.addEventListener("dragleave", (event) => {
+      if (!isFileDrag(event)) return;
+      if (--depth <= 0) reset();
+    });
+    zone.addEventListener("drop", (event) => {
+      if (!isFileDrag(event)) return;
+      event.preventDefault();
+      reset();
+      const files = Array.from(event.dataTransfer.files || []);
+      if (!files.length) { setDriveMessage("Arrasta ficheiros individuais, em vez de pastas.", "error"); return; }
+      void uploadDriveFiles(files);
+    });
+    zone.addEventListener("dragend", reset);
   }
 
   function renderProfileModules() {
@@ -3315,6 +3379,7 @@
     $("[data-drive-folder-form]")?.addEventListener("submit", createDriveFolder);
     $("[data-drive-upload]")?.addEventListener("click", () => $("[data-drive-file-input]")?.click());
     $("[data-drive-file-input]")?.addEventListener("change", uploadDriveFile);
+    bindDriveDropZone();
     $("[data-drive-search]")?.addEventListener("input", (event) => {
       workspace.drive.search = event.currentTarget.value;
       renderDrive();

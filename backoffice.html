@@ -324,7 +324,7 @@
 
         <section class="bo-section" data-section="documents">
           <div class="bo-section-head"><div><h2>Documentos</h2><p>Biblioteca interna da Rise Up, protegida pelo Supabase.</p></div><button class="bo-button bo-button-ghost" type="button" data-new-document>Adicionar ligação</button></div>
-          <article class="bo-panel bo-drive-browser">
+          <article class="bo-panel bo-drive-browser" data-drive-drop-zone>
             <div class="bo-drive-head">
               <div><h3>Drive interna</h3><p>Biblioteca privada da Rise Up no Supabase</p></div>
             </div>
@@ -338,12 +338,13 @@
                 <div class="bo-actions" data-drive-write-actions hidden>
                   <button class="bo-button bo-button-ghost" type="button" data-drive-new-folder>Nova pasta</button>
                   <button class="bo-button bo-button-primary" type="button" data-drive-upload>Carregar ficheiro</button>
-                  <input class="bo-sr-only" type="file" data-drive-file-input />
+                  <input class="bo-sr-only" type="file" multiple data-drive-file-input />
                 </div>
               </div>
             </div>
             <form class="bo-drive-folder-form" data-drive-folder-form hidden><label>Nome da pasta<input type="text" name="name" maxlength="180" required /></label><button class="bo-button bo-button-primary" type="submit">Criar</button><button class="bo-button bo-button-ghost" type="button" data-drive-cancel-folder>Cancelar</button></form>
             <div class="bo-drive-summary"><span data-drive-count>0 itens</span><span>Ordenado por nome</span></div>
+            <p class="bo-drive-drop-hint">Arrasta ficheiros para esta área ou usa Carregar ficheiro · Até 25 MB por ficheiro</p>
             <div class="bo-drive-list" data-drive-list aria-live="polite"></div>
             <p class="bo-status" data-drive-message></p>
           </article>

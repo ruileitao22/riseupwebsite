@@ -4,7 +4,7 @@ import { describe, expect, it, vi } from "vitest";
 
 const source = readFileSync("backoffice-workspace.js", "utf8");
 const handler = source.slice(
-  source.indexOf("  async function uploadDriveFile(event)"),
+  source.indexOf("  async function uploadDriveFiles(files)"),
   source.indexOf("  function renderProfileModules()")
 );
 
@@ -19,7 +19,8 @@ describe("Drive upload event lifecycle", () => {
     const loadDrive = vi.fn();
     const setDriveMessage = vi.fn();
     const upload = runInNewContext(handler + "\nuploadDriveFile", {
-      workspace: { preview: false, drive: { folderId: "rh" } },
+      workspace: { preview: false, drive: { folderId: "rh", permissions: { write: true } } },
+      $: () => null,
       driveRequest, loadDrive, setDriveMessage, FormData
     });
     const file = new File(["test"], "documento.txt", { type: "text/plain" });
@@ -37,10 +38,47 @@ describe("Drive upload event lifecycle", () => {
     expect(body[1].body.get("file")).toBeInstanceOf(File);
     if (fails) {
       expect(loadDrive).not.toHaveBeenCalled();
-      expect(setDriveMessage).toHaveBeenLastCalledWith("UPLOAD_FAILED", "error");
+      expect(setDriveMessage).toHaveBeenLastCalledWith("0 ficheiros carregados. documento.txt: UPLOAD_FAILED", "error");
     } else {
       expect(loadDrive).toHaveBeenCalledWith("rh");
       expect(setDriveMessage).toHaveBeenLastCalledWith("Ficheiro carregado.", "success");
     }
+  });
+});
+
+describe("Drive drag and drop", () => {
+  it("uploads dropped files to the original folder and continues after a failure", async () => {
+    const handlers: Record<string, (event: unknown) => void> = {};
+    const zone = {
+      addEventListener: (name: string, callback: (event: unknown) => void) => { handlers[name] = callback; },
+      classList: { add: vi.fn(), remove: vi.fn() }
+    };
+    const workspace = { preview: false, drive: { folderId: "rh", permissions: { write: true } } };
+    const destinations: unknown[] = [];
+    const driveRequest = vi.fn(async (_url: string, options: { body: FormData }) => {
+      destinations.push(options.body.get("parentId"));
+      workspace.drive.folderId = "comunicacao";
+      if (destinations.length === 1) throw new Error("UPLOAD_FAILED");
+    });
+    const setDriveMessage = vi.fn();
+    runInNewContext(handler + "\nbindDriveDropZone()", {
+      workspace, driveRequest, setDriveMessage, loadDrive: vi.fn(), FormData,
+      $: (selector: string) => selector === "[data-drive-drop-zone]" ? zone : null
+    });
+    const event = {
+      preventDefault: vi.fn(),
+      dataTransfer: { types: ["Files"], files: [
+        new File(["a"], "a.txt"), new File(["b"], "b.txt")
+      ] }
+    };
+    handlers.dragenter(event);
+    expect(zone.classList.add).toHaveBeenCalledWith("is-dragging");
+    handlers.drop(event);
+    await vi.waitFor(() => expect(setDriveMessage).toHaveBeenLastCalledWith(
+      "Ficheiro carregado. a.txt: UPLOAD_FAILED", "error"
+    ));
+    expect(destinations).toEqual(["rh", "rh"]);
+    expect(event.preventDefault).toHaveBeenCalled();
+    expect(zone.classList.remove).toHaveBeenCalledWith("is-dragging");
   });
 });
