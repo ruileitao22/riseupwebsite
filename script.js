@@ -7,6 +7,7 @@
     "nav.team": "Team",
     "nav.legends": "Rise Up Legends",
     "nav.companies": "For companies",
+    "companies.status": "Under development",
     "nav.projects": "Projects",
     "nav.join": "Join Us",
     "nav.contact": "Contact",
