@@ -4400,7 +4400,109 @@
     if (historyMode !== "none") updateBackofficeHistory(view, historyMode);
   }
 
+  function bindPasswordRecovery() {
+    const login = $(selectors.loginForm);
+    const requestForm = $("[data-recovery-request]");
+    const resetForm = $("[data-recovery-reset]");
+    let recoveryEmail = "";
+
+    function showRecoveryForm(form, heading, focusTarget) {
+      for (const panel of [login, requestForm, resetForm]) {
+        panel.hidden = panel !== form;
+      }
+      $("[data-auth-heading]").textContent = heading;
+      $("[data-auth-welcome]").hidden = form !== login;
+      focusTarget.focus();
+    }
+
+    function showRequest() {
+      resetForm.reset();
+      setStatus(resetForm.querySelector("[data-recovery-status]"), "");
+      setStatus(requestForm.querySelector("[data-recovery-status]"), "");
+      requestForm.elements.email.value = recoveryEmail;
+      showRecoveryForm(requestForm, "Recuperar palavra-passe", requestForm.elements.email);
+    }
+
+    function returnToLogin() {
+      requestForm.reset();
+      resetForm.reset();
+      login.elements.email.value = recoveryEmail;
+      login.elements.password.value = "";
+      showRecoveryForm(login, "Iniciar sessão", login.elements.email);
+      recoveryEmail = "";
+    }
+
+    async function submitRecovery(form, body, pendingMessage, onSuccess) {
+      const status = form.querySelector("[data-recovery-status]");
+      const buttons = [...form.querySelectorAll("button")];
+      buttons.forEach((button) => { button.disabled = true; });
+      setStatus(status, pendingMessage);
+
+      try {
+        const response = await fetch("/api/backoffice/password-recovery", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(body)
+        });
+        const result = await response.json();
+        if (!response.ok) {
+          setStatus(status, result.message, "error");
+          return;
+        }
+        setStatus(status, "");
+        onSuccess();
+      } catch {
+        setStatus(status, "Não foi possível concluir o pedido. Tenta novamente.", "error");
+      } finally {
+        buttons.forEach((button) => { button.disabled = false; });
+      }
+    }
+
+    $("[data-recovery-open]").addEventListener("click", () => {
+      recoveryEmail = login.elements.email.value.trim();
+      login.elements.password.value = "";
+      setStatus($(selectors.loginStatus), "");
+      showRequest();
+    });
+
+    $all("[data-recovery-back]").forEach((button) => button.addEventListener("click", returnToLogin));
+    $("[data-recovery-resend]").addEventListener("click", showRequest);
+
+    requestForm.addEventListener("submit", (event) => {
+      event.preventDefault();
+      const email = requestForm.elements.email.value.trim();
+      submitRecovery(requestForm, { action: "request", email }, "A pedir o código…", () => {
+        recoveryEmail = email;
+        showRecoveryForm(resetForm, "Repor palavra-passe", resetForm.elements.code);
+      });
+    });
+
+    resetForm.addEventListener("submit", (event) => {
+      event.preventDefault();
+      const { code, password, confirmation } = resetForm.elements;
+      const status = resetForm.querySelector("[data-recovery-status]");
+      if (password.value !== confirmation.value) {
+        setStatus(status, "As palavras-passe têm de ser iguais.", "error");
+        confirmation.focus();
+        return;
+      }
+      if (new TextEncoder().encode(password.value).length > 72) {
+        setStatus(status, "A palavra-passe é demasiado longa. Escolhe uma mais curta.", "error");
+        password.focus();
+        return;
+      }
+
+      submitRecovery(resetForm, { action: "reset", email: recoveryEmail, code: code.value, password: password.value }, "A repor a palavra-passe…", () => {
+        returnToLogin();
+        setStatus($(selectors.loginStatus), "Palavra-passe reposta. Já podes iniciar sessão.", "success");
+        login.elements.password.focus();
+      });
+    });
+  }
+
   function bindEvents() {
+    bindPasswordRecovery();
+
     window.addEventListener("beforeunload", (event) => {
       if (!hasUnsavedProjectChanges()) {
         return;

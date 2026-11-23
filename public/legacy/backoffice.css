@@ -4936,6 +4936,45 @@ body.is-member [data-admin-only] {
   text-align: center;
 }
 
+.bo-auth [hidden],
+.bo-auth .bo-status:empty {
+  display: none;
+}
+
+.bo-auth-action {
+  justify-self: center;
+  padding: 0.35rem 0;
+  border: 0;
+  background: transparent;
+  color: #165ead;
+  font: inherit;
+  font-size: 0.84rem;
+  font-weight: 700;
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+  cursor: pointer;
+}
+
+.bo-auth-action:disabled {
+  opacity: 0.6;
+  cursor: wait;
+}
+
+.bo-recovery-copy,
+.bo-auth .bo-form small {
+  margin: 0;
+  color: #536573;
+  font-size: 0.81rem;
+  line-height: 1.55;
+}
+
+.bo-recovery-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  column-gap: 1.25rem;
+}
+
 .bo-auth-visual {
   position: relative;
   min-width: 0;
