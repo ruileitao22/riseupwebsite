@@ -1224,21 +1224,15 @@
 
             <section class="bo-hr-module-view" role="tabpanel" data-hr-module-view="organization">
               <div class="bo-list-head bo-org-chart-head">
-                <div><p class="bo-kicker">Estrutura</p><h3>Organigrama da Rise Up</h3><p>Cria cargos, escolhe os membros e define de forma simples quem reporta a quem.</p></div>
+                <div><p class="bo-kicker">Estrutura</p><h3>Organigrama da Rise Up</h3><p>Os cargos estão agrupados por chefia direta. Abre um cartão para editar.</p></div>
                 <div class="bo-actions">
                   <button class="bo-button bo-button-ghost" type="button" data-add-org-node>Adicionar cargo</button>
                   <button class="bo-button bo-button-primary" type="button" data-save-org-chart>Guardar organigrama</button>
                   <button class="bo-button bo-button-ghost" type="button" data-export-org-pdf>Exportar PDF</button>
                 </div>
               </div>
-              <div class="bo-org-chart-help">
-                <span><strong>1.</strong> Adiciona um cargo</span>
-                <span><strong>2.</strong> Escolhe a pessoa</span>
-                <span><strong>3.</strong> Define a chefia direta</span>
-                <div class="bo-org-chart-zoom" aria-label="Zoom do organigrama"><button class="bo-icon-button" type="button" data-org-zoom-out aria-label="Reduzir zoom" title="Reduzir zoom">−</button><output data-org-zoom-label>100%</output><button class="bo-icon-button" type="button" data-org-zoom-in aria-label="Aumentar zoom" title="Aumentar zoom">+</button><button class="bo-button bo-button-ghost" type="button" data-org-zoom-reset>Repor</button></div>
-              </div>
+              <p class="bo-status" data-org-chart-status role="status"></p>
               <div class="bo-org-chart-canvas" data-org-chart></div>
-              <p class="bo-status" data-org-chart-status></p>
             </section>
 
             <section class="bo-hr-module-view" role="tabpanel" data-hr-module-view="warnings">

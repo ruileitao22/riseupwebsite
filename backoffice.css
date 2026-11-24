@@ -4242,58 +4242,90 @@ body.is-member [data-admin-only] {
 /* Organization chart builder */
 .bo-org-chart-head { align-items: flex-start; }
 .bo-org-chart-head .bo-actions { justify-content: flex-end; }
-.bo-org-chart-help { display: flex; flex-wrap: wrap; gap: 0.55rem; margin-bottom: 1rem; }
-.bo-org-chart-help span { padding: 0.42rem 0.62rem; border-radius: 7px; background: #f1f5f9; color: #607080; font-size: 0.73rem; }
-.bo-org-chart-help strong { color: #236dc9; }
-.bo-org-chart-zoom { display: inline-flex; align-items: center; gap: .35rem; margin-left: auto; padding-left: .25rem; }
-.bo-org-chart-zoom .bo-icon-button { width: 30px; height: 30px; min-height: 30px; font-size: 1.05rem; }
-.bo-org-chart-zoom output { min-width: 44px; color: #35506b; font-size: .72rem; font-weight: 800; text-align: center; }
-.bo-org-chart-zoom .bo-button { min-height: 30px; padding: .32rem .55rem; font-size: .68rem; }
+[data-org-chart-status]:empty { margin: 0; min-height: 0; }
 .bo-org-chart-canvas {
-  min-height: 300px;
-  padding: 1.25rem;
-  overflow-x: auto;
+  display: grid;
+  gap: 1rem;
+}
+.bo-org-group {
+  min-width: 0;
+  padding: clamp(0.75rem, 2vw, 1.25rem);
   border: 1px solid #e2e7ed;
   border-radius: 12px;
   background: #f8fafc;
-  scrollbar-width: thin;
 }
-.bo-org-roots { zoom: var(--bo-org-zoom, 1); transform-origin: top center; }
-.bo-org-roots,
-.bo-org-children { display: flex; align-items: flex-start; justify-content: center; gap: 1.15rem; min-width: max-content; }
-.bo-org-branch { position: relative; display: flex; flex-direction: column; align-items: center; }
-.bo-org-children { position: relative; margin-top: 34px; padding-top: 22px; }
-.bo-org-children::before { content: ""; position: absolute; top: 0; left: 10%; right: 10%; border-top: 1.5px solid #b9c7d5; }
-.bo-org-branch > .bo-org-children::after { content: ""; position: absolute; top: -34px; left: 50%; height: 34px; border-left: 1.5px solid #b9c7d5; }
-.bo-org-children > .bo-org-branch::before { content: ""; position: absolute; top: -22px; left: 50%; height: 22px; border-left: 1.5px solid #b9c7d5; }
-.bo-org-node-card {
-  width: 270px;
-  padding: 0.8rem;
+.bo-org-group-root { border-color: #cfdef2; background: #f1f6fd; }
+.bo-org-group-heading {
   display: grid;
-  gap: 0.68rem;
-  border: 1px solid #d9e1ea;
-  border-top: 3px solid #438be5;
-  border-radius: 10px;
-  background: #fff;
-  box-shadow: 0 7px 20px rgba(36, 57, 78, 0.07);
+  gap: 0.16rem;
+  margin: 0 0 0.85rem;
+  padding-inline-start: 0.65rem;
+  border-inline-start: 3px solid #438be5;
+  color: var(--bo-text);
+  font-size: 0.95rem;
 }
-.bo-org-node-head { display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; }
+.bo-org-group-label { color: #2361a7; font-size: 0.73rem; font-weight: 750; }
+.bo-org-person,
+.bo-org-role { min-width: 0; overflow-wrap: anywhere; }
+.bo-org-person { color: var(--bo-text); font-size: 0.9rem; font-weight: 750; }
+.bo-org-role { color: #526474; font-size: 0.78rem; line-height: 1.4; font-weight: 500; }
+.bo-org-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 13rem), 1fr));
+  align-items: start;
+  gap: 0.65rem;
+}
+.bo-org-node-card {
+  min-width: 0;
+  border: 1px solid #d9e1ea;
+  border-radius: 8px;
+  background: #fff;
+}
+.bo-org-node-card[open] { border-color: #87b3e8; }
+.bo-org-node-summary {
+  position: relative;
+  display: grid;
+  align-content: center;
+  gap: 0.2rem;
+  min-height: 4.25rem;
+  padding: 0.65rem 2rem 0.65rem 0.8rem;
+  border-radius: 7px;
+  cursor: pointer;
+  list-style: none;
+}
+.bo-org-node-summary::-webkit-details-marker { display: none; }
+.bo-org-node-summary::after {
+  content: "";
+  position: absolute;
+  inset-inline-end: 0.85rem;
+  top: 50%;
+  width: 0.45rem;
+  height: 0.45rem;
+  border: solid #4d6d90;
+  border-width: 0 1.5px 1.5px 0;
+  transform: translateY(-65%) rotate(45deg);
+}
+.bo-org-node-card[open] > .bo-org-node-summary::after { transform: translateY(-25%) rotate(225deg); }
+.bo-org-node-summary:hover,
+.bo-org-node-card[open] > .bo-org-node-summary { background: #f3f7fd; }
+.bo-org-node-summary:focus-visible { outline: 2px solid #236dc9; outline-offset: 2px; }
+.bo-org-node-editor { display: grid; gap: 0.65rem; padding: 0.75rem; border-top: 1px solid #e2e7ed; }
 .bo-org-node-order { display: flex; gap: 0.25rem; }
 .bo-org-node-order .bo-icon-button { width: 29px; height: 29px; min-height: 29px; }
-.bo-org-field { display: grid; gap: 0.3rem; color: var(--bo-text); font-size: 0.76rem; font-weight: 750; }
-.bo-org-field input { width: 100%; min-height: 38px; padding: 0.55rem 0.62rem; border: 1px solid rgba(31, 49, 68, 0.14); border-radius: 8px; background: #fff; outline: none; }
+.bo-org-node-order .bo-icon-button:disabled { opacity: 0.4; cursor: default; }
+.bo-org-field { display: grid; min-width: 0; gap: 0.3rem; color: var(--bo-text); font-size: 0.76rem; font-weight: 750; }
+.bo-org-field input,
+.bo-org-field select { width: 100%; min-width: 0; min-height: 38px; padding: 0.55rem 0.62rem; border: 1px solid rgba(31, 49, 68, 0.14); border-radius: 8px; background: #fff; color: var(--bo-text); }
 .bo-org-field input:focus { border-color: rgba(35, 109, 201, 0.45); box-shadow: 0 0 0 3px rgba(35, 109, 201, 0.09); }
 .bo-org-node-card .bo-select-trigger { min-height: 38px; padding-block: 0.5rem; font-size: 0.76rem; }
-.bo-org-node-actions { display: flex; align-items: center; justify-content: space-between; gap: 0.45rem; padding-top: 0.2rem; }
+.bo-org-node-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 0.35rem; }
 .bo-org-node-actions .bo-button { min-height: 33px; padding: 0.4rem 0.55rem; font-size: 0.7rem; }
-.bo-org-empty { min-height: 260px; display: grid; place-content: center; justify-items: center; gap: 0.6rem; color: #718096; text-align: center; }
+.bo-org-empty { min-height: 260px; display: grid; place-content: center; justify-items: center; gap: 0.6rem; padding: 1rem; border: 1px solid #e2e7ed; border-radius: 12px; background: #f8fafc; color: #526474; text-align: center; }
 .bo-org-empty strong { color: var(--bo-text); font-size: 1rem; }
 .bo-org-empty p { margin: 0 0 0.4rem; }
 
 @media (max-width: 760px) {
   .bo-org-chart-head .bo-actions { width: 100%; display: grid; grid-template-columns: 1fr; }
-  .bo-org-chart-zoom { width: 100%; justify-content: flex-start; margin-left: 0; }
-  .bo-org-node-card { width: 240px; }
 }
 
 @media (max-width: 760px) {
