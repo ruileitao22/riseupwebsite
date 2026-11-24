@@ -16,6 +16,9 @@
     roleHistory: [],
     organizationChart: [],
     organizationSavedIds: new Set(),
+    organizationSelection: "",
+    organizationZoom: null,
+    organizationView: null,
     activeHrModule: "schedule",
     attendanceView: "upcoming",
     attendanceEventId: "",
@@ -2697,26 +2700,137 @@
       .sort(compareOrganizationNodes);
   }
 
-  function organizationGroups() {
-    const byId = new Map(workspace.organizationChart.map((node) => [node.id, node]));
+  function organizationForest() {
+    const nodes = [...workspace.organizationChart].sort(compareOrganizationNodes);
+    const ids = new Set(nodes.map((node) => node.id));
     const byManager = new Map();
-    workspace.organizationChart.forEach((node) => {
-      const manager = byId.get(node.parent_id) || null;
-      if (!byManager.has(manager)) byManager.set(manager, { manager, nodes: [] });
-      byManager.get(manager).nodes.push(node);
-    });
-    byManager.forEach(({ nodes }) => nodes.sort(compareOrganizationNodes));
-
-    const ordered = [];
-    const appendGroup = (manager) => {
-      const group = byManager.get(manager);
-      if (!group) return;
-      byManager.delete(manager);
-      ordered.push(group);
+    for (const node of nodes) {
+      const manager = ids.has(node.parent_id) ? node.parent_id : null;
+      if (!byManager.has(manager)) byManager.set(manager, []);
+      byManager.get(manager).push(node);
+    }
+    const visited = new Set();
+    const visit = (node) => {
+      if (visited.has(node.id)) return null;
+      visited.add(node.id);
+      return { node, children: (byManager.get(node.id) || []).map(visit).filter(Boolean) };
     };
-    appendGroup(null);
-    for (const group of ordered) group.nodes.forEach(appendGroup);
-    return ordered.concat([...byManager.values()]);
+    const roots = (byManager.get(null) || []).map(visit);
+    // Still show entries in older data if a reporting cycle has no starting node.
+    for (const node of nodes) {
+      if (!visited.has(node.id)) roots.push(visit(node));
+    }
+    return roots;
+  }
+
+  function layoutOrganization(forest, cardWidth, gap, cardHeight) {
+    const levelGap = gap * 2;
+    const railInset = gap * 0.75;
+    const cards = [];
+    const lines = [];
+    const line = (x1, y1, x2, y2) => {
+      if (x1 !== x2 || y1 !== y2) lines.push({ x1, y1, x2, y2 });
+    };
+
+    function measure(entry) {
+      const children = entry.children.map(measure);
+      const blocks = [];
+      for (let index = 0; index < children.length;) {
+        const child = children[index];
+        let end = index;
+        while (end < children.length && !children[end].blocks.length) end += 1;
+        const count = end - index;
+        if (count < 3) {
+          blocks.push(child);
+          index += 1;
+          continue;
+        }
+
+        // Hang adjacent leaf roles from rails to avoid a single oversized row.
+        const columnCount = Math.ceil(count / Math.max(6, Math.ceil(Math.sqrt(count * 2))));
+        const rows = Math.ceil(count / columnCount);
+        for (let start = index; start < end; start += rows) {
+          const stack = children.slice(start, Math.min(start + rows, end));
+          const height = stack.reduce((sum, item) => sum + item.cardHeight, (stack.length - 1) * gap);
+          blocks.push({ stack, height, width: cardWidth + railInset, anchor: 0 });
+        }
+        index = end;
+      }
+
+      const childrenWidth = blocks.reduce((sum, child) => sum + child.width + gap, -gap);
+      const width = Math.max(cardWidth, childrenWidth);
+      const height = cardHeight(entry.node);
+      const offset = (width - childrenWidth) / 2;
+      let position = offset;
+      const columns = blocks.map((block) => {
+        const column = { block, x: position };
+        position += block.width + gap;
+        return column;
+      });
+      const first = columns[0];
+      const last = columns[columns.length - 1];
+      const axis = first ? (first.x + first.block.anchor + last.x + last.block.anchor) / 2 : width / 2;
+      const anchor = Math.max(cardWidth / 2, Math.min(width - cardWidth / 2, axis));
+      const descendantHeight = blocks.length ? levelGap + Math.max(...blocks.map((block) => block.height)) : 0;
+      return { entry, blocks, columns, width, anchor, cardHeight: height, height: height + descendantHeight };
+    }
+
+    function place(branch, x, y, root = false) {
+      const center = x + branch.anchor;
+      const bottom = y + branch.cardHeight;
+      cards.push({
+        node: branch.entry.node, x: center - cardWidth / 2, y, height: branch.cardHeight,
+        root, manager: Boolean(branch.columns.length)
+      });
+      if (!branch.columns.length) return;
+
+      const bar = bottom + levelGap / 2;
+      const nextY = bottom + levelGap;
+      const anchors = branch.columns.map(({ block, x: offset }) => x + offset + block.anchor);
+      line(center, bottom, center, bar);
+      line(Math.min(center, anchors[0]), bar, Math.max(center, anchors[anchors.length - 1]), bar);
+
+      branch.columns.forEach(({ block, x: offset }, index) => {
+        const startX = x + offset;
+        const anchor = anchors[index];
+        if (!block.stack) {
+          line(anchor, bar, anchor, nextY);
+          place(block, startX, nextY);
+          return;
+        }
+        let cardY = nextY;
+        let lastCenter = nextY;
+        block.stack.forEach((child) => {
+          lastCenter = cardY + child.cardHeight / 2;
+          line(anchor, lastCenter, startX + railInset, lastCenter);
+          place(child, startX + railInset, cardY);
+          cardY += child.cardHeight + gap;
+        });
+        line(anchor, bar, anchor, lastCenter);
+      });
+    }
+
+    const roots = forest.map(measure);
+    const columns = roots.length > 4 ? Math.ceil(Math.sqrt(roots.length) * 1.4) : roots.length;
+    const rows = [];
+    for (let index = 0; index < roots.length; index += columns) {
+      const branches = roots.slice(index, index + columns);
+      const width = branches.reduce((sum, branch) => sum + branch.width + gap, -gap);
+      const height = Math.max(...branches.map((branch) => branch.height));
+      rows.push({ branches, width, height });
+    }
+    const width = Math.max(0, ...rows.map((row) => row.width));
+    let height = 0;
+    for (const row of rows) {
+      if (height) height += levelGap;
+      let x = (width - row.width) / 2;
+      row.branches.forEach((branch) => {
+        place(branch, x, height, true);
+        x += branch.width + gap;
+      });
+      height += row.height;
+    }
+    return { cards, lines, width, height, cardWidth };
   }
 
   function organizationDescendantIds(nodeId, found = new Set()) {
@@ -2762,17 +2876,15 @@
     if (index < 0 || target < 0 || target >= siblings.length) return;
     [siblings[index], siblings[target]] = [siblings[target], siblings[index]];
     siblings.forEach((item, position) => { item.sort_order = position + 1; });
-    renderOrganizationChart(node.id, "summary");
+    renderOrganizationChart(node.id, "#bo-org-edit-title");
   }
 
   function updateOrganizationLabels(node) {
-    const id = CSS.escape(node.id);
-    const card = $(`[data-org-node-id="${id}"]`);
-    const heading = $(`[data-org-manager-id="${id}"]`);
-    [card, heading].filter(Boolean).forEach((container) => {
-      $(".bo-org-person", container).textContent = organizationMemberName(node.member_id);
-      $(".bo-org-role", container).textContent = organizationTitle(node);
-    });
+    const card = workspace.organizationView?.cards.get(node.id);
+    if (!card) return;
+    $(".bo-org-person", card).textContent = organizationMemberName(node.member_id);
+    $(".bo-org-role", card).textContent = organizationTitle(node);
+    refreshOrganizationLayout();
   }
 
   function createOrganizationEditor(node) {
@@ -2817,7 +2929,7 @@
       node.sort_order = organizationChildren(node.parent_id).length + 1;
       normalizeOrganizationSort(oldParent);
       normalizeOrganizationSort(node.parent_id);
-      renderOrganizationChart(node.id, "summary");
+      renderOrganizationChart(node.id, "#bo-org-edit-title");
     });
     parentLabel.appendChild(parent);
 
@@ -2846,36 +2958,114 @@
     return editor;
   }
 
-  function createOrganizationCard(node, expanded) {
-    const card = element("details", "bo-org-node-card");
+  function createOrganizationCard(node) {
+    const card = element("button", "bo-org-node-card");
+    card.type = "button";
     card.dataset.orgNodeId = node.id;
-    card.setAttribute("name", "organization-cards");
-    const summary = element("summary", "bo-org-node-summary");
-    summary.append(
+    card.setAttribute("aria-controls", "bo-org-edit-panel");
+    card.setAttribute("aria-expanded", "false");
+    card.append(
       element("span", "bo-org-person", organizationMemberName(node.member_id)),
       element("span", "bo-org-role", organizationTitle(node))
     );
-    card.appendChild(summary);
-    if (expanded) {
-      card.open = true;
-      card.appendChild(createOrganizationEditor(node));
-    }
-    card.addEventListener("toggle", () => {
-      const editor = $(".bo-org-node-editor", card);
-      if (card.open && !editor) card.appendChild(createOrganizationEditor(node));
-      if (!card.open) editor?.remove();
-    });
+    card.addEventListener("click", () => selectOrganizationNode(node.id, "#bo-org-edit-title"));
     return card;
   }
 
-  function renderOrganizationChart(expandedId, focusSelector) {
+  function selectOrganizationNode(id, focusSelector) {
+    const panel = $("[data-org-editor]");
+    if (!panel) return;
+    const cards = workspace.organizationView?.cards;
+    cards?.get(workspace.organizationSelection)?.setAttribute("aria-expanded", "false");
+    const node = workspace.organizationChart.find((item) => item.id === id);
+    workspace.organizationSelection = node?.id || "";
+    panel.hidden = !node;
+    const fields = $("[data-org-editor-fields]", panel);
+    fields.replaceChildren();
+    if (!node) return;
+    cards?.get(id)?.setAttribute("aria-expanded", "true");
+    fields.appendChild(createOrganizationEditor(node));
+    refreshOrganizationLayout();
+    if (focusSelector) $(focusSelector, panel)?.focus();
+  }
+
+  function fitOrganizationZoom(view) {
+    const { viewport, layout } = view;
+    const inset = 48;
+    return Math.min(1, (viewport.clientWidth - inset) / layout.width, (viewport.clientHeight - inset) / layout.height);
+  }
+
+  function applyOrganizationZoom() {
+    const view = workspace.organizationView;
+    if (!view?.layout || view.viewport.clientWidth <= 48 || view.viewport.clientHeight <= 48) return;
+    const { viewport, frame, stage, layout } = view;
+    const zoom = workspace.organizationZoom ?? fitOrganizationZoom(view);
+    const ratio = zoom / (view.scale || zoom);
+    const middleX = viewport.clientWidth / 2;
+    const middleY = viewport.clientHeight / 2;
+    const graphX = viewport.scrollLeft + middleX - frame.offsetLeft - 24;
+    const graphY = viewport.scrollTop + middleY - 24;
+    frame.style.width = `${Math.ceil(layout.width * zoom) + 48}px`;
+    frame.style.height = `${Math.ceil(layout.height * zoom) + 48}px`;
+    stage.style.transform = `scale(${zoom})`;
+    view.scale = zoom;
+    viewport.classList.toggle("is-pannable", viewport.scrollWidth > viewport.clientWidth || viewport.scrollHeight > viewport.clientHeight);
+    if (workspace.organizationZoom === null) {
+      viewport.scrollTo(0, 0);
+    } else if (ratio !== 1) {
+      viewport.scrollTo(graphX * ratio + frame.offsetLeft + 24 - middleX, graphY * ratio + 24 - middleY);
+    }
+    const percentage = zoom < 0.01 ? "< 1%" : `${Math.round(zoom * 100)}%`;
+    $("[data-org-zoom-label]").value = percentage;
+    $("[data-org-zoom-actual]").setAttribute("aria-pressed", String(workspace.organizationZoom === 1));
+    $("[data-org-zoom-fit]").setAttribute("aria-pressed", String(workspace.organizationZoom === null));
+    const minimum = Math.min(0.25, fitOrganizationZoom(view));
+    $("[data-org-zoom-out]").disabled = zoom <= minimum;
+    $("[data-org-zoom-in]").disabled = zoom >= 1.6;
+  }
+
+  function adjustOrganizationZoom(factor) {
+    const view = workspace.organizationView;
+    if (!view?.scale) return;
+    workspace.organizationZoom = factor
+      ? Math.max(Math.min(0.25, fitOrganizationZoom(view)), Math.min(1.6, view.scale * factor))
+      : null;
+    applyOrganizationZoom();
+  }
+
+  function refreshOrganizationLayout() {
+    const view = workspace.organizationView;
+    if (!view?.viewport.clientWidth) return;
+    const { cards, forest, connections, stage } = view;
+    const cardWidth = 188;
+    const layout = layoutOrganization(forest, cardWidth, 18, (node) => cards.get(node.id).offsetHeight);
+    view.layout = layout;
+    stage.style.width = `${layout.width}px`;
+    stage.style.height = `${layout.height}px`;
+    connections.setAttribute("viewBox", `0 0 ${layout.width} ${layout.height}`);
+    connections.firstElementChild.setAttribute("d", layout.lines.map(({ x1, y1, x2, y2 }) => `M${x1} ${y1}L${x2} ${y2}`).join(" "));
+    layout.cards.forEach(({ node, x, y, root, manager }) => {
+      const card = cards.get(node.id);
+      card.style.left = `${x}px`;
+      card.style.top = `${y}px`;
+      card.classList.toggle("bo-org-node-root", root);
+      card.classList.toggle("bo-org-node-manager", manager && !root);
+    });
+    applyOrganizationZoom();
+  }
+
+  function renderOrganizationChart(selectedId = workspace.organizationSelection, focusSelector) {
     const canvas = $("[data-org-chart]");
     if (!canvas) return;
-    expandedId ??= $(".bo-org-node-card[open]", canvas)?.dataset.orgNodeId;
+    const { scrollLeft, scrollTop } = canvas;
+    workspace.organizationView = null;
     canvas.replaceChildren();
+    $("[data-org-chart-tools]").hidden = !workspace.organizationChart.length;
     if (!workspace.organizationChart.length) {
+      selectOrganizationNode("");
+      workspace.organizationZoom = null;
       const empty = element("div", "bo-org-empty");
-      empty.append(element("strong", null, "O organigrama ainda está vazio."), element("p", null, "Começa pelo cargo de topo e adiciona os restantes níveis."));
+      empty.append(element("strong", null, "O organograma ainda está vazio."), element("p", null, "Começa pelo cargo de topo e adiciona os restantes níveis."));
       const add = element("button", "bo-button bo-button-primary", "Criar primeiro cargo");
       add.type = "button";
       add.addEventListener("click", () => addOrganizationNode());
@@ -2883,28 +3073,49 @@
       canvas.appendChild(empty);
       return;
     }
-    const sections = organizationGroups().map(({ manager, nodes }) => {
-      const section = element("section", `bo-org-group${manager ? "" : " bo-org-group-root"}`);
-      const heading = element("h4", "bo-org-group-heading");
-      if (manager) {
-        heading.dataset.orgManagerId = manager.id;
-        heading.append(
-          element("span", "bo-org-group-label", "Reportam a"),
-          element("span", "bo-org-person", organizationMemberName(manager.member_id)),
-          element("span", "bo-org-role", organizationTitle(manager))
-        );
-      } else {
-        heading.textContent = "Cargos de topo";
-      }
-      const cards = element("div", "bo-org-cards");
-      nodes.forEach((node) => cards.appendChild(createOrganizationCard(node, node.id === expandedId)));
-      section.append(heading, cards);
-      return section;
+    const forest = organizationForest();
+    const frame = element("div", "bo-org-frame");
+    const stage = element("div", "bo-org-stage");
+    const svgNamespace = "http://www.w3.org/2000/svg";
+    const connections = document.createElementNS(svgNamespace, "svg");
+    connections.setAttribute("class", "bo-org-connections");
+    connections.setAttribute("aria-hidden", "true");
+    connections.appendChild(document.createElementNS(svgNamespace, "path"));
+    stage.appendChild(connections);
+    const cards = new Map();
+    const append = ({ node, children }) => {
+      const card = createOrganizationCard(node);
+      cards.set(node.id, card);
+      stage.appendChild(card);
+      children.forEach(append);
+    };
+    forest.forEach(append);
+    frame.appendChild(stage);
+    canvas.appendChild(frame);
+    workspace.organizationView = { viewport: canvas, frame, stage, connections, cards, forest };
+    selectOrganizationNode(selectedId, focusSelector);
+    if (!workspace.organizationSelection) refreshOrganizationLayout();
+    if (workspace.organizationZoom !== null) canvas.scrollTo(scrollLeft, scrollTop);
+  }
+
+  function bindOrganizationViewport(viewport) {
+    new ResizeObserver(refreshOrganizationLayout).observe(viewport);
+    void document.fonts?.ready.then(refreshOrganizationLayout);
+
+    let drag;
+    viewport.addEventListener("pointerdown", (event) => {
+      if (event.pointerType !== "mouse" || event.button !== 0 || event.target.closest("button") || !viewport.classList.contains("is-pannable")) return;
+      drag = { id: event.pointerId, x: event.clientX + viewport.scrollLeft, y: event.clientY + viewport.scrollTop };
+      viewport.setPointerCapture(drag.id);
+      viewport.classList.add("is-dragging");
     });
-    canvas.append(...sections);
-    if (expandedId && focusSelector) {
-      $(`[data-org-node-id="${CSS.escape(expandedId)}"] ${focusSelector}`, canvas)?.focus();
-    }
+    viewport.addEventListener("pointermove", (event) => {
+      if (drag?.id === event.pointerId) viewport.scrollTo(drag.x - event.clientX, drag.y - event.clientY);
+    });
+    viewport.addEventListener("lostpointercapture", () => {
+      drag = null;
+      viewport.classList.remove("is-dragging");
+    });
   }
 
   async function saveOrganizationChart() {
@@ -2917,7 +3128,7 @@
       return;
     }
     try {
-      setWorkspaceStatus(status, "A guardar organigrama...");
+      setWorkspaceStatus(status, "A guardar organograma...");
       if (!workspace.preview) {
         const rows = workspace.organizationChart.map((node) => ({
           id: node.id,
@@ -2939,9 +3150,9 @@
         }
       }
       workspace.organizationSavedIds = new Set(workspace.organizationChart.map((node) => node.id));
-      setWorkspaceStatus(status, "Organigrama guardado.", "success");
+      setWorkspaceStatus(status, "Organograma guardado.", "success");
     } catch (error) {
-      setWorkspaceStatus(status, error?.message || "Não foi possível guardar o organigrama.", "error");
+      setWorkspaceStatus(status, error?.message || "Não foi possível guardar o organograma.", "error");
     }
   }
 
@@ -2984,11 +3195,11 @@
     return { font, size, lines, lineHeight, height: lines.length * lineHeight, context, canvasFont, maxWidth };
   }
 
-  async function drawOrganizationPdfText(pdf, page, layout, x, top, color) {
+  async function drawOrganizationPdfText(pdf, page, layout, x, top, color, scale) {
     const { font, size, lines, lineHeight, height, context, canvasFont, maxWidth } = layout;
     if (!context) {
       lines.forEach((line, index) => {
-        page.drawText(line, { x, y: top - size - index * lineHeight, font, size, color });
+        page.drawText(line, { x, y: top - (size + index * lineHeight) * scale, font, size: size * scale, color });
       });
       return;
     }
@@ -3001,7 +3212,61 @@
     context.fillStyle = `rgb(${color.red * 255}, ${color.green * 255}, ${color.blue * 255})`;
     lines.forEach((line, index) => context.fillText(line, 0, size + index * lineHeight));
     const image = await pdf.embedPng(context.canvas.toDataURL("image/png"));
-    page.drawImage(image, { x, y: top - height, width: maxWidth, height });
+    page.drawImage(image, { x, y: top - height * scale, width: maxWidth * scale, height: height * scale });
+  }
+
+  function fitOrganizationPdfPage(layout, [shortSide, longSide], margin, header, footer) {
+    const fit = (width, height) => Math.min((width - 2 * margin) / layout.width, (height - header - footer) / layout.height);
+    const landscape = fit(longSide, shortSide);
+    const portrait = fit(shortSide, longSide);
+    return portrait > landscape
+      ? { layout, width: shortSide, height: longSide, scale: Math.min(1, portrait) }
+      : { layout, width: longSide, height: shortSide, scale: Math.min(1, landscape) };
+  }
+
+  function paginateOrganizationPdf(forest, fit, minimumScale) {
+    const pages = [];
+    const pending = [forest];
+    for (const roots of pending) {
+      const visible = [];
+      const frontier = [];
+      let page;
+      const append = (entry, siblings, allowSmaller = false) => {
+        const copy = { node: entry.node, children: [] };
+        siblings.push(copy);
+        const candidate = fit(visible);
+        if (candidate.scale < minimumScale && !allowSmaller) {
+          siblings.pop();
+          return false;
+        }
+        frontier.push({ entry, copy });
+        page = candidate;
+        return true;
+      };
+
+      for (const [index, root] of roots.entries()) {
+        if (append(root, visible, index === 0)) continue;
+        pending.push(roots.slice(index));
+        break;
+      }
+      const rootCount = frontier.length;
+      const continuations = [];
+      for (const { entry, copy } of frontier) {
+        for (const [index, child] of entry.children.entries()) {
+          // A repeated manager must be followed by at least one new role on its own page.
+          if (append(child, copy.children, frontier.length === 1)) continue;
+          continuations.push({ node: entry.node, children: entry.children.slice(index) });
+          break;
+        }
+      }
+      if (continuations.length && frontier.length === rootCount) {
+        continuations.forEach((entry) => pending.push([entry]));
+      } else if (continuations.length) {
+        pending.push(continuations);
+      }
+      pages.push(page);
+    }
+    return pages;
   }
 
   async function exportOrganizationPdf() {
@@ -3018,102 +3283,90 @@
       setWorkspaceStatus(status, "A preparar PDF...");
       const { PDFDocument, StandardFonts, PageSizes, rgb } = window.PDFLib;
       const pdf = await PDFDocument.create();
-      const [portraitWidth, portraitHeight] = PageSizes.A4;
-      const width = portraitHeight;
-      const height = portraitWidth;
       const regular = await pdf.embedFont(StandardFonts.Helvetica);
       const bold = await pdf.embedFont(StandardFonts.HelveticaBold);
       const logoResponse = await window.fetch("/img/riseup-logo.png");
       if (!logoResponse.ok) throw new Error("Não foi possível carregar o logótipo.");
       const logo = await pdf.embedPng(await logoResponse.arrayBuffer());
-      const logoSize = logo.scaleToFit(52, 52);
+      const logoSize = logo.scaleToFit(48, 48);
       const generated = new Intl.DateTimeFormat("pt-PT", { day: "2-digit", month: "long", year: "numeric" }).format(new Date());
-      const ink = rgb(0.08, 0.14, 0.21);
-      const muted = rgb(0.32, 0.39, 0.46);
-      const accent = rgb(0.14, 0.36, 0.64);
-      const border = rgb(0.83, 0.88, 0.93);
-      const margin = 38;
-      const contentWidth = width - 2 * margin;
-      const contentTop = height - 91;
-      const contentBottom = 43;
-      const columns = 3;
-      const gap = 10;
-      const boxWidth = (contentWidth - (columns - 1) * gap) / columns;
-      const cardPadding = 11;
-      const groups = organizationGroups().map(({ manager, nodes }) => ({
-        manager: manager && organizationPdfText(
-          bold, `${organizationMemberName(manager.member_id)} · ${organizationTitle(manager)}`, 11, contentWidth - 22
-        ),
-        cards: nodes.map((node) => {
-          const name = organizationPdfText(bold, organizationMemberName(node.member_id), 11, boxWidth - 2 * cardPadding);
-          const title = organizationPdfText(regular, organizationTitle(node), 9.5, boxWidth - 2 * cardPadding);
-          return { name, title, height: Math.max(52, 2 * cardPadding + name.height + title.height) };
-        })
+      const ink = rgb(0.08, 0.15, 0.24);
+      const muted = rgb(0.26, 0.34, 0.44);
+      const accent = rgb(0.20, 0.49, 0.80);
+      const navy = rgb(0.09, 0.23, 0.40);
+      const border = rgb(0.67, 0.75, 0.85);
+      const lineColor = rgb(0.37, 0.50, 0.64);
+      const white = rgb(1, 1, 1);
+      const light = rgb(0.86, 0.92, 0.98);
+      const managerFill = rgb(0.93, 0.96, 1);
+      const margin = 32;
+      const header = 88;
+      const footer = 42;
+      const cardWidth = 126;
+      const padding = 9;
+      const forest = organizationForest();
+      const labels = new Map(workspace.organizationChart.map((node) => {
+        const name = organizationPdfText(bold, organizationMemberName(node.member_id), 11, cardWidth - 2 * padding);
+        const title = organizationPdfText(regular, organizationTitle(node), 10, cardWidth - 2 * padding);
+        return [node.id, { name, title, height: Math.max(49, 2 * padding + name.height + title.height) }];
       }));
-
-      let page;
-      let top;
-      const addPage = () => {
-        page = pdf.addPage([width, height]);
-        page.drawImage(logo, { x: margin, y: height - 68, ...logoSize });
-        page.drawText("Organigrama da Rise Up", { x: margin + 64, y: height - 41, size: 20, font: bold, color: ink });
-        page.drawLine({ start: { x: margin, y: height - 75 }, end: { x: width - margin, y: height - 75 }, thickness: 1, color: border });
-        page.drawLine({ start: { x: margin, y: 34 }, end: { x: width - margin, y: 34 }, thickness: 1, color: border });
-        page.drawText(`Rise Up · Documento interno · ${generated}`, { x: margin, y: 20, size: 8, font: regular, color: muted });
-        top = contentTop;
-      };
-
-      const headingHeight = (group) => group.manager ? 29 + group.manager.height : 28;
-      const drawHeading = async (group, continuation) => {
-        const bandHeight = headingHeight(group);
-        const y = top - bandHeight;
-        page.drawRectangle({ x: margin, y, width: contentWidth, height: bandHeight, color: rgb(0.94, 0.96, 0.99) });
-        page.drawRectangle({ x: margin, y, width: 3, height: bandHeight, color: accent });
-        const label = group.manager ? "Reportam a" : "Cargos de topo";
-        page.drawText(continuation ? `${label} (continuação)` : label, {
-          x: margin + 11, y: top - 17, size: group.manager ? 8 : 10, font: bold, color: accent
-        });
-        if (group.manager) await drawOrganizationPdfText(pdf, page, group.manager, margin + 11, top - 21, ink);
-        top = y - gap;
-      };
-
-      addPage();
-      for (const group of groups) {
-        for (let index = 0; index < group.cards.length; index += columns) {
-          const row = group.cards.slice(index, index + columns);
-          const rowHeight = Math.max(...row.map((card) => card.height));
-          if (index === 0) {
-            if (top - headingHeight(group) - gap - rowHeight < contentBottom && top !== contentTop) addPage();
-            await drawHeading(group, false);
-          } else if (top - rowHeight < contentBottom) {
-            addPage();
-            await drawHeading(group, true);
-          }
-
-          for (const [column, card] of row.entries()) {
-            const x = margin + column * (boxWidth + gap);
-            page.drawRectangle({
-              x, y: top - rowHeight, width: boxWidth, height: rowHeight, borderWidth: 1, borderColor: border, color: rgb(1, 1, 1)
-            });
-            await drawOrganizationPdfText(pdf, page, card.name, x + cardPadding, top - cardPadding, ink);
-            await drawOrganizationPdfText(pdf, page, card.title, x + cardPadding, top - cardPadding - card.name.height, muted);
-          }
-          top -= rowHeight + gap;
-        }
-        top -= 8;
+      const makeLayout = (trees) => layoutOrganization(trees, cardWidth, 12, (node) => labels.get(node.id).height);
+      const fit = (layout, paper) => fitOrganizationPdfPage(layout, paper, margin, header, footer);
+      const full = makeLayout(forest);
+      const minimumScale = 0.9;
+      const a4 = fit(full, PageSizes.A4);
+      const a3 = fit(full, PageSizes.A3);
+      const pages = a4.scale >= minimumScale ? [a4] : [a3];
+      if (a3.scale < minimumScale) {
+        pages.push(...paginateOrganizationPdf(forest, (trees) => fit(makeLayout(trees), PageSizes.A4), minimumScale));
       }
 
-      const pages = pdf.getPages();
-      pages.forEach((pdfPage, index) => {
+      pdf.setTitle("Organograma da Rise Up");
+      for (const [index, { layout, width, height, scale }] of pages.entries()) {
+        const page = pdf.addPage([width, height]);
+        page.drawImage(logo, { x: margin, y: height - 64, ...logoSize });
+        page.drawText("Organograma da Rise Up", { x: margin + 60, y: height - 39, size: 20, font: bold, color: ink });
+        const subtitle = index === 0 ? "Visão geral" : "Detalhe da estrutura";
+        page.drawText(subtitle, { x: margin + 60, y: height - 54, size: 9.5, font: regular, color: muted });
+        page.drawLine({ start: { x: margin, y: height - 72 }, end: { x: width - margin, y: height - 72 }, thickness: 0.75, color: border });
+        page.drawLine({ start: { x: margin, y: 33 }, end: { x: width - margin, y: 33 }, thickness: 0.75, color: border });
+        page.drawText(`Rise Up · Documento interno · ${generated}`, { x: margin, y: 19, size: 8, font: regular, color: muted });
         const label = `Página ${index + 1} de ${pages.length}`;
-        pdfPage.drawText(label, { x: width - margin - regular.widthOfTextAtSize(label, 8), y: 20, size: 8, font: regular, color: muted });
-      });
+        page.drawText(label, { x: width - margin - regular.widthOfTextAtSize(label, 8), y: 19, size: 8, font: regular, color: muted });
+
+        const left = (width - layout.width * scale) / 2;
+        const top = height - header;
+        layout.lines.forEach(({ x1, y1, x2, y2 }) => {
+          page.drawLine({
+            start: { x: left + x1 * scale, y: top - y1 * scale },
+            end: { x: left + x2 * scale, y: top - y2 * scale },
+            thickness: Math.max(0.5, 1.1 * scale), color: lineColor
+          });
+        });
+        for (const card of layout.cards) {
+          const { name, title } = labels.get(card.node.id);
+          const x = left + card.x * scale;
+          const cardTop = top - card.y * scale;
+          const boxWidth = layout.cardWidth * scale;
+          const boxHeight = card.height * scale;
+          page.drawRectangle({
+            x, y: cardTop - boxHeight, width: boxWidth, height: boxHeight,
+            borderWidth: 0.7 * scale, borderColor: card.root ? navy : border,
+            color: card.root ? navy : card.manager ? managerFill : white
+          });
+          page.drawRectangle({ x, y: cardTop - 2.4 * scale, width: boxWidth, height: 2.4 * scale, color: accent });
+          const inset = padding * scale;
+          await drawOrganizationPdfText(pdf, page, name, x + inset, cardTop - inset, card.root ? white : ink, scale);
+          await drawOrganizationPdfText(pdf, page, title, x + inset, cardTop - inset - name.height * scale, card.root ? light : muted, scale);
+        }
+      }
+
       const bytes = await pdf.save();
       const blob = new Blob([bytes], { type: "application/pdf" });
       const url = URL.createObjectURL(blob);
       const download = document.createElement("a");
       download.href = url;
-      download.download = "organigrama-rise-up.pdf";
+      download.download = "organograma-rise-up.pdf";
       document.body.appendChild(download);
       download.click();
       download.remove();
@@ -3158,7 +3411,7 @@
       ["todo", "To-Do", "Tarefas e prioridades"],
       ["projects", "Projetos", "Projetos, clientes e equipas"],
       ["team", "Equipa", "Membros e contactos"],
-      ["hr", "Recursos Humanos", "Cronograma, eventos, advertências privadas, presenças, cargos, candidaturas e organigrama"],
+      ["hr", "Recursos Humanos", "Cronograma, eventos, advertências privadas, presenças, cargos, candidaturas e organograma"],
       ["communication", "Comunicação", "Calendário editorial e publicações"],
       ["documents", "Documentos", "Biblioteca interna"],
       ["contacts", "Contactos", "Mensagens recebidas"],
@@ -3320,6 +3573,20 @@
     $("[data-add-org-node]")?.addEventListener("click", () => addOrganizationNode());
     $("[data-save-org-chart]")?.addEventListener("click", saveOrganizationChart);
     $("[data-export-org-pdf]")?.addEventListener("click", exportOrganizationPdf);
+    $("[data-org-zoom-in]")?.addEventListener("click", () => adjustOrganizationZoom(1.25));
+    $("[data-org-zoom-out]")?.addEventListener("click", () => adjustOrganizationZoom(0.8));
+    $("[data-org-zoom-actual]")?.addEventListener("click", () => {
+      workspace.organizationZoom = 1;
+      applyOrganizationZoom();
+    });
+    $("[data-org-zoom-fit]")?.addEventListener("click", () => adjustOrganizationZoom(null));
+    $("[data-org-editor-close]")?.addEventListener("click", () => {
+      const card = workspace.organizationView?.cards.get(workspace.organizationSelection);
+      selectOrganizationNode("");
+      card?.focus({ preventScroll: true });
+    });
+    const organizationViewport = $("[data-org-chart]");
+    if (organizationViewport) bindOrganizationViewport(organizationViewport);
     $("[data-new-hr-milestone]")?.addEventListener("click", () => { $("[data-hr-milestone-form]").hidden = false; });
     $("[data-close-hr-milestone-form]")?.addEventListener("click", () => { $("[data-hr-milestone-form]").hidden = true; });
     $("[data-hr-milestone-form]")?.addEventListener("submit", (event) => {

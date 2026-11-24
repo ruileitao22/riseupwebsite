@@ -1105,7 +1105,7 @@
             </button>
             <button class="bo-hr-module-card" type="button" role="tab" aria-selected="false" data-hr-module-button="organization">
               <span class="bo-hr-module-icon bo-hr-module-icon-organization" aria-hidden="true"></span>
-              <span><strong>Organigrama</strong><small>Estrutura, cargos e linhas de responsabilidade.</small></span>
+              <span><strong>Organograma</strong><small>Estrutura, cargos e linhas de responsabilidade.</small></span>
               <span class="bo-hr-module-arrow" aria-hidden="true">→</span>
             </button>
             <button class="bo-hr-module-card" type="button" role="tab" aria-selected="false" data-hr-module-button="warnings">
@@ -1224,15 +1224,31 @@
 
             <section class="bo-hr-module-view" role="tabpanel" data-hr-module-view="organization">
               <div class="bo-list-head bo-org-chart-head">
-                <div><p class="bo-kicker">Estrutura</p><h3>Organigrama da Rise Up</h3><p>Os cargos estão agrupados por chefia direta. Abre um cartão para editar.</p></div>
+                <div><h3>Organograma da Rise Up</h3><p>Seleciona um cargo para editar ou usa o zoom para explorar a estrutura.</p></div>
                 <div class="bo-actions">
                   <button class="bo-button bo-button-ghost" type="button" data-add-org-node>Adicionar cargo</button>
-                  <button class="bo-button bo-button-primary" type="button" data-save-org-chart>Guardar organigrama</button>
+                  <button class="bo-button bo-button-primary" type="button" data-save-org-chart>Guardar organograma</button>
                   <button class="bo-button bo-button-ghost" type="button" data-export-org-pdf>Exportar PDF</button>
                 </div>
               </div>
               <p class="bo-status" data-org-chart-status role="status"></p>
-              <div class="bo-org-chart-canvas" data-org-chart></div>
+              <div class="bo-org-chart-tools" role="group" aria-label="Zoom do organograma" data-org-chart-tools hidden>
+                <button class="bo-icon-button" type="button" data-org-zoom-out aria-label="Reduzir zoom">−</button>
+                <output data-org-zoom-label aria-label="Zoom atual">100%</output>
+                <button class="bo-icon-button" type="button" data-org-zoom-in aria-label="Aumentar zoom">+</button>
+                <button class="bo-button bo-button-ghost" type="button" data-org-zoom-actual aria-label="Tamanho real">100%</button>
+                <button class="bo-button bo-button-ghost" type="button" data-org-zoom-fit>Ajustar à janela</button>
+              </div>
+              <div class="bo-org-workspace" data-org-workspace>
+                <div class="bo-org-chart-canvas" data-org-chart tabindex="0" role="region" aria-label="Diagrama do organograma"></div>
+                <aside class="bo-org-edit-panel" id="bo-org-edit-panel" aria-labelledby="bo-org-edit-title" data-org-editor hidden>
+                  <div class="bo-org-edit-heading">
+                    <h4 id="bo-org-edit-title" tabindex="-1">Editar cargo</h4>
+                    <button class="bo-icon-button" type="button" data-org-editor-close aria-label="Fechar edição">×</button>
+                  </div>
+                  <div data-org-editor-fields></div>
+                </aside>
+              </div>
             </section>
 
             <section class="bo-hr-module-view" role="tabpanel" data-hr-module-view="warnings">
